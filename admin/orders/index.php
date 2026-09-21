@@ -1,9 +1,42 @@
-<?php  
+<?php
 
 require_once '../../core/Middleware.php';
+require_once '../../config/database.php';
+require_once '../../core/Session.php';
 
 Middleware::admin();
+Session::start();
+
 $pageTitle = "Orders";
+
+
+// Flash messages
+$successMessage = Session::getFlash('success');
+$errorMessage = Session::getFlash('error');
+
+
+// FETCH ORDERS
+$sql = "SELECT
+            o.id,
+            o.order_number,
+            o.billing_full_name,
+            o.total_amount,
+            o.payment_method,
+            o.payment_status,
+            o.order_status,
+            o.created_at,
+            u.name AS customer_name,
+            u.email AS customer_email
+        FROM orders o
+        INNER JOIN users u
+            ON u.id = o.user_id
+        ORDER BY o.id DESC";
+
+$stmt = $pdo->prepare($sql);
+$stmt->execute();
+
+$orders = $stmt->fetchAll();
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -12,21 +45,21 @@ $pageTitle = "Orders";
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="apple-touch-icon" sizes="76x76" href="../assets/img/apple-icon.png">
-  <link rel="icon" type="image/png" href="../assets/img/favicon.png">
+    <link rel="icon" type="image/png" href="../assets/img/favicon.png">
     <title>Orders - ClothWear Admin</title>
 
-<link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700,900" />
-  <!-- Nucleo Icons -->
-  <link href="../assets/css/nucleo-icons.css" rel="stylesheet" />
-  <link href="../assets/css/nucleo-svg.css" rel="stylesheet" />
-  <!-- Font Awesome Icons -->
-<link
-    rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
->  <!-- Material Icons -->
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" />
-  <!-- CSS Files -->
-  <link id="pagestyle" href="../assets/css/material-dashboard.css?v=3.2.0" rel="stylesheet" />
+    <link rel="stylesheet" type="text/css"
+        href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700,900" />
+    <!-- Nucleo Icons -->
+    <link href="../assets/css/nucleo-icons.css" rel="stylesheet" />
+    <link href="../assets/css/nucleo-svg.css" rel="stylesheet" />
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <!-- Material Icons -->
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <!-- CSS Files -->
+    <link id="pagestyle" href="../assets/css/material-dashboard.css?v=3.2.0" rel="stylesheet" />
 </head>
 
 <body class="g-sidenav-show  bg-gray-100">
@@ -42,6 +75,36 @@ $pageTitle = "Orders";
     <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg">
 
         <div class="container-fluid py-4">
+            <?php if ($successMessage): ?>
+
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+
+                    <i class="fa-solid fa-circle-check me-2"></i>
+
+                    <?= htmlspecialchars($successMessage) ?>
+
+                    <button type="button" class="btn-close" data-bs-dismiss="alert">
+                    </button>
+
+                </div>
+
+            <?php endif; ?>
+
+
+            <?php if ($errorMessage): ?>
+
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+
+                    <i class="fa-solid fa-circle-exclamation me-2"></i>
+
+                    <?= htmlspecialchars($errorMessage) ?>
+
+                    <button type="button" class="btn-close" data-bs-dismiss="alert">
+                    </button>
+
+                </div>
+
+            <?php endif; ?>
 
             <!-- Page Heading -->
             <div class="row">
@@ -97,27 +160,33 @@ $pageTitle = "Orders";
 
                                         <tr>
 
-                                            <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                            <th
+                                                class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
                                                 Order
                                             </th>
 
-                                            <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">
+                                            <th
+                                                class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">
                                                 Customer
                                             </th>
 
-                                            <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                            <th
+                                                class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
                                                 Total
                                             </th>
 
-                                            <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                            <th
+                                                class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
                                                 Payment
                                             </th>
 
-                                            <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                            <th
+                                                class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
                                                 Order Status
                                             </th>
 
-                                            <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                            <th
+                                                class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
                                                 Date
                                             </th>
 
@@ -131,246 +200,203 @@ $pageTitle = "Orders";
 
                                     <tbody>
 
+                                        <?php if (empty($orders)): ?>
 
-                                        <!-- ORDER 1 -->
-                                        <tr>
+                                            <tr>
 
-                                            <td>
+                                                <td colspan="7" class="text-center py-5">
 
-                                                <div class="d-flex px-3 py-1">
+                                                    <i class="fa-solid fa-box-open text-secondary fs-3 mb-3"></i>
 
-                                                    <div class="d-flex flex-column justify-content-center">
+                                                    <p class="text-sm text-secondary mb-0">
+                                                        No orders found.
+                                                    </p>
 
-                                                        <h6 class="mb-0 text-sm">
-                                                            #ORD-1001
-                                                        </h6>
+                                                </td>
 
-                                                    </div>
+                                            </tr>
 
-                                                </div>
+                                        <?php else: ?>
 
-                                            </td>
+                                            <?php foreach ($orders as $order): ?>
 
+                                                <tr>
 
-                                            <td>
+                                                    <!-- ORDER -->
+                                                    <td>
 
-                                                <p class="text-sm font-weight-bold mb-0">
-                                                    John Doe
-                                                </p>
+                                                        <div class="d-flex px-3 py-1">
 
-                                            </td>
+                                                            <div class="d-flex flex-column justify-content-center">
 
+                                                                <h6 class="mb-0 text-sm">
 
-                                            <td>
+                                                                    #<?= htmlspecialchars($order['order_number']) ?>
 
-                                                <p class="text-sm font-weight-bold mb-0">
-                                                    $125.00
-                                                </p>
+                                                                </h6>
 
-                                            </td>
+                                                                <p class="text-xs text-secondary mb-0">
 
+                                                                    Order ID:
+                                                                    <?= (int) $order['id'] ?>
 
-                                            <td>
+                                                                </p>
 
-                                                <span class="badge badge-sm bg-gradient-success">
-                                                    Completed
-                                                </span>
+                                                            </div>
 
-                                            </td>
+                                                        </div>
 
+                                                    </td>
 
-                                            <td>
 
-                                                <span class="badge badge-sm bg-gradient-info">
-                                                    Processing
-                                                </span>
+                                                    <!-- CUSTOMER -->
+                                                    <td>
 
-                                            </td>
+                                                        <div class="d-flex flex-column">
 
+                                                            <p class="text-sm font-weight-bold mb-0">
 
-                                            <td>
+                                                                <?= htmlspecialchars($order['customer_name']) ?>
 
-                                                <span class="text-secondary text-xs font-weight-bold">
-                                                    10 Sep 2026
-                                                </span>
+                                                            </p>
 
-                                            </td>
+                                                            <p class="text-xs text-secondary mb-0">
 
+                                                                <?= htmlspecialchars($order['customer_email']) ?>
 
-                                            <td class="align-middle">
+                                                            </p>
 
-                                                <a
-                                                    href="detail.php?id=1"
-                                                    class="btn btn-link text-secondary mb-0">
+                                                        </div>
 
-                                                    <i class="fa fa-eye text-xs"></i>
+                                                    </td>
 
-                                                </a>
 
-                                            </td>
+                                                    <!-- TOTAL -->
+                                                    <td>
 
-                                        </tr>
+                                                        <p class="text-sm font-weight-bold mb-0">
 
+                                                            PKR <?= number_format(
+                                                                (float) $order['total_amount'],
+                                                                2
+                                                            ) ?>
 
-                                        <!-- ORDER 2 -->
-                                        <tr>
+                                                        </p>
 
-                                            <td>
+                                                    </td>
 
-                                                <div class="d-flex px-3 py-1">
 
-                                                    <div class="d-flex flex-column justify-content-center">
+                                                    <!-- PAYMENT -->
+                                                    <td>
 
-                                                        <h6 class="mb-0 text-sm">
-                                                            #ORD-1002
-                                                        </h6>
+                                                        <select name="payment_status"
+                                                            class="form-select form-select-sm payment-status-select"
+                                                            form="order-form-<?= (int) $order['id'] ?>">
 
-                                                    </div>
+                                                            <option value="pending" <?= $order['payment_status'] === 'pending' ? 'selected' : '' ?>>
+                                                                Pending
+                                                            </option>
 
-                                                </div>
+                                                            <option value="completed" <?= $order['payment_status'] === 'completed' ? 'selected' : '' ?>>
+                                                                Completed
+                                                            </option>
 
-                                            </td>
+                                                            <option value="failed" <?= $order['payment_status'] === 'failed' ? 'selected' : '' ?>>
+                                                                Failed
+                                                            </option>
 
+                                                        </select>
 
-                                            <td>
 
-                                                <p class="text-sm font-weight-bold mb-0">
-                                                    Sarah Ahmed
-                                                </p>
+                                                        <p class="text-xs text-secondary mb-0 mt-1">
 
-                                            </td>
+                                                            <?= strtoupper(
+                                                                htmlspecialchars($order['payment_method'])
+                                                            ) ?>
 
+                                                        </p>
 
-                                            <td>
+                                                    </td>
 
-                                                <p class="text-sm font-weight-bold mb-0">
-                                                    $240.00
-                                                </p>
 
-                                            </td>
+                                                    <!-- ORDER STATUS -->
+                                                    <td>
 
+                                                        <select name="order_status"
+                                                            class="form-select form-select-sm order-status-select"
+                                                            form="order-form-<?= (int) $order['id'] ?>">
 
-                                            <td>
+                                                            <option value="processing" <?= $order['order_status'] === 'processing' ? 'selected' : '' ?>>
+                                                                Processing
+                                                            </option>
 
-                                                <span class="badge badge-sm bg-gradient-warning">
-                                                    Pending
-                                                </span>
+                                                            <option value="shipped" <?= $order['order_status'] === 'shipped' ? 'selected' : '' ?>>
+                                                                Shipped
+                                                            </option>
 
-                                            </td>
+                                                            <option value="delivered" <?= $order['order_status'] === 'delivered' ? 'selected' : '' ?>>
+                                                                Delivered
+                                                            </option>
 
+                                                            <option value="cancelled" <?= $order['order_status'] === 'cancelled' ? 'selected' : '' ?>>
+                                                                Cancelled
+                                                            </option>
 
-                                            <td>
+                                                        </select>
 
-                                                <span class="badge badge-sm bg-gradient-info">
-                                                    Processing
-                                                </span>
+                                                    </td>
 
-                                            </td>
 
+                                                    <!-- DATE -->
+                                                    <td>
 
-                                            <td>
+                                                        <span class="text-secondary text-xs font-weight-bold">
 
-                                                <span class="text-secondary text-xs font-weight-bold">
-                                                    09 Sep 2026
-                                                </span>
+                                                            <?= date(
+                                                                'd M Y',
+                                                                strtotime($order['created_at'])
+                                                            ) ?>
 
-                                            </td>
+                                                        </span>
 
+                                                    </td>
 
-                                            <td class="align-middle">
 
-                                                <a
-                                                    href="/admin/orders/detail.php?id=2"
-                                                    class="btn btn-link text-secondary mb-0">
+                                                    <!-- VIEW -->
+                                                    <!-- ACTIONS -->
+                                                    <td class="align-middle">
 
-                                                    <i class="fa fa-eye text-xs"></i>
+                                                        <!-- Update Status Form -->
+                                                        <form method="POST" action="update-status.php"
+                                                            id="order-form-<?= (int) $order['id'] ?>" class="d-inline">
 
-                                                </a>
+                                                            <input type="hidden" name="order_id"
+                                                                value="<?= (int) $order['id'] ?>">
 
-                                            </td>
+                                                            <button type="submit" class="btn btn-sm bg-gradient-dark mb-1"
+                                                                title="Save Status">
+                                                                <i class="fa-solid fa-check me-1"></i>
+                                                                Save
+                                                            </button>
 
-                                        </tr>
+                                                        </form>
 
 
-                                        <!-- ORDER 3 -->
-                                        <tr>
+                                                        <!-- View Order -->
+                                                        <a href="detail.php?id=<?= (int) $order['id'] ?>"
+                                                            class="btn btn-link text-secondary mb-0" title="View Order">
 
-                                            <td>
+                                                            <i class="fa fa-eye text-xs"></i>
 
-                                                <div class="d-flex px-3 py-1">
+                                                        </a>
 
-                                                    <div class="d-flex flex-column justify-content-center">
+                                                    </td>
 
-                                                        <h6 class="mb-0 text-sm">
-                                                            #ORD-1003
-                                                        </h6>
+                                                </tr>
 
-                                                    </div>
+                                            <?php endforeach; ?>
 
-                                                </div>
-
-                                            </td>
-
-
-                                            <td>
-
-                                                <p class="text-sm font-weight-bold mb-0">
-                                                    Ali Khan
-                                                </p>
-
-                                            </td>
-
-
-                                            <td>
-
-                                                <p class="text-sm font-weight-bold mb-0">
-                                                    $89.50
-                                                </p>
-
-                                            </td>
-
-
-                                            <td>
-
-                                                <span class="badge badge-sm bg-gradient-success">
-                                                    Completed
-                                                </span>
-
-                                            </td>
-
-
-                                            <td>
-
-                                                <span class="badge badge-sm bg-gradient-success">
-                                                    Delivered
-                                                </span>
-
-                                            </td>
-
-
-                                            <td>
-
-                                                <span class="text-secondary text-xs font-weight-bold">
-                                                    07 Sep 2026
-                                                </span>
-
-                                            </td>
-
-
-                                            <td class="align-middle">
-
-                                                <a
-                                                    href="/admin/orders/detail.php?id=3"
-                                                    class="btn btn-link text-secondary mb-0">
-
-                                                    <i class="fa fa-eye text-xs"></i>
-
-                                                </a>
-
-                                            </td>
-
-                                        </tr>
-
+                                        <?php endif; ?>
 
                                     </tbody>
 
@@ -385,8 +411,8 @@ $pageTitle = "Orders";
                 </div>
 
             </div>
-    <!-- Admin Footer -->
-    <?php require_once '../../includes/admin-footer.php'; ?>
+            <!-- Admin Footer -->
+            <?php require_once '../../includes/admin-footer.php'; ?>
         </div>
 
 

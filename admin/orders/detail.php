@@ -1,83 +1,233 @@
 <?php
+
 require_once '../../core/Middleware.php';
+require_once '../../config/database.php';
+require_once '../../core/Session.php';
 
 Middleware::admin();
+Session::start();
+
 $pageTitle = "Order Details";
 
-/*
-|--------------------------------------------------------------------------
-| Temporary Order Data
-|--------------------------------------------------------------------------
-| Later, this data will come from the database using:
-|
-| detail.php?id=1
-|
-*/
 
-$orderId = $_GET['id'] ?? 1;
+// --------------------------------------------------
+// GET ORDER ID
+// --------------------------------------------------
 
+$orderId = (int) ($_GET['id'] ?? 0);
 
-/*
-|--------------------------------------------------------------------------
-| Sample Order Information
-|--------------------------------------------------------------------------
-*/
+if ($orderId <= 0) {
 
-$orderNumber = "#ORD-1001";
+    Session::setFlash(
+        'error',
+        'Invalid order ID.'
+    );
 
-$customerName = "John Doe";
-$customerEmail = "john@example.com";
-$customerPhone = "03001234567";
-
-$orderDate = "10 Sep 2026";
-
-$paymentStatus = "Completed";
-$orderStatus = "Processing";
-
-$paymentMethod = "Cash on Delivery";
-
-$shippingAddress = "123 Main Street, Karachi, Pakistan";
+    header('Location: index.php');
+    exit;
+}
 
 
-/*
-|--------------------------------------------------------------------------
-| Sample Order Items
-|--------------------------------------------------------------------------
-*/
+// --------------------------------------------------
+// FETCH ORDER
+// --------------------------------------------------
 
-$orderItems = [
+$sql = "SELECT
+            o.id,
+            o.user_id,
+            o.billing_full_name,
+            o.billing_phone,
+            o.billing_country,
+            o.billing_address_line1,
+            o.billing_address_line2,
+            o.billing_city,
+            o.billing_state,
+            o.billing_postcode,
+            o.order_number,
+            o.subtotal_amount,
+            o.shipping_method_id,
+            o.shipping_method_name,
+            o.shipping_cost,
+            o.total_amount,
+            o.payment_method,
+            o.payment_status,
+            o.order_status,
+            o.transaction_id,
+            o.created_at,
 
-    [
-        "name" => "Classic Sneakers",
-        "category" => "Footwear",
-        "quantity" => 2,
-        "price" => 45.00,
-        "total" => 90.00
-    ],
+            u.name AS customer_name,
+            u.email AS customer_email
 
-    [
-        "name" => "Cotton T-Shirt",
-        "category" => "Clothing",
-        "quantity" => 1,
-        "price" => 25.00,
-        "total" => 25.00
-    ],
+        FROM orders o
 
-    [
-        "name" => "Leather Wallet",
-        "category" => "Accessories",
-        "quantity" => 1,
-        "price" => 10.00,
-        "total" => 10.00
-    ]
+        INNER JOIN users u
+            ON u.id = o.user_id
 
-];
+        WHERE o.id = :id
+
+        LIMIT 1";
+
+$stmt = $pdo->prepare($sql);
+
+$stmt->execute([
+    ':id' => $orderId
+]);
+
+$order = $stmt->fetch();
 
 
-$subtotal = 125.00;
-$shipping = 0.00;
-$discount = 0.00;
-$grandTotal = 125.00;
+// --------------------------------------------------
+// ORDER NOT FOUND
+// --------------------------------------------------
+
+if (!$order) {
+
+    Session::setFlash(
+        'error',
+        'Order not found.'
+    );
+
+    header('Location: index.php');
+    exit;
+}
+
+
+// --------------------------------------------------
+// FETCH ORDER ITEMS
+// --------------------------------------------------
+
+$sql = "SELECT
+            oi.id,
+            oi.product_id,
+            oi.quantity,
+            oi.unit_price,
+            oi.subtotal,
+
+            p.name AS product_name,
+            p.image AS product_image,
+
+            c.name AS category_name
+
+        FROM order_items oi
+
+        INNER JOIN products p
+            ON p.id = oi.product_id
+
+        LEFT JOIN categories c
+            ON c.id = p.category_id
+
+        WHERE oi.order_id = :order_id
+
+        ORDER BY oi.id ASC";
+
+$stmt = $pdo->prepare($sql);
+
+$stmt->execute([
+    ':order_id' => $orderId
+]);
+
+$orderItems = $stmt->fetchAll();
+
+
+// --------------------------------------------------
+// CALCULATED VALUES
+// --------------------------------------------------
+
+$subtotal = (float) $order['subtotal_amount'];
+
+$shipping = (float) $order['shipping_cost'];
+
+$grandTotal = (float) $order['total_amount'];
+
+
+// There is currently no discount column in your orders table.
+$discount = 0;
+
+
+// --------------------------------------------------
+// PAYMENT METHOD DISPLAY
+// --------------------------------------------------
+
+if ($order['payment_method'] === 'cod') {
+
+    $paymentMethod = 'Cash on Delivery';
+
+} elseif ($order['payment_method'] === 'paypal') {
+
+    $paymentMethod = 'PayPal';
+
+} else {
+
+    $paymentMethod = ucfirst(
+        $order['payment_method']
+    );
+
+}
+
+
+// --------------------------------------------------
+// PAYMENT STATUS DISPLAY
+// --------------------------------------------------
+
+$paymentStatus = ucfirst(
+    $order['payment_status']
+);
+
+
+// --------------------------------------------------
+// ORDER STATUS DISPLAY
+// --------------------------------------------------
+
+$orderStatus = ucfirst(
+    $order['order_status']
+);
+
+
+// --------------------------------------------------
+// ORDER DATE
+// --------------------------------------------------
+
+$orderDate = date(
+    'd M Y, h:i A',
+    strtotime($order['created_at'])
+);
+
+
+// --------------------------------------------------
+// BUILD BILLING / SHIPPING ADDRESS
+// --------------------------------------------------
+
+$addressParts = [];
+
+if (!empty($order['billing_address_line1'])) {
+    $addressParts[] = $order['billing_address_line1'];
+}
+
+if (!empty($order['billing_address_line2'])) {
+    $addressParts[] = $order['billing_address_line2'];
+}
+
+if (!empty($order['billing_city'])) {
+    $addressParts[] = $order['billing_city'];
+}
+
+if (!empty($order['billing_state'])) {
+    $addressParts[] = $order['billing_state'];
+}
+
+if (!empty($order['billing_postcode'])) {
+    $addressParts[] = $order['billing_postcode'];
+}
+
+if (!empty($order['billing_country'])) {
+    $addressParts[] = $order['billing_country'];
+}
+
+
+$shippingAddress = implode(
+    ', ',
+    $addressParts
+);
 
 ?>
 
@@ -512,12 +662,12 @@ $grandTotal = 125.00;
 
                             <h5 class="mb-1">
                                 Order
-                                <?php echo htmlspecialchars($orderNumber); ?>
+                                #<?= htmlspecialchars($order['order_number']) ?>
                             </h5>
 
                             <p class="text-sm text-secondary mb-0">
                                 Placed on
-                                <?php echo htmlspecialchars($orderDate); ?>
+                                <?= htmlspecialchars($orderDate) ?>
                             </p>
 
 
@@ -526,7 +676,7 @@ $grandTotal = 125.00;
                                 <i class="fa-solid fa-hashtag"></i>
 
                                 Order ID:
-                                <?php echo htmlspecialchars($orderId); ?>
+                                <?= (int) $order['id'] ?>
 
                             </span>
 
@@ -535,24 +685,32 @@ $grandTotal = 125.00;
 
                         <!-- ORDER STATUS -->
 
+                        <!-- ORDER STATUS -->
+
                         <div>
 
-                            <?php if ($orderStatus === "Delivered"): ?>
+                            <?php if ($order['order_status'] === 'delivered'): ?>
 
                                 <span class="order-status-badge status-success">
                                     Delivered
                                 </span>
 
-                            <?php elseif ($orderStatus === "Processing"): ?>
+                            <?php elseif ($order['order_status'] === 'processing'): ?>
 
                                 <span class="order-status-badge status-info">
                                     Processing
                                 </span>
 
-                            <?php else: ?>
+                            <?php elseif ($order['order_status'] === 'shipped'): ?>
 
                                 <span class="order-status-badge status-warning">
-                                    <?php echo htmlspecialchars($orderStatus); ?>
+                                    Shipped
+                                </span>
+
+                            <?php elseif ($order['order_status'] === 'cancelled'): ?>
+
+                                <span class="order-status-badge" style="background-color:#f8d7da;color:#842029;">
+                                    Cancelled
                                 </span>
 
                             <?php endif; ?>
@@ -593,7 +751,7 @@ $grandTotal = 125.00;
                                 </span>
 
                                 <div class="info-value">
-                                    <?php echo htmlspecialchars($customerName); ?>
+                                    <?= htmlspecialchars($order['billing_full_name']) ?>
                                 </div>
 
 
@@ -602,7 +760,7 @@ $grandTotal = 125.00;
                                 </span>
 
                                 <div class="info-value">
-                                    <?php echo htmlspecialchars($customerEmail); ?>
+                                    <?= htmlspecialchars($order['customer_email']) ?>
                                 </div>
 
 
@@ -611,13 +769,15 @@ $grandTotal = 125.00;
                                 </span>
 
                                 <div class="info-value mb-0">
-                                    <?php echo htmlspecialchars($customerPhone); ?>
+                                    <?= htmlspecialchars($order['billing_phone']) ?>
                                 </div>
 
                             </div>
 
                         </div>
 
+
+                        <!-- SHIPPING INFORMATION -->
 
                         <!-- SHIPPING INFORMATION -->
 
@@ -636,7 +796,25 @@ $grandTotal = 125.00;
                                 </span>
 
                                 <div class="info-value">
-                                    <?php echo htmlspecialchars($shippingAddress); ?>
+
+                                    <?= htmlspecialchars(
+                                        $shippingAddress
+                                    ) ?>
+
+                                </div>
+
+
+                                <span class="info-label">
+                                    Shipping Method
+                                </span>
+
+                                <div class="info-value">
+
+                                    <?= !empty($order['shipping_method_name'])
+                                        ? htmlspecialchars($order['shipping_method_name'])
+                                        : 'N/A'
+                                        ?>
+
                                 </div>
 
 
@@ -646,9 +824,31 @@ $grandTotal = 125.00;
 
                                 <div class="info-value mb-0">
 
-                                    <span class="order-status-badge status-info">
-                                        <?php echo htmlspecialchars($orderStatus); ?>
-                                    </span>
+                                    <?php if ($order['order_status'] === 'delivered'): ?>
+
+                                        <span class="order-status-badge status-success">
+                                            Delivered
+                                        </span>
+
+                                    <?php elseif ($order['order_status'] === 'processing'): ?>
+
+                                        <span class="order-status-badge status-info">
+                                            Processing
+                                        </span>
+
+                                    <?php elseif ($order['order_status'] === 'shipped'): ?>
+
+                                        <span class="order-status-badge status-warning">
+                                            Shipped
+                                        </span>
+
+                                    <?php elseif ($order['order_status'] === 'cancelled'): ?>
+
+                                        <span class="order-status-badge" style="background-color:#f8d7da;color:#842029;">
+                                            Cancelled
+                                        </span>
+
+                                    <?php endif; ?>
 
                                 </div>
 
@@ -656,6 +856,8 @@ $grandTotal = 125.00;
 
                         </div>
 
+
+                        <!-- PAYMENT INFORMATION -->
 
                         <!-- PAYMENT INFORMATION -->
 
@@ -674,7 +876,7 @@ $grandTotal = 125.00;
                                 </span>
 
                                 <div class="info-value">
-                                    <?php echo htmlspecialchars($paymentMethod); ?>
+                                    <?= htmlspecialchars($paymentMethod) ?>
                                 </div>
 
 
@@ -682,29 +884,42 @@ $grandTotal = 125.00;
                                     Payment Status
                                 </span>
 
-                                <div class="info-value mb-0">
+                                <div class="info-value">
 
-                                    <?php if ($paymentStatus === "Completed"): ?>
+                                    <?php if ($order['payment_status'] === 'completed'): ?>
 
                                         <span class="order-status-badge status-success">
                                             Completed
                                         </span>
 
-                                    <?php elseif ($paymentStatus === "Pending"): ?>
+                                    <?php elseif ($order['payment_status'] === 'pending'): ?>
 
                                         <span class="order-status-badge status-warning">
                                             Pending
                                         </span>
 
-                                    <?php else: ?>
+                                    <?php elseif ($order['payment_status'] === 'failed'): ?>
 
-                                        <span class="order-status-badge status-warning">
-                                            <?php echo htmlspecialchars($paymentStatus); ?>
+                                        <span class="order-status-badge" style="background-color:#f8d7da;color:#842029;">
+                                            Failed
                                         </span>
 
                                     <?php endif; ?>
 
                                 </div>
+
+
+                                <?php if (!empty($order['transaction_id'])): ?>
+
+                                    <span class="info-label">
+                                        Transaction ID
+                                    </span>
+
+                                    <div class="info-value mb-0">
+                                        <?= htmlspecialchars($order['transaction_id']) ?>
+                                    </div>
+
+                                <?php endif; ?>
 
                             </div>
 
@@ -756,54 +971,114 @@ $grandTotal = 125.00;
 
                                 <tbody>
 
-                                    <?php foreach ($orderItems as $item): ?>
+                                <tbody>
+
+                                    <?php if (empty($orderItems)): ?>
 
                                         <tr>
 
-                                            <td>
+                                            <td colspan="4" class="text-center py-4 text-secondary">
 
-                                                <div class="product-name">
-                                                    <?php echo htmlspecialchars($item["name"]); ?>
-                                                </div>
+                                                <i class="fa-solid fa-box-open fs-4 mb-2"></i>
 
-                                                <div class="product-category">
-                                                    <?php echo htmlspecialchars($item["category"]); ?>
-                                                </div>
-
-                                            </td>
-
-
-                                            <td class="text-center">
-
-                                                <span class="text-sm font-weight-bold">
-                                                    <?php echo htmlspecialchars($item["quantity"]); ?>
-                                                </span>
-
-                                            </td>
-
-
-                                            <td class="text-end">
-
-                                                <span class="text-sm font-weight-bold">
-                                                    $
-                                                    <?php echo number_format($item["price"], 2); ?>
-                                                </span>
-
-                                            </td>
-
-
-                                            <td class="text-end">
-
-                                                <span class="text-sm font-weight-bold">
-                                                    $
-                                                    <?php echo number_format($item["total"], 2); ?>
-                                                </span>
+                                                <p class="text-sm mb-0">
+                                                    No items found for this order.
+                                                </p>
 
                                             </td>
 
                                         </tr>
 
-                                    <?php endforeach; ?>
+                                    <?php else: ?>
+
+                                        <?php foreach ($orderItems as $item): ?>
+
+                                            <tr>
+
+                                                <td>
+
+                                                    <div class="d-flex align-items-center">
+
+                                                        <?php if (!empty($item['product_image'])): ?>
+
+                                                            <img src="../../public/uploads/products/<?= htmlspecialchars($item['product_image']) ?>"
+                                                                alt="<?= htmlspecialchars($item['product_name']) ?>" width="50"
+                                                                height="50" class="rounded me-3" style="object-fit: cover;">
+
+                                                        <?php endif; ?>
+
+
+                                                        <div>
+
+                                                            <div class="product-name">
+
+                                                                <?= htmlspecialchars(
+                                                                    $item['product_name']
+                                                                ) ?>
+
+                                                            </div>
+
+                                                            <div class="product-category">
+
+                                                                <?= !empty($item['category_name'])
+                                                                    ? htmlspecialchars($item['category_name'])
+                                                                    : 'No Category'
+                                                                    ?>
+
+                                                            </div>
+
+                                                        </div>
+
+                                                    </div>
+
+                                                </td>
+
+
+                                                <td class="text-center">
+
+                                                    <span class="text-sm font-weight-bold">
+
+                                                        <?= (int) $item['quantity'] ?>
+
+                                                    </span>
+
+                                                </td>
+
+
+                                                <td class="text-end">
+
+                                                    <span class="text-sm font-weight-bold">
+
+                                                        PKR <?= number_format(
+                                                            (float) $item['unit_price'],
+                                                            2
+                                                        ) ?>
+
+                                                    </span>
+
+                                                </td>
+
+
+                                                <td class="text-end">
+
+                                                    <span class="text-sm font-weight-bold">
+
+                                                        PKR <?= number_format(
+                                                            (float) $item['subtotal'],
+                                                            2
+                                                        ) ?>
+
+                                                    </span>
+
+                                                </td>
+
+                                            </tr>
+
+                                        <?php endforeach; ?>
+
+                                    <?php endif; ?>
+
+                                </tbody>
 
                                 </tbody>
 
@@ -815,12 +1090,9 @@ $grandTotal = 125.00;
                     </div>
 
 
-                    <!-- =========================
-                     ORDER SUMMARY
-                ========================== -->
+                    <!-- ORDER SUMMARY -->
 
                     <div class="order-summary">
-
 
                         <div class="summary-row">
 
@@ -829,8 +1101,10 @@ $grandTotal = 125.00;
                             </span>
 
                             <strong>
-                                $
-                                <?php echo number_format($subtotal, 2); ?>
+                                PKR <?= number_format(
+                                    $subtotal,
+                                    2
+                                ) ?>
                             </strong>
 
                         </div>
@@ -843,8 +1117,10 @@ $grandTotal = 125.00;
                             </span>
 
                             <strong>
-                                $
-                                <?php echo number_format($shipping, 2); ?>
+                                PKR <?= number_format(
+                                    $shipping,
+                                    2
+                                ) ?>
                             </strong>
 
                         </div>
@@ -857,8 +1133,10 @@ $grandTotal = 125.00;
                             </span>
 
                             <strong>
-                                -$
-                                <?php echo number_format($discount, 2); ?>
+                                -PKR <?= number_format(
+                                    $discount,
+                                    2
+                                ) ?>
                             </strong>
 
                         </div>
@@ -871,8 +1149,10 @@ $grandTotal = 125.00;
                             </span>
 
                             <strong>
-                                $
-                                <?php echo number_format($grandTotal, 2); ?>
+                                PKR <?= number_format(
+                                    $grandTotal,
+                                    2
+                                ) ?>
                             </strong>
 
                         </div>

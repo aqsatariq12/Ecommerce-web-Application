@@ -1,8 +1,30 @@
-<?php  
+<?php
+
 require_once '../../core/Middleware.php';
+require_once '../../config/database.php';
+require_once '../../core/Session.php';
 
 Middleware::admin();
+Session::start();
+
 $pageTitle = "Users";
+
+// Get all users
+$sql = "SELECT
+            id,
+            name,
+            email,
+            role,
+            is_active,
+            created_at
+        FROM users
+        ORDER BY id DESC";
+
+$stmt = $pdo->prepare($sql);
+$stmt->execute();
+
+$users = $stmt->fetchAll();
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -26,6 +48,13 @@ $pageTitle = "Users";
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" />
   <!-- CSS Files -->
   <link id="pagestyle" href="../assets/css/material-dashboard.css?v=3.2.0" rel="stylesheet" />
+  <style>
+    .user-status-select {
+        min-width: 120px;
+        font-size: 12px;
+        padding: 6px 30px 6px 10px;
+    }
+</style>
 </head>
 
 <body class="g-sidenav-show  bg-gray-100">
@@ -126,227 +155,154 @@ $pageTitle = "Users";
 
                                     <tbody>
 
+    <?php if (empty($users)): ?>
 
-                                        <!-- USER 1 -->
-                                        <tr>
+        <tr>
+            <td colspan="6" class="text-center py-4">
+                <p class="text-sm text-secondary mb-0">
+                    No users found.
+                </p>
+            </td>
+        </tr>
 
-                                            <td>
+    <?php else: ?>
 
-                                                <div class="d-flex px-3 py-1">
+        <?php foreach ($users as $user): ?>
 
-                                                    <div class="d-flex flex-column justify-content-center">
+            <tr>
 
-                                                        <h6 class="mb-0 text-sm">
-                                                            John Doe
-                                                        </h6>
+                <!-- User -->
+                <td>
 
-                                                    </div>
+                    <div class="d-flex px-3 py-1">
 
-                                                </div>
+                        <div class="d-flex flex-column justify-content-center">
 
-                                            </td>
+                            <h6 class="mb-0 text-sm">
+                                <?= htmlspecialchars($user['name']) ?>
+                            </h6>
 
+                        </div>
 
-                                            <td>
+                    </div>
 
-                                                <p class="text-sm font-weight-bold mb-0">
-                                                    john@example.com
-                                                </p>
+                </td>
 
-                                            </td>
 
+                <!-- Email -->
+                <td>
 
-                                            <td>
+                    <p class="text-sm font-weight-bold mb-0">
+                        <?= htmlspecialchars($user['email']) ?>
+                    </p>
 
-                                                <span class="badge badge-sm bg-gradient-info">
-                                                    Customer
-                                                </span>
+                </td>
 
-                                            </td>
 
+                <!-- Role -->
+                <td>
 
-                                            <td>
+                    <?php if ($user['role'] === 'admin'): ?>
 
-                                                <span class="badge badge-sm bg-gradient-success">
-                                                    Active
-                                                </span>
+                        <span class="badge badge-sm bg-gradient-dark">
+                            Admin
+                        </span>
 
-                                            </td>
+                    <?php else: ?>
 
+                        <span class="badge badge-sm bg-gradient-info">
+                            Customer
+                        </span>
 
-                                            <td>
+                    <?php endif; ?>
 
-                                                <span class="text-secondary text-xs font-weight-bold">
-                                                    01 Sep 2026
-                                                </span>
+                </td>
 
-                                            </td>
 
+                <!-- Status -->
+                <td>
 
-                                            <td class="align-middle">
+                    <select
+                        name="is_active"
+                        class="form-select form-select-sm user-status-select"
+                        form="user-form-<?= (int) $user['id'] ?>"
+                        <?= $user['role'] === 'admin' ? 'disabled' : '' ?>
+                    >
 
-                                                <button
-                                                    type="button"
-                                                    class="btn btn-link text-secondary mb-0"
-                                                    data-bs-toggle="modal"
-                                                    data-bs-target="#deleteUserModal">
+                        <option
+                            value="1"
+                            <?= (int) $user['is_active'] === 1 ? 'selected' : '' ?>
+                        >
+                            Active
+                        </option>
 
-                                                    <i class="fa fa-trash text-xs"></i>
+                        <option
+                            value="0"
+                            <?= (int) $user['is_active'] === 0 ? 'selected' : '' ?>
+                        >
+                            Inactive
+                        </option>
 
-                                                </button>
+                    </select>
 
-                                            </td>
+                </td>
 
-                                        </tr>
 
+                <!-- Joined -->
+                <td>
 
-                                        <!-- USER 2 -->
-                                        <tr>
+                    <span class="text-secondary text-xs font-weight-bold">
 
-                                            <td>
+                        <?= date(
+                            'd M Y',
+                            strtotime($user['created_at'])
+                        ) ?>
 
-                                                <div class="d-flex px-3 py-1">
+                    </span>
 
-                                                    <div class="d-flex flex-column justify-content-center">
+                </td>
 
-                                                        <h6 class="mb-0 text-sm">
-                                                            Sarah Ahmed
-                                                        </h6>
 
-                                                    </div>
+                <!-- Actions -->
+                <td class="align-middle">
 
-                                                </div>
+                    <?php if ($user['role'] !== 'admin'): ?>
 
-                                            </td>
+                        <form
+                            method="POST"
+                            action="update-status.php"
+                            id="user-form-<?= (int) $user['id'] ?>"
+                            class="d-inline"
+                        >
 
+                            <input
+                                type="hidden"
+                                name="user_id"
+                                value="<?= (int) $user['id'] ?>"
+                            >
 
-                                            <td>
+                            <button
+                                type="submit"
+                                class="btn btn-sm bg-gradient-dark mb-1"
+                                title="Save Status"
+                            >
+                                <i class="fa-solid fa-check me-1"></i>
+                                Save
+                            </button>
 
-                                                <p class="text-sm font-weight-bold mb-0">
-                                                    sarah@example.com
-                                                </p>
+                        </form>
 
-                                            </td>
+                    <?php endif; ?>
 
+                </td>
 
-                                            <td>
+            </tr>
 
-                                                <span class="badge badge-sm bg-gradient-info">
-                                                    Customer
-                                                </span>
+        <?php endforeach; ?>
 
-                                            </td>
+    <?php endif; ?>
 
-
-                                            <td>
-
-                                                <span class="badge badge-sm bg-gradient-success">
-                                                    Active
-                                                </span>
-
-                                            </td>
-
-
-                                            <td>
-
-                                                <span class="text-secondary text-xs font-weight-bold">
-                                                    28 Aug 2026
-                                                </span>
-
-                                            </td>
-
-
-                                            <td class="align-middle">
-
-                                                <button
-                                                    type="button"
-                                                    class="btn btn-link text-secondary mb-0"
-                                                    data-bs-toggle="modal"
-                                                    data-bs-target="#deleteUserModal">
-
-                                                    <i class="fa fa-trash text-xs"></i>
-
-                                                </button>
-
-                                            </td>
-
-                                        </tr>
-
-
-                                        <!-- ADMIN USER -->
-                                        <tr>
-
-                                            <td>
-
-                                                <div class="d-flex px-3 py-1">
-
-                                                    <div class="d-flex flex-column justify-content-center">
-
-                                                        <h6 class="mb-0 text-sm">
-                                                            Admin
-                                                        </h6>
-
-                                                    </div>
-
-                                                </div>
-
-                                            </td>
-
-
-                                            <td>
-
-                                                <p class="text-sm font-weight-bold mb-0">
-                                                    admin@example.com
-                                                </p>
-
-                                            </td>
-
-
-                                            <td>
-
-                                                <span class="badge badge-sm bg-gradient-dark">
-                                                    Admin
-                                                </span>
-
-                                            </td>
-
-
-                                            <td>
-
-                                                <span class="badge badge-sm bg-gradient-success">
-                                                    Active
-                                                </span>
-
-                                            </td>
-
-
-                                            <td>
-
-                                                <span class="text-secondary text-xs font-weight-bold">
-                                                    20 Aug 2026
-                                                </span>
-
-                                            </td>
-
-
-                                            <td class="align-middle">
-
-                                                <button
-                                                    type="button"
-                                                    class="btn btn-link text-secondary mb-0"
-                                                    data-bs-toggle="modal"
-                                                    data-bs-target="#deleteUserModal">
-
-                                                    <i class="fa fa-trash text-xs"></i>
-
-                                                </button>
-
-                                            </td>
-
-                                        </tr>
-
-
-                                    </tbody>
+</tbody>
 
                                 </table>
 

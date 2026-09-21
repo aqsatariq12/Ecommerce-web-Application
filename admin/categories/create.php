@@ -1,8 +1,207 @@
 <?php
+
 require_once '../../core/Middleware.php';
+require_once '../../config/database.php';
+require_once '../../core/Session.php';
 
 Middleware::admin();
+Session::start();
+
 $pageTitle = "Create Category";
+
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_category'])) {
+
+    $name = trim($_POST['name'] ?? '');
+    $status = $_POST['status'] ?? 'active';
+    $image = $_FILES['image'] ?? null;
+
+
+    // =========================
+    // VALIDATE CATEGORY NAME
+    // =========================
+
+    if ($name === '') {
+
+        Session::setFlash(
+            'error',
+            'Category name is required.'
+        );
+
+    }
+
+    // =========================
+    // VALIDATE IMAGE
+    // =========================
+    elseif (!$image || $image['error'] !== UPLOAD_ERR_OK) {
+
+        Session::setFlash(
+            'error',
+            'Please select a category image.'
+        );
+
+    } elseif ($image['size'] > 2 * 1024 * 1024) {
+
+        Session::setFlash(
+            'error',
+            'Image size must be less than 2MB.'
+        );
+
+    } else {
+
+        // Get actual MIME type
+        $imageType = mime_content_type($image['tmp_name']);
+
+        $allowedTypes = [
+            'image/jpeg',
+            'image/png',
+            'image/webp'
+        ];
+
+
+        if (!in_array($imageType, $allowedTypes)) {
+
+            Session::setFlash(
+                'error',
+                'Only JPG, PNG, and WebP images are allowed.'
+            );
+
+        } else {
+
+            // =========================
+            // STATUS
+            // =========================
+
+            $statusValue = ($status === 'active') ? 1 : 0;
+
+
+            // =========================
+            // CREATE SLUG
+            // =========================
+
+            $slug = strtolower($name);
+
+            $slug = preg_replace(
+                '/[^a-z0-9]+/i',
+                '-',
+                $slug
+            );
+
+            $slug = trim($slug, '-');
+
+
+            // =========================
+            // CHECK DUPLICATE
+            // =========================
+
+            $sql = "SELECT id
+                    FROM categories
+                    WHERE name = :name
+                    OR slug = :slug
+                    LIMIT 1";
+
+            $stmt = $pdo->prepare($sql);
+
+            $stmt->execute([
+                ':name' => $name,
+                ':slug' => $slug
+            ]);
+
+
+            if ($stmt->fetch()) {
+
+                Session::setFlash(
+                    'error',
+                    'A category with this name already exists.'
+                );
+
+                header('Location: index.php');
+
+
+            } else {
+
+                // =========================
+                // IMAGE EXTENSION
+                // =========================
+
+                $extension = match ($imageType) {
+
+                    'image/jpeg' => 'jpg',
+
+                    'image/png' => 'png',
+
+                    'image/webp' => 'webp',
+
+                    default => null
+                };
+
+
+                // =========================
+                // UNIQUE IMAGE NAME
+                // =========================
+
+                $imageName = uniqid('category_', true) . '.' . $extension;
+
+
+                // =========================
+                // UPLOAD PATH
+                // =========================
+
+                $uploadDirectory = '../../public/uploads/categories/';
+
+                $uploadPath = $uploadDirectory . $imageName;
+
+
+                // =========================
+                // MOVE IMAGE
+                // =========================
+
+                if (
+                    !move_uploaded_file(
+                        $image['tmp_name'],
+                        $uploadPath
+                    )
+                ) {
+
+                    Session::setFlash(
+                        'error',
+                        'Failed to upload category image.'
+                    );
+
+                } else {
+
+                    // =========================
+                    // INSERT CATEGORY
+                    // =========================
+
+                    $sql = "INSERT INTO categories
+                            (name, slug, image, status)
+                            VALUES
+                            (:name, :slug, :image, :status)";
+
+                    $stmt = $pdo->prepare($sql);
+
+                    $stmt->execute([
+                        ':name' => $name,
+                        ':slug' => $slug,
+                        ':image' => $imageName,
+                        ':status' => $statusValue
+                    ]);
+
+
+                    Session::setFlash(
+                        'success',
+                        'Category created successfully.'
+                    );
+
+
+                    header('Location: index.php');
+                    exit;
+                }
+            }
+        }
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -275,6 +474,11 @@ $pageTitle = "Create Category";
             }
 
         }
+
+        .category-input[type="file"] {
+            padding: 10px 12px;
+            cursor: pointer;
+        }
     </style>
 
 </head>
@@ -369,10 +573,33 @@ $pageTitle = "Create Category";
                         ========================== -->
 
                         <div class="category-form-body">
+                            <!-- <?php if ($successMessage): ?>
+
+                                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                    <i class="fa-solid fa-circle-check me-2"></i>
+                                    <?= htmlspecialchars($successMessage) ?>
+
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert">
+                                    </button>
+                                </div>
+
+                            <?php endif; ?> -->
 
 
-                            <form method="POST" action="">
+                            <!-- <?php if ($errorMessage): ?>
 
+                                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                    <i class="fa-solid fa-circle-exclamation me-2"></i>
+                                    <?= htmlspecialchars($errorMessage) ?>
+
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert">
+                                    </button>
+                                </div>
+
+                            <?php endif; ?> -->
+
+
+                            <form method="POST" action="" enctype="multipart/form-data">
 
                                 <!-- =========================
                                      CATEGORY NAME
@@ -396,6 +623,30 @@ $pageTitle = "Create Category";
                                     <span class="field-help">
 
                                         Enter a unique name for this product category.
+
+                                    </span>
+
+                                </div>
+                                <!-- =========================
+     CATEGORY IMAGE
+========================== -->
+
+                                <div class="category-field">
+
+                                    <label for="categoryImage">
+
+                                        <i class="fa-solid fa-image"></i>
+
+                                        Category Image
+
+                                    </label>
+
+                                    <input type="file" id="categoryImage" name="image" class="category-input"
+                                        accept="image/jpeg,image/png,image/webp" required>
+
+                                    <span class="field-help">
+
+                                        Upload a JPG, PNG, or WebP image. Maximum size: 2MB.
 
                                     </span>
 

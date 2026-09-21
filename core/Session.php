@@ -51,15 +51,24 @@ SESSION
     └── error   → "Something went wrong!"
     */
 
+    
+public static function setFlash($key, $message)
+{
+    $_SESSION['_flash'][$key] = $message;
+}
 
-    public static function getFlash($key)
-    {
-        if (!isset($_SESSION['_flash'][$key])) {
-            return null;
-        }
-        $message = $_SESSION['_flash'][$key];
-        unset($_SESSION['_flash'][$key]);
-        return $message;
+
+public static function getFlash($key)
+{
+    if (!isset($_SESSION['_flash'][$key])) {
+        return null;
     }
+
+    $message = $_SESSION['_flash'][$key];
+
+    unset($_SESSION['_flash'][$key]);
+
+    return $message;
+}
 }
 ?>

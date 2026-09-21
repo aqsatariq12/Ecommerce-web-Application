@@ -167,20 +167,7 @@ $currentPath = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
             </li>
 
 
-            <!-- Sign Up -->
-            <li class="nav-item">
-                <a class="nav-link <?= $currentPath === '/admin/register.php' ? 'active bg-gradient-dark text-white' : 'text-dark' ?>"
-                   href="/admin/register.php">
 
-                    <i class="material-symbols-rounded opacity-5">
-                        assignment
-                    </i>
-
-                    <span class="nav-link-text ms-1">
-                        Sign Up
-                    </span>
-                </a>
-            </li>
 
 
 <!-- Logout -->

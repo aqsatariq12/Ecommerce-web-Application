@@ -1,10 +1,52 @@
 <?php
 
 require_once '../../core/Middleware.php';
+require_once '../../config/database.php';
+require_once '../../core/Session.php';
 
 Middleware::admin();
+Session::start();
 
 $pageTitle = "Categories";
+
+
+// =========================
+// FLASH MESSAGES
+// =========================
+
+$successMessage = Session::getFlash('success');
+$errorMessage = Session::getFlash('error');
+
+
+// =========================
+// FETCH CATEGORIES
+// =========================
+
+$sql = "SELECT
+            c.id,
+            c.name,
+            c.slug,
+            c.image,
+            c.status,
+            c.created_at,
+            COUNT(p.id) AS product_count
+        FROM categories c
+        LEFT JOIN products p
+            ON p.category_id = c.id
+        GROUP BY
+            c.id,
+            c.name,
+            c.slug,
+            c.image,
+            c.status,
+            c.created_at
+        ORDER BY c.id DESC";
+
+$stmt = $pdo->prepare($sql);
+$stmt->execute();
+
+$categories = $stmt->fetchAll();
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -100,6 +142,36 @@ $pageTitle = "Categories";
 
         <!-- Page Header -->
         <div class="container-fluid py-4">
+            <?php if ($successMessage): ?>
+
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+
+                    <i class="fa-solid fa-circle-check me-2"></i>
+
+                    <?= htmlspecialchars($successMessage) ?>
+
+                    <button type="button" class="btn-close" data-bs-dismiss="alert">
+                    </button>
+
+                </div>
+
+            <?php endif; ?>
+
+
+            <?php if ($errorMessage): ?>
+
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+
+                    <i class="fa-solid fa-circle-exclamation me-2"></i>
+
+                    <?= htmlspecialchars($errorMessage) ?>
+
+                    <button type="button" class="btn-close" data-bs-dismiss="alert">
+                    </button>
+
+                </div>
+
+            <?php endif; ?>
 
             <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
 
@@ -174,57 +246,151 @@ $pageTitle = "Categories";
                             <tbody>
 
                                 <!-- Example Category -->
-                                <tr>
+                            <tbody>
 
-                                    <td>
-                                        <div class="d-flex px-3 py-1">
+                                <?php if (empty($categories)): ?>
 
-                                            <div class="d-flex flex-column justify-content-center">
+                                    <tr>
 
-                                                <h6 class="mb-0 text-sm">
-                                                    Footwear
-                                                </h6>
+                                        <td colspan="4" class="text-center py-5">
 
-                                            </div>
+                                            <i class="fa-solid fa-folder-open text-secondary fs-3 mb-3"></i>
 
-                                        </div>
-                                    </td>
+                                            <p class="text-sm text-secondary mb-0">
+                                                No categories found.
+                                            </p>
+
+                                        </td>
+
+                                    </tr>
+
+                                <?php else: ?>
+
+                                    <?php foreach ($categories as $category): ?>
+
+                                        <tr>
+
+                                            <!-- CATEGORY -->
+                                            <td>
+
+                                                <div class="d-flex px-3 py-1 align-items-center">
+
+                                                    <!-- CATEGORY IMAGE -->
+
+                                                    <div class="me-3">
+
+                                                        <?php if (!empty($category['image'])): ?>
+
+                                                            <img src="../../public/uploads/categories/<?= htmlspecialchars($category['image']) ?>"
+                                                                alt="<?= htmlspecialchars($category['name']) ?>"
+                                                                class="border-radius-lg" width="50" height="50"
+                                                                style="object-fit: cover;">
+
+                                                        <?php else: ?>
+
+                                                            <div class="bg-gray-100 border-radius-lg d-flex align-items-center justify-content-center"
+                                                                style="width: 50px; height: 50px;">
+
+                                                                <i class="fa-solid fa-image text-secondary"></i>
+
+                                                            </div>
+
+                                                        <?php endif; ?>
+
+                                                    </div>
 
 
-                                    <td>
+                                                    <!-- CATEGORY NAME -->
 
-                                        <p class="text-xs font-weight-bold mb-0">
-                                            140 Products
-                                        </p>
+                                                    <div class="d-flex flex-column justify-content-center">
 
-                                    </td>
+                                                        <h6 class="mb-0 text-sm">
+                                                            <?= htmlspecialchars($category['name']) ?>
+                                                        </h6>
 
+                                                        <p class="text-xs text-secondary mb-0">
+                                                            <?= htmlspecialchars($category['slug']) ?>
+                                                        </p>
 
-                                    <td>
+                                                    </div>
 
-                                        <span class="badge bg-gradient-success">
-                                            Active
-                                        </span>
+                                                </div>
 
-                                    </td>
-
-
-                                    <td class="text-end pe-4">
-
-                                        <!-- Edit -->
-                                        <a href="edit.php?id=1" class="btn btn-link text-secondary p-0 me-3"
-                                            title="Edit Category"> <i class="fa-solid fa-pen"></i> </a>
+                                            </td>
 
 
-                                        <!-- Delete -->
-                                        <button class="btn btn-link text-danger p-0" data-bs-toggle="modal"
-                                            data-bs-target="#deleteCatModal">
-                                            <i class="fa-solid fa-trash"></i>
-                                        </button>
+                                            <!-- PRODUCTS COUNT -->
 
-                                    </td>
+                                            <td>
 
-                                </tr>
+                                                <p class="text-xs font-weight-bold mb-0">
+
+                                                    <?= (int) $category['product_count'] ?>
+
+                                                    <?= ((int) $category['product_count'] === 1)
+                                                        ? 'Product'
+                                                        : 'Products'
+                                                        ?>
+
+                                                </p>
+
+                                            </td>
+
+
+                                            <!-- STATUS -->
+
+                                            <td>
+
+                                                <?php if ((int) $category['status'] === 1): ?>
+
+                                                    <span class="badge bg-gradient-success">
+                                                        Active
+                                                    </span>
+
+                                                <?php else: ?>
+
+                                                    <span class="badge bg-gradient-secondary">
+                                                        Inactive
+                                                    </span>
+
+                                                <?php endif; ?>
+
+                                            </td>
+
+
+                                            <!-- ACTION -->
+
+                                            <td class="text-end pe-4">
+
+                                                <!-- EDIT -->
+
+                                                <a href="edit.php?id=<?= (int) $category['id'] ?>"
+                                                    class="btn btn-link text-secondary p-0 me-3" title="Edit Category">
+
+                                                    <i class="fa-solid fa-pen"></i>
+
+                                                </a>
+
+
+                                                <!-- DELETE -->
+
+                                                <button type="button" class="btn btn-link text-danger p-0"
+                                                    data-bs-toggle="modal" data-bs-target="#deleteCatModal"
+                                                    data-category-id="<?= (int) $category['id'] ?>"
+                                                    data-category-name="<?= htmlspecialchars($category['name']) ?>"
+                                                    title="Delete Category">
+                                                    <i class="fa-solid fa-trash"></i>
+                                                </button>
+
+                                            </td>
+
+                                        </tr>
+
+                                    <?php endforeach; ?>
+
+                                <?php endif; ?>
+
+                            </tbody>
 
                             </tbody>
 
@@ -255,32 +421,33 @@ $pageTitle = "Categories";
             <div class="modal-content text-center p-3">
 
                 <div class="text-danger fs-1 mb-2">
-
                     <i class="fa-solid fa-circle-exclamation"></i>
-
                 </div>
-
 
                 <h6 class="fw-bold">
                     Are you sure?
                 </h6>
 
-
                 <p class="small text-muted mb-3">
-                    Do you want to delete this category?
+                    Do you want to delete
+                    <strong id="deleteCategoryName"></strong>?
                 </p>
-
 
                 <div class="d-flex justify-content-center gap-2">
 
-                    <button class="btn btn-light btn-sm" data-bs-dismiss="modal">
+                    <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">
                         Cancel
                     </button>
 
+                    <form method="POST" action="delete.php" id="deleteCategoryForm">
 
-                    <button class="btn btn-danger btn-sm">
-                        Yes, Delete
-                    </button>
+                        <input type="hidden" name="category_id" id="deleteCategoryId">
+
+                        <button type="submit" class="btn btn-danger btn-sm">
+                            Yes, Delete
+                        </button>
+
+                    </form>
 
                 </div>
 
@@ -293,9 +460,39 @@ $pageTitle = "Categories";
 
 
 
-    <!-- =========================
-     JAVASCRIPT
-========================= -->
+    <script>
+
+        document.addEventListener('DOMContentLoaded', function () {
+
+            const deleteModal = document.getElementById('deleteCatModal');
+
+            const deleteCategoryId =
+                document.getElementById('deleteCategoryId');
+
+            const deleteCategoryName =
+                document.getElementById('deleteCategoryName');
+
+
+            deleteModal.addEventListener('show.bs.modal', function (event) {
+
+                const button = event.relatedTarget;
+
+                const categoryId =
+                    button.getAttribute('data-category-id');
+
+                const categoryName =
+                    button.getAttribute('data-category-name');
+
+
+                deleteCategoryId.value = categoryId;
+
+                deleteCategoryName.textContent = categoryName;
+
+            });
+
+        });
+
+    </script>
 
     <!-- Popper -->
     <script src="../assets/js/core/popper.min.js"></script>

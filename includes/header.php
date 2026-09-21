@@ -1,7 +1,31 @@
 <?php
 require_once __DIR__ . '/../core/Auth.php';
+require_once __DIR__ . '/../core/Category.php';
+require_once __DIR__ . '/../core/Cart.php';
+
 Session::start();
 $isLoggedIn = Auth::check();
+$headerCategories = Category::getActiveCategories();
+$headerCartItems = [];
+$headerCartCount = 0;
+$headerCartTotal = 0;
+
+if ($isLoggedIn && Auth::isCustomer()) {
+
+    $user = Auth::user();
+
+    $headerCartItems = Cart::getCartItems($user['id']);
+
+    foreach ($headerCartItems as $headerCartItem) {
+
+        $headerCartCount += (int) $headerCartItem['quantity'];
+
+        $headerCartTotal +=
+            (float) $headerCartItem['unit_price'] *
+            (int) $headerCartItem['quantity'];
+    }
+}
+
 ?>
 
 <style>
@@ -331,6 +355,13 @@ $isLoggedIn = Auth::check();
             font-size: 12px;
         }
     }
+
+    html {
+        scroll-behavior: smooth;
+    }
+    #newArrival, #dealsOutlet, #trendingProducts {
+    scroll-margin-top: 100px;
+}
 </style>
 
 
@@ -553,7 +584,7 @@ $isLoggedIn = Auth::check();
                             <i class="icon-shopping-cart"></i>
 
                             <span class="cart-count">
-                                2
+                                <?= $headerCartCount ?>
                             </span>
 
                         </div>
@@ -571,99 +602,65 @@ $isLoggedIn = Auth::check();
 
                         <div class="dropdown-cart-products">
 
+                            <?php if (!empty($headerCartItems)): ?>
 
-                            <!-- Product 1 -->
+                                <?php foreach ($headerCartItems as $headerCartItem): ?>
 
-                            <div class="product">
+                                    <div class="product">
 
-                                <div class="product-cart-details">
+                                        <div class="product-cart-details">
 
-                                    <h4 class="product-title">
+                                            <h4 class="product-title">
 
-                                        <a href="product-detail.php">
-                                            Beige knitted elastic runner shoes
+                                                <a href="product-detail.php?id=<?= (int) $headerCartItem['product_id'] ?>">
+                                                    <?= htmlspecialchars($headerCartItem['name']) ?>
+                                                </a>
+
+                                            </h4>
+
+                                            <span class="cart-product-info">
+
+                                                <span class="cart-product-qty">
+                                                    <?= (int) $headerCartItem['quantity'] ?>
+                                                </span>
+
+                                                x $<?= number_format((float) $headerCartItem['unit_price'], 2) ?>
+
+                                            </span>
+
+                                        </div>
+
+
+                                        <figure class="product-image-container">
+
+                                            <a href="product-detail.php?id=<?= (int) $headerCartItem['product_id'] ?>"
+                                                class="product-image">
+
+                                                <img src="uploads/products/<?= htmlspecialchars($headerCartItem['image']) ?>"
+                                                    alt="<?= htmlspecialchars($headerCartItem['name']) ?>">
+
+                                            </a>
+
+                                        </figure>
+
+
+                                        <a href="cart.php" class="btn-remove" title="Remove Product">
+
+                                            <i class="icon-close"></i>
+
                                         </a>
 
-                                    </h4>
+                                    </div>
 
-                                    <span class="cart-product-info">
+                                <?php endforeach; ?>
 
-                                        <span class="cart-product-qty">
-                                            1
-                                        </span>
+                            <?php else: ?>
 
-                                        x $84.00
+                                <p class="text-center p-3 mb-0">
+                                    Your cart is empty.
+                                </p>
 
-                                    </span>
-
-                                </div>
-
-
-                                <figure class="product-image-container">
-
-                                    <a href="product-detail.php" class="product-image">
-
-                                        <img src="assets/images/products/cart/product-1.jpg" alt="product">
-
-                                    </a>
-
-                                </figure>
-
-
-                                <a href="#" class="btn-remove" title="Remove Product">
-
-                                    <i class="icon-close"></i>
-
-                                </a>
-
-                            </div>
-
-
-                            <!-- Product 2 -->
-
-                            <div class="product">
-
-                                <div class="product-cart-details">
-
-                                    <h4 class="product-title">
-
-                                        <a href="product-detail.php">
-                                            Blue utility pinafore denim dress
-                                        </a>
-
-                                    </h4>
-
-                                    <span class="cart-product-info">
-
-                                        <span class="cart-product-qty">
-                                            1
-                                        </span>
-
-                                        x $76.00
-
-                                    </span>
-
-                                </div>
-
-
-                                <figure class="product-image-container">
-
-                                    <a href="product-detail.php" class="product-image">
-
-                                        <img src="assets/images/products/cart/product-2.jpg" alt="product">
-
-                                    </a>
-
-                                </figure>
-
-
-                                <a href="#" class="btn-remove" title="Remove Product">
-
-                                    <i class="icon-close"></i>
-
-                                </a>
-
-                            </div>
+                            <?php endif; ?>
 
                         </div>
 
@@ -677,7 +674,7 @@ $isLoggedIn = Auth::check();
                             </span>
 
                             <span class="cart-total-price">
-                                $160.00
+                                $<?= number_format($headerCartTotal, 2) ?>
                             </span>
 
                         </div>
@@ -743,11 +740,9 @@ $isLoggedIn = Auth::check();
                     <a href="#" class="dropdown-toggle" role="button" data-toggle="dropdown" aria-haspopup="true"
                         aria-expanded="false" data-display="static" title="Browse Categories">
 
-                        <i class="icon-bars"></i>
-
                         Browse Categories
 
-                        <i class="icon-angle-down"></i>
+
 
                     </a>
 
@@ -758,21 +753,32 @@ $isLoggedIn = Auth::check();
 
                             <ul class="menu-vertical sf-arrows">
 
+                                <!-- All Products -->
+
                                 <li class="item-lead">
 
-                                    <a href="products.php">
+                                    <a href="all_products.php">
                                         All Products
                                     </a>
 
                                 </li>
 
-                                <li>
 
-                                    <a href="products.php">
-                                        Categories
-                                    </a>
+                                <!-- Categories -->
 
-                                </li>
+                                <?php foreach ($headerCategories as $headerCategory): ?>
+
+                                    <li>
+
+                                        <a href="products.php?category=<?= (int) $headerCategory['id'] ?>">
+
+                                            <?= htmlspecialchars($headerCategory['name']) ?>
+
+                                        </a>
+
+                                    </li>
+
+                                <?php endforeach; ?>
 
                             </ul>
 
@@ -787,7 +793,7 @@ $isLoggedIn = Auth::check();
 
             <!-- ================= MAIN NAV ================= -->
 
-            <div class="header-center">
+            <div class="">
 
                 <nav class="main-nav">
 
@@ -809,7 +815,7 @@ $isLoggedIn = Auth::check();
 
                         <li>
 
-                            <a href="products.php" class="sf-with-ul">
+                            <a href="#" class="sf-with-ul">
                                 Shop
                             </a>
 
@@ -839,16 +845,12 @@ $isLoggedIn = Auth::check();
                                                     <ul>
 
                                                         <li>
-                                                            <a href="products.php">
+                                                            <a href="all_products.php">
                                                                 All Products
                                                             </a>
                                                         </li>
 
-                                                        <li>
-                                                            <a href="products.php">
-                                                                Products
-                                                            </a>
-                                                        </li>
+
 
                                                     </ul>
 
@@ -982,8 +984,27 @@ $isLoggedIn = Auth::check();
 
                         <li>
 
-                            <a href="product-detail.php">
-                                Product
+                            <a href="orders.php">
+                                My Order
+                            </a>
+
+                        </li>
+                        <li>
+                            <a href="index.php#newArrival">
+                                New Arrivals
+                            </a>
+                        </li>
+                        <li>
+
+                            <a href="index.php#dealsOutlet">
+                                Deals/Outlet
+                            </a>
+
+                        </li>
+                        <li>
+
+                            <a href="index.php#trendingProducts">
+                                Trending Products
                             </a>
 
                         </li>
@@ -992,25 +1013,6 @@ $isLoggedIn = Auth::check();
                     </ul>
 
                 </nav>
-
-            </div>
-
-
-            <!-- ================= CLEARANCE ================= -->
-
-            <div class="header-right">
-
-                <i class="la la-lightbulb-o"></i>
-
-                <p>
-
-                    Clearance
-
-                    <span class="highlight">
-                        &nbsp;Up to 30% Off
-                    </span>
-
-                </p>
 
             </div>
 
@@ -1133,7 +1135,7 @@ $isLoggedIn = Auth::check();
                             <ul>
 
                                 <li>
-                                    <a href="products.php">
+                                    <a href="all_products.php">
                                         All Products
                                     </a>
                                 </li>
@@ -1204,24 +1206,32 @@ $isLoggedIn = Auth::check();
 
                     <ul class="mobile-cats-menu">
 
+                        <!-- All Products -->
 
                         <li>
 
-                            <a class="mobile-cats-lead" href="products.php">
+                            <a class="mobile-cats-lead" href="all_products.php">
                                 All Products
                             </a>
 
                         </li>
 
 
-                        <li>
+                        <!-- Categories -->
 
-                            <a href="products.php">
-                                Categories
-                            </a>
+                        <?php foreach ($headerCategories as $headerCategory): ?>
 
-                        </li>
+                            <li>
 
+                                <a href="products.php?category=<?= (int) $headerCategory['id'] ?>">
+
+                                    <?= htmlspecialchars($headerCategory['name']) ?>
+
+                                </a>
+
+                            </li>
+
+                        <?php endforeach; ?>
 
                     </ul>
 

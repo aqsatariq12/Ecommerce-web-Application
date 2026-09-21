@@ -1,7 +1,334 @@
 <?php
+
 require_once '../core/Middleware.php';
+require_once '../config/database.php';
+require_once '../core/Session.php';
+
 Middleware::admin();
+Session::start();
+
 $pageTitle = "Dashboard";
+
+
+/*
+|--------------------------------------------------------------------------
+| TODAY'S SALES
+|--------------------------------------------------------------------------
+*/
+
+$sql = "SELECT
+            COALESCE(SUM(total_amount), 0) AS total
+        FROM orders
+        WHERE DATE(created_at) = CURDATE()
+        AND order_status != 'cancelled'";
+
+$stmt = $pdo->prepare($sql);
+$stmt->execute();
+
+$todaySales = (float) $stmt->fetch()['total'];
+
+
+/*
+|--------------------------------------------------------------------------
+| TODAY'S ORDERS
+|--------------------------------------------------------------------------
+*/
+
+$sql = "SELECT COUNT(*) AS total
+        FROM orders
+        WHERE DATE(created_at) = CURDATE()";
+
+$stmt = $pdo->prepare($sql);
+$stmt->execute();
+
+$todayOrders = (int) $stmt->fetch()['total'];
+
+
+/*
+|--------------------------------------------------------------------------
+| TOTAL CUSTOMERS
+|--------------------------------------------------------------------------
+*/
+
+$sql = "SELECT COUNT(*) AS total
+        FROM users
+        WHERE role = 'customer'";
+
+$stmt = $pdo->prepare($sql);
+$stmt->execute();
+
+$totalCustomers = (int) $stmt->fetch()['total'];
+
+
+/*
+|--------------------------------------------------------------------------
+| TOTAL PRODUCTS
+|--------------------------------------------------------------------------
+*/
+
+$sql = "SELECT COUNT(*) AS total
+        FROM products";
+
+$stmt = $pdo->prepare($sql);
+$stmt->execute();
+
+$totalProducts = (int) $stmt->fetch()['total'];
+
+
+/*
+|--------------------------------------------------------------------------
+| TOTAL SALES
+|--------------------------------------------------------------------------
+*/
+
+$sql = "SELECT
+            COALESCE(SUM(total_amount), 0) AS total
+        FROM orders
+        WHERE order_status != 'cancelled'";
+
+$stmt = $pdo->prepare($sql);
+$stmt->execute();
+
+$totalSales = (float) $stmt->fetch()['total'];
+
+
+/*
+|--------------------------------------------------------------------------
+| PROCESSING ORDERS
+|--------------------------------------------------------------------------
+*/
+
+$sql = "SELECT COUNT(*) AS total
+        FROM orders
+        WHERE order_status = 'processing'";
+
+$stmt = $pdo->prepare($sql);
+$stmt->execute();
+
+$processingOrders = (int) $stmt->fetch()['total'];
+
+
+/*
+|--------------------------------------------------------------------------
+| DELIVERED ORDERS
+|--------------------------------------------------------------------------
+*/
+
+$sql = "SELECT COUNT(*) AS total
+        FROM orders
+        WHERE order_status = 'delivered'";
+
+$stmt = $pdo->prepare($sql);
+$stmt->execute();
+
+$deliveredOrders = (int) $stmt->fetch()['total'];
+
+
+/*
+|--------------------------------------------------------------------------
+| LOW STOCK PRODUCTS
+|--------------------------------------------------------------------------
+|
+| Products with stock <= 5
+|
+*/
+
+$sql = "SELECT COUNT(*) AS total
+        FROM products
+        WHERE stock <= 5
+        AND status = 1";
+
+$stmt = $pdo->prepare($sql);
+$stmt->execute();
+
+$lowStockProducts = (int) $stmt->fetch()['total'];
+
+
+/*
+|--------------------------------------------------------------------------
+| SALES FOR LAST 7 DAYS
+|--------------------------------------------------------------------------
+*/
+
+$sql = "SELECT
+            DATE(created_at) AS sale_date,
+            COALESCE(SUM(total_amount), 0) AS total_sales
+        FROM orders
+        WHERE created_at >= CURDATE() - INTERVAL 6 DAY
+        AND order_status != 'cancelled'
+        GROUP BY DATE(created_at)
+        ORDER BY sale_date ASC";
+
+$stmt = $pdo->prepare($sql);
+$stmt->execute();
+
+$salesLast7Days = $stmt->fetchAll();
+
+
+/*
+|--------------------------------------------------------------------------
+| PREPARE LAST 7 DAYS CHART DATA
+|--------------------------------------------------------------------------
+*/
+
+$dailyLabels = [];
+$dailySales = [];
+
+for ($i = 6; $i >= 0; $i--) {
+
+    $date = date(
+        'Y-m-d',
+        strtotime("-$i days")
+    );
+
+    $dailyLabels[] = date(
+        'D',
+        strtotime($date)
+    );
+
+    $dailySales[$date] = 0;
+}
+
+foreach ($salesLast7Days as $sale) {
+
+    $date = $sale['sale_date'];
+
+    if (isset($dailySales[$date])) {
+        $dailySales[$date] = (float) $sale['total_sales'];
+    }
+}
+
+$dailySalesValues = array_values($dailySales);
+
+
+/*
+|--------------------------------------------------------------------------
+| MONTHLY SALES - LAST 6 MONTHS
+|--------------------------------------------------------------------------
+*/
+
+$sql = "SELECT
+            YEAR(created_at) AS sale_year,
+            MONTH(created_at) AS sale_month,
+            COALESCE(SUM(total_amount), 0) AS total_sales
+        FROM orders
+        WHERE created_at >= DATE_FORMAT(
+            DATE_SUB(CURDATE(), INTERVAL 5 MONTH),
+            '%Y-%m-01'
+        )
+        AND order_status != 'cancelled'
+        GROUP BY
+            YEAR(created_at),
+            MONTH(created_at)
+        ORDER BY
+            sale_year ASC,
+            sale_month ASC";
+
+$stmt = $pdo->prepare($sql);
+$stmt->execute();
+
+$monthlySalesData = $stmt->fetchAll();
+
+
+/*
+|--------------------------------------------------------------------------
+| PREPARE LAST 6 MONTHS CHART DATA
+|--------------------------------------------------------------------------
+*/
+
+$monthlyLabels = [];
+$monthlySales = [];
+
+for ($i = 5; $i >= 0; $i--) {
+
+    $monthDate = strtotime("-$i months");
+
+    $year = date('Y', $monthDate);
+    $month = date('n', $monthDate);
+
+    $key = $year . '-' . $month;
+
+    $monthlyLabels[] = date(
+        'M',
+        $monthDate
+    );
+
+    $monthlySales[$key] = 0;
+}
+
+foreach ($monthlySalesData as $sale) {
+
+    $key = $sale['sale_year'] . '-' . $sale['sale_month'];
+
+    if (isset($monthlySales[$key])) {
+        $monthlySales[$key] = (float) $sale['total_sales'];
+    }
+}
+
+$monthlySalesValues = array_values($monthlySales);
+
+
+/*
+|--------------------------------------------------------------------------
+| RECENT ORDERS
+|--------------------------------------------------------------------------
+*/
+
+$sql = "SELECT
+            o.id,
+            o.order_number,
+            o.billing_full_name,
+            o.total_amount,
+            o.payment_method,
+            o.payment_status,
+            o.order_status,
+            o.created_at
+        FROM orders o
+        ORDER BY o.id DESC
+        LIMIT 5";
+
+$stmt = $pdo->prepare($sql);
+$stmt->execute();
+
+$recentOrders = $stmt->fetchAll();
+
+
+/*
+|--------------------------------------------------------------------------
+| TOP SELLING PRODUCTS
+|--------------------------------------------------------------------------
+*/
+
+$sql = "SELECT
+            p.name AS product_name,
+            p.image AS product_image,
+            COALESCE(SUM(oi.quantity), 0) AS quantity_sold,
+            COALESCE(SUM(oi.subtotal), 0) AS total_sales
+        FROM order_items oi
+
+        INNER JOIN orders o
+            ON o.id = oi.order_id
+
+        INNER JOIN products p
+            ON p.id = oi.product_id
+
+        WHERE o.order_status != 'cancelled'
+
+        GROUP BY
+            oi.product_id,
+            p.name,
+            p.image
+
+        ORDER BY
+            quantity_sold DESC
+
+        LIMIT 5";
+
+$stmt = $pdo->prepare($sql);
+$stmt->execute();
+
+$topProducts = $stmt->fetchAll();
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -28,864 +355,1003 @@ $pageTitle = "Dashboard";
   <link id="pagestyle" href="assets/css/material-dashboard.css?v=3.2.0" rel="stylesheet" />
 </head>
 
-<body class="g-sidenav-show  bg-gray-100">
-  <?php require_once '../includes/admin-header.php'; ?>
-  <?php require_once '../includes/admin-sidenavbar.php'; ?>
+<body class="g-sidenav-show bg-gray-100">
 
-  <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
-    <!-- Navbar -->
 
-    <div class="container-fluid py-2">
-      <div class="row">
-        <div class="ms-3">
-          <h3 class="mb-0 h4 font-weight-bolder">Dashboard</h3>
-          <p class="mb-4">
-            Check the sales, value and bounce rate by country.
-          </p>
-        </div>
-        <div class="col-xl-3 col-sm-6 mb-xl-0 mb-4">
-          <div class="card">
-            <div class="card-header p-2 ps-3">
-              <div class="d-flex justify-content-between">
-                <div>
-                  <p class="text-sm mb-0 text-capitalize">Today's Money</p>
-                  <h4 class="mb-0">$53k</h4>
+    <!-- Admin Header -->
+    <?php require_once '../includes/admin-header.php'; ?>
+
+
+    <!-- Admin Sidebar -->
+    <?php require_once '../includes/admin-sidenavbar.php'; ?>
+
+
+    <!-- Main Content -->
+    <main
+        class="main-content position-relative max-height-vh-100 h-100 border-radius-lg"
+    >
+
+        <div class="container-fluid py-4">
+
+
+            <!-- ====================================================== -->
+            <!-- HEADER -->
+            <!-- ====================================================== -->
+
+            <div class="row">
+
+                <div class="col-12">
+
+                    <div class="ms-1 mb-4">
+
+                        <h3 class="mb-1 h4 font-weight-bolder">
+                            Dashboard
+                        </h3>
+
+                        <p class="mb-0 text-sm text-secondary">
+                            Overview of your ClothWear store
+                        </p>
+
+                    </div>
+
                 </div>
-                <div class="icon icon-md icon-shape bg-gradient-dark shadow-dark shadow text-center border-radius-lg">
-                  <i class="material-symbols-rounded opacity-10">weekend</i>
-                </div>
-              </div>
+
             </div>
-            <hr class="dark horizontal my-0">
-            <div class="card-footer p-2 ps-3">
-              <p class="mb-0 text-sm"><span class="text-success font-weight-bolder">+55% </span>than last week</p>
-            </div>
-          </div>
-        </div>
-        <div class="col-xl-3 col-sm-6 mb-xl-0 mb-4">
-          <div class="card">
-            <div class="card-header p-2 ps-3">
-              <div class="d-flex justify-content-between">
-                <div>
-                  <p class="text-sm mb-0 text-capitalize">Today's Users</p>
-                  <h4 class="mb-0">2300</h4>
-                </div>
-                <div class="icon icon-md icon-shape bg-gradient-dark shadow-dark shadow text-center border-radius-lg">
-                  <i class="material-symbols-rounded opacity-10">person</i>
-                </div>
-              </div>
-            </div>
-            <hr class="dark horizontal my-0">
-            <div class="card-footer p-2 ps-3">
-              <p class="mb-0 text-sm"><span class="text-success font-weight-bolder">+3% </span>than last month</p>
-            </div>
-          </div>
-        </div>
-        <div class="col-xl-3 col-sm-6 mb-xl-0 mb-4">
-          <div class="card">
-            <div class="card-header p-2 ps-3">
-              <div class="d-flex justify-content-between">
-                <div>
-                  <p class="text-sm mb-0 text-capitalize">Ads Views</p>
-                  <h4 class="mb-0">3,462</h4>
-                </div>
-                <div class="icon icon-md icon-shape bg-gradient-dark shadow-dark shadow text-center border-radius-lg">
-                  <i class="material-symbols-rounded opacity-10">leaderboard</i>
-                </div>
-              </div>
-            </div>
-            <hr class="dark horizontal my-0">
-            <div class="card-footer p-2 ps-3">
-              <p class="mb-0 text-sm"><span class="text-danger font-weight-bolder">-2% </span>than yesterday</p>
-            </div>
-          </div>
-        </div>
-        <div class="col-xl-3 col-sm-6">
-          <div class="card">
-            <div class="card-header p-2 ps-3">
-              <div class="d-flex justify-content-between">
-                <div>
-                  <p class="text-sm mb-0 text-capitalize">Sales</p>
-                  <h4 class="mb-0">$103,430</h4>
-                </div>
-                <div class="icon icon-md icon-shape bg-gradient-dark shadow-dark shadow text-center border-radius-lg">
-                  <i class="material-symbols-rounded opacity-10">weekend</i>
-                </div>
-              </div>
-            </div>
-            <hr class="dark horizontal my-0">
-            <div class="card-footer p-2 ps-3">
-              <p class="mb-0 text-sm"><span class="text-success font-weight-bolder">+5% </span>than yesterday</p>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-lg-4 col-md-6 mt-4 mb-4">
-          <div class="card">
-            <div class="card-body">
-              <h6 class="mb-0 ">Website Views</h6>
-              <p class="text-sm ">Last Campaign Performance</p>
-              <div class="pe-2">
-                <div class="chart">
-                  <canvas id="chart-bars" class="chart-canvas" height="170"></canvas>
-                </div>
-              </div>
-              <hr class="dark horizontal">
-              <div class="d-flex ">
-                <i class="material-symbols-rounded text-sm my-auto me-1">schedule</i>
-                <p class="mb-0 text-sm"> campaign sent 2 days ago </p>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="col-lg-4 col-md-6 mt-4 mb-4">
-          <div class="card ">
-            <div class="card-body">
-              <h6 class="mb-0 "> Daily Sales </h6>
-              <p class="text-sm "> (<span class="font-weight-bolder">+15%</span>) increase in today sales. </p>
-              <div class="pe-2">
-                <div class="chart">
-                  <canvas id="chart-line" class="chart-canvas" height="170"></canvas>
-                </div>
-              </div>
-              <hr class="dark horizontal">
-              <div class="d-flex ">
-                <i class="material-symbols-rounded text-sm my-auto me-1">schedule</i>
-                <p class="mb-0 text-sm"> updated 4 min ago </p>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="col-lg-4 mt-4 mb-3">
-          <div class="card">
-            <div class="card-body">
-              <h6 class="mb-0 ">Completed Tasks</h6>
-              <p class="text-sm ">Last Campaign Performance</p>
-              <div class="pe-2">
-                <div class="chart">
-                  <canvas id="chart-line-tasks" class="chart-canvas" height="170"></canvas>
-                </div>
-              </div>
-              <hr class="dark horizontal">
-              <div class="d-flex ">
-                <i class="material-symbols-rounded text-sm my-auto me-1">schedule</i>
-                <p class="mb-0 text-sm">just updated</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="row mb-4">
-        <div class="col-lg-8 col-md-6 mb-md-0 mb-4">
-          <div class="card">
-            <div class="card-header pb-0">
-              <div class="row">
-                <div class="col-lg-6 col-7">
-                  <h6>Projects</h6>
-                  <p class="text-sm mb-0">
-                    <i class="fa fa-check text-info" aria-hidden="true"></i>
-                    <span class="font-weight-bold ms-1">30 done</span> this month
-                  </p>
-                </div>
-                <div class="col-lg-6 col-5 my-auto text-end">
-                  <div class="dropdown float-lg-end pe-4">
-                    <a class="cursor-pointer" id="dropdownTable" data-bs-toggle="dropdown" aria-expanded="false">
-                      <i class="fa fa-ellipsis-v text-secondary"></i>
-                    </a>
-                    <ul class="dropdown-menu px-2 py-3 ms-sm-n4 ms-n5" aria-labelledby="dropdownTable">
-                      <li><a class="dropdown-item border-radius-md" href="javascript:;">Action</a></li>
-                      <li><a class="dropdown-item border-radius-md" href="javascript:;">Another action</a></li>
-                      <li><a class="dropdown-item border-radius-md" href="javascript:;">Something else here</a></li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="card-body px-0 pb-2">
-              <div class="table-responsive">
-                <table class="table align-items-center mb-0">
-                  <thead>
-                    <tr>
-                      <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Companies</th>
-                      <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Members</th>
-                      <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Budget
-                      </th>
-                      <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
-                        Completion</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>
-                        <div class="d-flex px-2 py-1">
-                          <div>
-                            <img src="assets/img/small-logos/logo-xd.svg" class="avatar avatar-sm me-3" alt="xd">
-                          </div>
-                          <div class="d-flex flex-column justify-content-center">
-                            <h6 class="mb-0 text-sm">Material XD Version</h6>
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <div class="avatar-group mt-2">
-                          <a href="javascript:;" class="avatar avatar-xs rounded-circle" data-bs-toggle="tooltip"
-                            data-bs-placement="bottom" title="Ryan Tompson">
-                            <img src="assets/img/team-1.jpg" alt="team1">
-                          </a>
-                          <a href="javascript:;" class="avatar avatar-xs rounded-circle" data-bs-toggle="tooltip"
-                            data-bs-placement="bottom" title="Romina Hadid">
-                            <img src="assets/img/team-2.jpg" alt="team2">
-                          </a>
-                          <a href="javascript:;" class="avatar avatar-xs rounded-circle" data-bs-toggle="tooltip"
-                            data-bs-placement="bottom" title="Alexander Smith">
-                            <img src="assets/img/team-3.jpg" alt="team3">
-                          </a>
-                          <a href="javascript:;" class="avatar avatar-xs rounded-circle" data-bs-toggle="tooltip"
-                            data-bs-placement="bottom" title="Jessica Doe">
-                            <img src="assets/img/team-4.jpg" alt="team4">
-                          </a>
-                        </div>
-                      </td>
-                      <td class="align-middle text-center text-sm">
-                        <span class="text-xs font-weight-bold"> $14,000 </span>
-                      </td>
-                      <td class="align-middle">
-                        <div class="progress-wrapper w-75 mx-auto">
-                          <div class="progress-info">
-                            <div class="progress-percentage">
-                              <span class="text-xs font-weight-bold">60%</span>
+
+
+
+            <!-- ====================================================== -->
+            <!-- MAIN STATISTICS -->
+            <!-- ====================================================== -->
+
+            <div class="row">
+
+
+                <!-- Today's Sales -->
+                <div class="col-xl-3 col-sm-6 mb-4">
+
+                    <div class="card dashboard-card">
+
+                        <div class="card-header p-2 ps-3">
+
+                            <div class="d-flex justify-content-between">
+
+                                <div>
+
+                                    <p class="text-sm mb-1 text-capitalize">
+                                        Today's Sales
+                                    </p>
+
+                                    <h4 class="mb-0">
+                                        PKR <?= number_format(
+                                            $todaySales,
+                                            2
+                                        ) ?>
+                                    </h4>
+
+                                </div>
+
+
+                                <div
+                                    class="icon icon-md icon-shape bg-gradient-dark shadow-dark shadow text-center border-radius-lg"
+                                >
+
+                                    <i class="material-symbols-rounded opacity-10">
+                                        payments
+                                    </i>
+
+                                </div>
+
                             </div>
-                          </div>
-                          <div class="progress">
-                            <div class="progress-bar bg-gradient-info w-60" role="progressbar" aria-valuenow="60"
-                              aria-valuemin="0" aria-valuemax="100"></div>
-                          </div>
+
                         </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <div class="d-flex px-2 py-1">
-                          <div>
-                            <img src="assets/img/small-logos/logo-atlassian.svg" class="avatar avatar-sm me-3"
-                              alt="atlassian">
-                          </div>
-                          <div class="d-flex flex-column justify-content-center">
-                            <h6 class="mb-0 text-sm">Add Progress Track</h6>
-                          </div>
+
+
+                        <hr class="dark horizontal my-0">
+
+
+                        <div class="card-footer p-2 ps-3">
+
+                            <p class="mb-0 text-sm text-secondary">
+                                Sales from today
+                            </p>
+
                         </div>
-                      </td>
-                      <td>
-                        <div class="avatar-group mt-2">
-                          <a href="javascript:;" class="avatar avatar-xs rounded-circle" data-bs-toggle="tooltip"
-                            data-bs-placement="bottom" title="Romina Hadid">
-                            <img src="assets/img/team-2.jpg" alt="team5">
-                          </a>
-                          <a href="javascript:;" class="avatar avatar-xs rounded-circle" data-bs-toggle="tooltip"
-                            data-bs-placement="bottom" title="Jessica Doe">
-                            <img src="assets/img/team-4.jpg" alt="team6">
-                          </a>
-                        </div>
-                      </td>
-                      <td class="align-middle text-center text-sm">
-                        <span class="text-xs font-weight-bold"> $3,000 </span>
-                      </td>
-                      <td class="align-middle">
-                        <div class="progress-wrapper w-75 mx-auto">
-                          <div class="progress-info">
-                            <div class="progress-percentage">
-                              <span class="text-xs font-weight-bold">10%</span>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- Today's Orders -->
+                <div class="col-xl-3 col-sm-6 mb-4">
+
+                    <div class="card dashboard-card">
+
+                        <div class="card-header p-2 ps-3">
+
+                            <div class="d-flex justify-content-between">
+
+                                <div>
+
+                                    <p class="text-sm mb-1 text-capitalize">
+                                        Today's Orders
+                                    </p>
+
+                                    <h4 class="mb-0">
+                                        <?= number_format($todayOrders) ?>
+                                    </h4>
+
+                                </div>
+
+
+                                <div
+                                    class="icon icon-md icon-shape bg-gradient-info shadow-dark shadow text-center border-radius-lg"
+                                >
+
+                                    <i class="material-symbols-rounded opacity-10">
+                                        shopping_cart
+                                    </i>
+
+                                </div>
+
                             </div>
-                          </div>
-                          <div class="progress">
-                            <div class="progress-bar bg-gradient-info w-10" role="progressbar" aria-valuenow="10"
-                              aria-valuemin="0" aria-valuemax="100"></div>
-                          </div>
+
                         </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <div class="d-flex px-2 py-1">
-                          <div>
-                            <img src="assets/img/small-logos/logo-slack.svg" class="avatar avatar-sm me-3" alt="team7">
-                          </div>
-                          <div class="d-flex flex-column justify-content-center">
-                            <h6 class="mb-0 text-sm">Fix Platform Errors</h6>
-                          </div>
+
+
+                        <hr class="dark horizontal my-0">
+
+
+                        <div class="card-footer p-2 ps-3">
+
+                            <p class="mb-0 text-sm text-secondary">
+                                Orders placed today
+                            </p>
+
                         </div>
-                      </td>
-                      <td>
-                        <div class="avatar-group mt-2">
-                          <a href="javascript:;" class="avatar avatar-xs rounded-circle" data-bs-toggle="tooltip"
-                            data-bs-placement="bottom" title="Romina Hadid">
-                            <img src="assets/img/team-3.jpg" alt="team8">
-                          </a>
-                          <a href="javascript:;" class="avatar avatar-xs rounded-circle" data-bs-toggle="tooltip"
-                            data-bs-placement="bottom" title="Jessica Doe">
-                            <img src="assets/img/team-1.jpg" alt="team9">
-                          </a>
-                        </div>
-                      </td>
-                      <td class="align-middle text-center text-sm">
-                        <span class="text-xs font-weight-bold"> Not set </span>
-                      </td>
-                      <td class="align-middle">
-                        <div class="progress-wrapper w-75 mx-auto">
-                          <div class="progress-info">
-                            <div class="progress-percentage">
-                              <span class="text-xs font-weight-bold">100%</span>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- Customers -->
+                <div class="col-xl-3 col-sm-6 mb-4">
+
+                    <div class="card dashboard-card">
+
+                        <div class="card-header p-2 ps-3">
+
+                            <div class="d-flex justify-content-between">
+
+                                <div>
+
+                                    <p class="text-sm mb-1 text-capitalize">
+                                        Total Customers
+                                    </p>
+
+                                    <h4 class="mb-0">
+                                        <?= number_format($totalCustomers) ?>
+                                    </h4>
+
+                                </div>
+
+
+                                <div
+                                    class="icon icon-md icon-shape bg-gradient-success shadow-dark shadow text-center border-radius-lg"
+                                >
+
+                                    <i class="material-symbols-rounded opacity-10">
+                                        person
+                                    </i>
+
+                                </div>
+
                             </div>
-                          </div>
-                          <div class="progress">
-                            <div class="progress-bar bg-gradient-success w-100" role="progressbar" aria-valuenow="100"
-                              aria-valuemin="0" aria-valuemax="100"></div>
-                          </div>
+
                         </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <div class="d-flex px-2 py-1">
-                          <div>
-                            <img src="assets/img/small-logos/logo-spotify.svg" class="avatar avatar-sm me-3"
-                              alt="spotify">
-                          </div>
-                          <div class="d-flex flex-column justify-content-center">
-                            <h6 class="mb-0 text-sm">Launch our Mobile App</h6>
-                          </div>
+
+
+                        <hr class="dark horizontal my-0">
+
+
+                        <div class="card-footer p-2 ps-3">
+
+                            <p class="mb-0 text-sm text-secondary">
+                                Registered customers
+                            </p>
+
                         </div>
-                      </td>
-                      <td>
-                        <div class="avatar-group mt-2">
-                          <a href="javascript:;" class="avatar avatar-xs rounded-circle" data-bs-toggle="tooltip"
-                            data-bs-placement="bottom" title="Ryan Tompson">
-                            <img src="assets/img/team-4.jpg" alt="user1">
-                          </a>
-                          <a href="javascript:;" class="avatar avatar-xs rounded-circle" data-bs-toggle="tooltip"
-                            data-bs-placement="bottom" title="Romina Hadid">
-                            <img src="assets/img/team-3.jpg" alt="user2">
-                          </a>
-                          <a href="javascript:;" class="avatar avatar-xs rounded-circle" data-bs-toggle="tooltip"
-                            data-bs-placement="bottom" title="Alexander Smith">
-                            <img src="assets/img/team-4.jpg" alt="user3">
-                          </a>
-                          <a href="javascript:;" class="avatar avatar-xs rounded-circle" data-bs-toggle="tooltip"
-                            data-bs-placement="bottom" title="Jessica Doe">
-                            <img src="assets/img/team-1.jpg" alt="user4">
-                          </a>
-                        </div>
-                      </td>
-                      <td class="align-middle text-center text-sm">
-                        <span class="text-xs font-weight-bold"> $20,500 </span>
-                      </td>
-                      <td class="align-middle">
-                        <div class="progress-wrapper w-75 mx-auto">
-                          <div class="progress-info">
-                            <div class="progress-percentage">
-                              <span class="text-xs font-weight-bold">100%</span>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- Products -->
+                <div class="col-xl-3 col-sm-6 mb-4">
+
+                    <div class="card dashboard-card">
+
+                        <div class="card-header p-2 ps-3">
+
+                            <div class="d-flex justify-content-between">
+
+                                <div>
+
+                                    <p class="text-sm mb-1 text-capitalize">
+                                        Total Products
+                                    </p>
+
+                                    <h4 class="mb-0">
+                                        <?= number_format($totalProducts) ?>
+                                    </h4>
+
+                                </div>
+
+
+                                <div
+                                    class="icon icon-md icon-shape bg-gradient-warning shadow-dark shadow text-center border-radius-lg"
+                                >
+
+                                    <i class="material-symbols-rounded opacity-10">
+                                        inventory_2
+                                    </i>
+
+                                </div>
+
                             </div>
-                          </div>
-                          <div class="progress">
-                            <div class="progress-bar bg-gradient-success w-100" role="progressbar" aria-valuenow="100"
-                              aria-valuemin="0" aria-valuemax="100"></div>
-                          </div>
+
                         </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <div class="d-flex px-2 py-1">
-                          <div>
-                            <img src="assets/img/small-logos/logo-jira.svg" class="avatar avatar-sm me-3" alt="jira">
-                          </div>
-                          <div class="d-flex flex-column justify-content-center">
-                            <h6 class="mb-0 text-sm">Add the New Pricing Page</h6>
-                          </div>
+
+
+                        <hr class="dark horizontal my-0">
+
+
+                        <div class="card-footer p-2 ps-3">
+
+                            <p class="mb-0 text-sm text-secondary">
+                                Products in catalog
+                            </p>
+
                         </div>
-                      </td>
-                      <td>
-                        <div class="avatar-group mt-2">
-                          <a href="javascript:;" class="avatar avatar-xs rounded-circle" data-bs-toggle="tooltip"
-                            data-bs-placement="bottom" title="Ryan Tompson">
-                            <img src="assets/img/team-4.jpg" alt="user5">
-                          </a>
-                        </div>
-                      </td>
-                      <td class="align-middle text-center text-sm">
-                        <span class="text-xs font-weight-bold"> $500 </span>
-                      </td>
-                      <td class="align-middle">
-                        <div class="progress-wrapper w-75 mx-auto">
-                          <div class="progress-info">
-                            <div class="progress-percentage">
-                              <span class="text-xs font-weight-bold">25%</span>
-                            </div>
-                          </div>
-                          <div class="progress">
-                            <div class="progress-bar bg-gradient-info w-25" role="progressbar" aria-valuenow="25"
-                              aria-valuemin="0" aria-valuemax="25"></div>
-                          </div>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <div class="d-flex px-2 py-1">
-                          <div>
-                            <img src="assets/img/small-logos/logo-invision.svg" class="avatar avatar-sm me-3"
-                              alt="invision">
-                          </div>
-                          <div class="d-flex flex-column justify-content-center">
-                            <h6 class="mb-0 text-sm">Redesign New Online Shop</h6>
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <div class="avatar-group mt-2">
-                          <a href="javascript:;" class="avatar avatar-xs rounded-circle" data-bs-toggle="tooltip"
-                            data-bs-placement="bottom" title="Ryan Tompson">
-                            <img src="assets/img/team-1.jpg" alt="user6">
-                          </a>
-                          <a href="javascript:;" class="avatar avatar-xs rounded-circle" data-bs-toggle="tooltip"
-                            data-bs-placement="bottom" title="Jessica Doe">
-                            <img src="assets/img/team-4.jpg" alt="user7">
-                          </a>
-                        </div>
-                      </td>
-                      <td class="align-middle text-center text-sm">
-                        <span class="text-xs font-weight-bold"> $2,000 </span>
-                      </td>
-                      <td class="align-middle">
-                        <div class="progress-wrapper w-75 mx-auto">
-                          <div class="progress-info">
-                            <div class="progress-percentage">
-                              <span class="text-xs font-weight-bold">40%</span>
-                            </div>
-                          </div>
-                          <div class="progress">
-                            <div class="progress-bar bg-gradient-info w-40" role="progressbar" aria-valuenow="40"
-                              aria-valuemin="0" aria-valuemax="40"></div>
-                          </div>
-                        </div>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
+
+                    </div>
+
+                </div>
+
             </div>
-          </div>
-        </div>
-        <div class="col-lg-4 col-md-6">
-          <div class="card h-100">
-            <div class="card-header pb-0">
-              <h6>Orders overview</h6>
-              <p class="text-sm">
-                <i class="fa fa-arrow-up text-success" aria-hidden="true"></i>
-                <span class="font-weight-bold">24%</span> this month
-              </p>
+
+
+
+            <!-- ====================================================== -->
+            <!-- SECONDARY STATISTICS -->
+            <!-- ====================================================== -->
+
+            <div class="row">
+
+
+                <!-- Total Sales -->
+                <div class="col-xl-3 col-sm-6 mb-4">
+
+                    <div class="card">
+
+                        <div class="card-body p-3">
+
+                            <p class="text-sm mb-1 text-uppercase font-weight-bold">
+                                Total Sales
+                            </p>
+
+                            <h5 class="font-weight-bolder mb-0">
+                                PKR <?= number_format(
+                                    $totalSales,
+                                    2
+                                ) ?>
+                            </h5>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- Processing -->
+                <div class="col-xl-3 col-sm-6 mb-4">
+
+                    <div class="card">
+
+                        <div class="card-body p-3">
+
+                            <p class="text-sm mb-1 text-uppercase font-weight-bold">
+                                Processing Orders
+                            </p>
+
+                            <h5 class="font-weight-bolder mb-0">
+                                <?= number_format($processingOrders) ?>
+                            </h5>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- Delivered -->
+                <div class="col-xl-3 col-sm-6 mb-4">
+
+                    <div class="card">
+
+                        <div class="card-body p-3">
+
+                            <p class="text-sm mb-1 text-uppercase font-weight-bold">
+                                Delivered Orders
+                            </p>
+
+                            <h5 class="font-weight-bolder mb-0">
+                                <?= number_format($deliveredOrders) ?>
+                            </h5>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- Low Stock -->
+                <div class="col-xl-3 col-sm-6 mb-4">
+
+                    <div class="card">
+
+                        <div class="card-body p-3">
+
+                            <p class="text-sm mb-1 text-uppercase font-weight-bold">
+                                Low Stock
+                            </p>
+
+                            <h5 class="font-weight-bolder mb-0">
+
+                                <?= number_format($lowStockProducts) ?>
+
+                                <?php if ($lowStockProducts > 0): ?>
+
+                                    <span class="text-xs text-warning">
+                                        products
+                                    </span>
+
+                                <?php endif; ?>
+
+                            </h5>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
             </div>
-            <div class="card-body p-3">
-              <div class="timeline timeline-one-side">
-                <div class="timeline-block mb-3">
-                  <span class="timeline-step">
-                    <i class="material-symbols-rounded text-success text-gradient">notifications</i>
-                  </span>
-                  <div class="timeline-content">
-                    <h6 class="text-dark text-sm font-weight-bold mb-0">$2400, Design changes</h6>
-                    <p class="text-secondary font-weight-bold text-xs mt-1 mb-0">22 DEC 7:20 PM</p>
-                  </div>
+
+
+
+            <!-- ====================================================== -->
+            <!-- CHARTS -->
+            <!-- ====================================================== -->
+
+            <div class="row">
+
+
+                <!-- Last 7 Days -->
+                <div class="col-lg-6 mb-4">
+
+                    <div class="card">
+
+                        <div class="card-body">
+
+                            <h6 class="mb-0">
+                                Sales - Last 7 Days
+                            </h6>
+
+                            <p class="text-sm text-secondary">
+                                Daily sales performance
+                            </p>
+
+
+                            <div class="chart-container">
+
+                                <canvas
+                                    id="dailySalesChart"
+                                    class="chart-canvas"
+                                ></canvas>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
                 </div>
-                <div class="timeline-block mb-3">
-                  <span class="timeline-step">
-                    <i class="material-symbols-rounded text-danger text-gradient">code</i>
-                  </span>
-                  <div class="timeline-content">
-                    <h6 class="text-dark text-sm font-weight-bold mb-0">New order #1832412</h6>
-                    <p class="text-secondary font-weight-bold text-xs mt-1 mb-0">21 DEC 11 PM</p>
-                  </div>
+
+
+
+                <!-- Last 6 Months -->
+                <div class="col-lg-6 mb-4">
+
+                    <div class="card">
+
+                        <div class="card-body">
+
+                            <h6 class="mb-0">
+                                Sales - Last 6 Months
+                            </h6>
+
+                            <p class="text-sm text-secondary">
+                                Monthly sales performance
+                            </p>
+
+
+                            <div class="chart-container">
+
+                                <canvas
+                                    id="monthlySalesChart"
+                                    class="chart-canvas"
+                                ></canvas>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
                 </div>
-                <div class="timeline-block mb-3">
-                  <span class="timeline-step">
-                    <i class="material-symbols-rounded text-info text-gradient">shopping_cart</i>
-                  </span>
-                  <div class="timeline-content">
-                    <h6 class="text-dark text-sm font-weight-bold mb-0">Server payments for April</h6>
-                    <p class="text-secondary font-weight-bold text-xs mt-1 mb-0">21 DEC 9:34 PM</p>
-                  </div>
-                </div>
-                <div class="timeline-block mb-3">
-                  <span class="timeline-step">
-                    <i class="material-symbols-rounded text-warning text-gradient">credit_card</i>
-                  </span>
-                  <div class="timeline-content">
-                    <h6 class="text-dark text-sm font-weight-bold mb-0">New card added for order #4395133</h6>
-                    <p class="text-secondary font-weight-bold text-xs mt-1 mb-0">20 DEC 2:20 AM</p>
-                  </div>
-                </div>
-                <div class="timeline-block mb-3">
-                  <span class="timeline-step">
-                    <i class="material-symbols-rounded text-primary text-gradient">key</i>
-                  </span>
-                  <div class="timeline-content">
-                    <h6 class="text-dark text-sm font-weight-bold mb-0">Unlock packages for development</h6>
-                    <p class="text-secondary font-weight-bold text-xs mt-1 mb-0">18 DEC 4:54 AM</p>
-                  </div>
-                </div>
-                <div class="timeline-block">
-                  <span class="timeline-step">
-                    <i class="material-symbols-rounded text-dark text-gradient">payments</i>
-                  </span>
-                  <div class="timeline-content">
-                    <h6 class="text-dark text-sm font-weight-bold mb-0">New order #9583120</h6>
-                    <p class="text-secondary font-weight-bold text-xs mt-1 mb-0">17 DEC</p>
-                  </div>
-                </div>
-              </div>
+
             </div>
-          </div>
-        </div>
-      </div>
-      <?php require_once '../includes/admin-footer.php'; ?>
-    </div>
-  </main>
-  <div class="fixed-plugin">
-    <a class="fixed-plugin-button text-dark position-fixed px-3 py-2">
-      <i class="material-symbols-rounded py-2">settings</i>
-    </a>
-    <div class="card shadow-lg">
-      <div class="card-header pb-0 pt-3">
-        <div class="float-start">
-          <h5 class="mt-3 mb-0">Material UI Configurator</h5>
-          <p>See our dashboard options.</p>
-        </div>
-        <div class="float-end mt-4">
-          <button class="btn btn-link text-dark p-0 fixed-plugin-close-button">
-            <i class="material-symbols-rounded">clear</i>
-          </button>
-        </div>
-        <!-- End Toggle Button -->
-      </div>
-      <hr class="horizontal dark my-1">
-      <div class="card-body pt-sm-3 pt-0">
-        <!-- Sidebar Backgrounds -->
-        <div>
-          <h6 class="mb-0">Sidebar Colors</h6>
-        </div>
-        <a href="javascript:void(0)" class="switch-trigger background-color">
-          <div class="badge-colors my-2 text-start">
-            <span class="badge filter bg-gradient-primary" data-color="primary" onclick="sidebarColor(this)"></span>
-            <span class="badge filter bg-gradient-dark active" data-color="dark" onclick="sidebarColor(this)"></span>
-            <span class="badge filter bg-gradient-info" data-color="info" onclick="sidebarColor(this)"></span>
-            <span class="badge filter bg-gradient-success" data-color="success" onclick="sidebarColor(this)"></span>
-            <span class="badge filter bg-gradient-warning" data-color="warning" onclick="sidebarColor(this)"></span>
-            <span class="badge filter bg-gradient-danger" data-color="danger" onclick="sidebarColor(this)"></span>
-          </div>
-        </a>
-        <!-- Sidenav Type -->
-        <div class="mt-3">
-          <h6 class="mb-0">Sidenav Type</h6>
-          <p class="text-sm">Choose between different sidenav types.</p>
-        </div>
-        <div class="d-flex">
-          <button class="btn bg-gradient-dark px-3 mb-2" data-class="bg-gradient-dark"
-            onclick="sidebarType(this)">Dark</button>
-          <button class="btn bg-gradient-dark px-3 mb-2 ms-2" data-class="bg-transparent"
-            onclick="sidebarType(this)">Transparent</button>
-          <button class="btn bg-gradient-dark px-3 mb-2  active ms-2" data-class="bg-white"
-            onclick="sidebarType(this)">White</button>
-        </div>
-        <p class="text-sm d-xl-none d-block mt-2">You can change the sidenav type just on desktop view.</p>
-        <!-- Navbar Fixed -->
-        <div class="mt-3 d-flex">
-          <h6 class="mb-0">Navbar Fixed</h6>
-          <div class="form-check form-switch ps-0 ms-auto my-auto">
-            <input class="form-check-input mt-1 ms-auto" type="checkbox" id="navbarFixed" onclick="navbarFixed(this)">
-          </div>
-        </div>
-        <hr class="horizontal dark my-3">
-        <div class="mt-2 d-flex">
-          <h6 class="mb-0">Light / Dark</h6>
-          <div class="form-check form-switch ps-0 ms-auto my-auto">
-            <input class="form-check-input mt-1 ms-auto" type="checkbox" id="dark-version" onclick="darkMode(this)">
-          </div>
-        </div>
-        <hr class="horizontal dark my-sm-4">
-        <a class="btn bg-gradient-info w-100" href="https://www.creative-tim.com/product/material-dashboard-pro">Free
-          Download</a>
-        <a class="btn btn-outline-dark w-100"
-          href="https://www.creative-tim.com/learning-lab/bootstrap/overview/material-dashboard">View documentation</a>
-        <div class="w-100 text-center">
-          <a class="github-button" href="https://github.com/creativetimofficial/material-dashboard"
-            data-icon="octicon-star" data-size="large" data-show-count="true"
-            aria-label="Star creativetimofficial/material-dashboard on GitHub">Star</a>
-          <h6 class="mt-3">Thank you for sharing!</h6>
-          <a href="https://twitter.com/intent/tweet?text=Check%20Material%20UI%20Dashboard%20made%20by%20%40CreativeTim%20%23webdesign%20%23dashboard%20%23bootstrap5&amp;url=https%3A%2F%2Fwww.creative-tim.com%2Fproduct%2Fsoft-ui-dashboard"
-            class="btn btn-dark mb-0 me-2" target="_blank">
-            <i class="fab fa-twitter me-1" aria-hidden="true"></i> Tweet
-          </a>
-          <a href="https://www.facebook.com/sharer/sharer.php?u=https://www.creative-tim.com/product/material-dashboard"
-            class="btn btn-dark mb-0 me-2" target="_blank">
-            <i class="fab fa-facebook-square me-1" aria-hidden="true"></i> Share
-          </a>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!--   Core JS Files   -->
-  <script src="assets/js/core/popper.min.js"></script>
-  <script src="assets/js/core/bootstrap.min.js"></script>
-  <script src="assets/js/plugins/perfect-scrollbar.min.js"></script>
-  <script src="assets/js/plugins/smooth-scrollbar.min.js"></script>
-  <script src="assets/js/plugins/chartjs.min.js"></script>
-  <script>
-    var ctx = document.getElementById("chart-bars").getContext("2d");
-
-    new Chart(ctx, {
-      type: "bar",
-      data: {
-        labels: ["M", "T", "W", "T", "F", "S", "S"],
-        datasets: [{
-          label: "Views",
-          tension: 0.4,
-          borderWidth: 0,
-          borderRadius: 4,
-          borderSkipped: false,
-          backgroundColor: "#43A047",
-          data: [50, 45, 22, 28, 50, 60, 76],
-          barThickness: 'flex'
-        },],
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            display: false,
-          }
-        },
-        interaction: {
-          intersect: false,
-          mode: 'index',
-        },
-        scales: {
-          y: {
-            grid: {
-              drawBorder: false,
-              display: true,
-              drawOnChartArea: true,
-              drawTicks: false,
-              borderDash: [5, 5],
-              color: '#e5e5e5'
-            },
-            ticks: {
-              suggestedMin: 0,
-              suggestedMax: 500,
-              beginAtZero: true,
-              padding: 10,
-              font: {
-                size: 14,
-                lineHeight: 2
-              },
-              color: "#737373"
-            },
-          },
-          x: {
-            grid: {
-              drawBorder: false,
-              display: false,
-              drawOnChartArea: false,
-              drawTicks: false,
-              borderDash: [5, 5]
-            },
-            ticks: {
-              display: true,
-              color: '#737373',
-              padding: 10,
-              font: {
-                size: 14,
-                lineHeight: 2
-              },
-            }
-          },
-        },
-      },
-    });
 
 
-    var ctx2 = document.getElementById("chart-line").getContext("2d");
 
-    new Chart(ctx2, {
-      type: "line",
-      data: {
-        labels: ["J", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D"],
-        datasets: [{
-          label: "Sales",
-          tension: 0,
-          borderWidth: 2,
-          pointRadius: 3,
-          pointBackgroundColor: "#43A047",
-          pointBorderColor: "transparent",
-          borderColor: "#43A047",
-          backgroundColor: "transparent",
-          fill: true,
-          data: [120, 230, 130, 440, 250, 360, 270, 180, 90, 300, 310, 220],
-          maxBarThickness: 6
+            <!-- ====================================================== -->
+            <!-- RECENT ORDERS + TOP PRODUCTS -->
+            <!-- ====================================================== -->
 
-        }],
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            display: false,
-          },
-          tooltip: {
-            callbacks: {
-              title: function (context) {
-                const fullMonths = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-                return fullMonths[context[0].dataIndex];
-              }
-            }
-          }
-        },
-        interaction: {
-          intersect: false,
-          mode: 'index',
-        },
-        scales: {
-          y: {
-            grid: {
-              drawBorder: false,
-              display: true,
-              drawOnChartArea: true,
-              drawTicks: false,
-              borderDash: [4, 4],
-              color: '#e5e5e5'
-            },
-            ticks: {
-              display: true,
-              color: '#737373',
-              padding: 10,
-              font: {
-                size: 12,
-                lineHeight: 2
-              },
-            }
-          },
-          x: {
-            grid: {
-              drawBorder: false,
-              display: false,
-              drawOnChartArea: false,
-              drawTicks: false,
-              borderDash: [5, 5]
-            },
-            ticks: {
-              display: true,
-              color: '#737373',
-              padding: 10,
-              font: {
-                size: 12,
-                lineHeight: 2
-              },
-            }
-          },
-        },
-      },
-    });
+            <div class="row mb-4">
 
-    var ctx3 = document.getElementById("chart-line-tasks").getContext("2d");
 
-    new Chart(ctx3, {
-      type: "line",
-      data: {
-        labels: ["Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
-        datasets: [{
-          label: "Tasks",
-          tension: 0,
-          borderWidth: 2,
-          pointRadius: 3,
-          pointBackgroundColor: "#43A047",
-          pointBorderColor: "transparent",
-          borderColor: "#43A047",
-          backgroundColor: "transparent",
-          fill: true,
-          data: [50, 40, 300, 220, 500, 250, 400, 230, 500],
-          maxBarThickness: 6
+                <!-- Recent Orders -->
+                <div class="col-lg-7 mb-4 mb-lg-0">
 
-        }],
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            display: false,
-          }
-        },
-        interaction: {
-          intersect: false,
-          mode: 'index',
-        },
-        scales: {
-          y: {
-            grid: {
-              drawBorder: false,
-              display: true,
-              drawOnChartArea: true,
-              drawTicks: false,
-              borderDash: [4, 4],
-              color: '#e5e5e5'
-            },
-            ticks: {
-              display: true,
-              padding: 10,
-              color: '#737373',
-              font: {
-                size: 14,
-                lineHeight: 2
-              },
-            }
-          },
-          x: {
-            grid: {
-              drawBorder: false,
-              display: false,
-              drawOnChartArea: false,
-              drawTicks: false,
-              borderDash: [4, 4]
-            },
-            ticks: {
-              display: true,
-              color: '#737373',
-              padding: 10,
-              font: {
-                size: 14,
-                lineHeight: 2
-              },
-            }
-          },
-        },
-      },
-    });
-  </script>
-  <script>
-    var win = navigator.platform.indexOf('Win') > -1;
-    if (win && document.querySelector('#sidenav-scrollbar')) {
-      var options = {
-        damping: '0.5'
-      }
-      Scrollbar.init(document.querySelector('#sidenav-scrollbar'), options);
-    }
-  </script>
-  <!-- Github buttons -->
-  <script async defer src="https://buttons.github.io/buttons.js"></script>
-  <!-- Control Center for Material Dashboard: parallax effects, scripts for the example pages etc -->
-  <script src="assets/js/material-dashboard.min.js?v=3.2.0"></script>
+                    <div class="card h-100">
+
+                        <div class="card-header pb-0">
+
+                            <div class="d-flex justify-content-between align-items-center">
+
+                                <div>
+
+                                    <h6 class="mb-1">
+                                        Recent Orders
+                                    </h6>
+
+                                    <p class="text-sm mb-0 text-secondary">
+                                        Latest customer orders
+                                    </p>
+
+                                </div>
+
+
+                                <a
+                                    href="orders/index.php"
+                                    class="btn btn-sm bg-gradient-dark mb-0"
+                                >
+                                    View All
+                                </a>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="card-body px-0 pb-2">
+
+                            <div class="table-responsive">
+
+                                <table class="table align-items-center mb-0 dashboard-table">
+
+                                    <thead>
+
+                                        <tr>
+
+                                            <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                                Order
+                                            </th>
+
+                                            <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                                Customer
+                                            </th>
+
+                                            <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                                Total
+                                            </th>
+
+                                            <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                                Status
+                                            </th>
+
+                                        </tr>
+
+                                    </thead>
+
+
+                                    <tbody>
+
+                                        <?php if (empty($recentOrders)): ?>
+
+                                            <tr>
+
+                                                <td
+                                                    colspan="4"
+                                                    class="text-center py-4"
+                                                >
+
+                                                    <p class="text-sm text-secondary mb-0">
+                                                        No orders yet.
+                                                    </p>
+
+                                                </td>
+
+                                            </tr>
+
+                                        <?php else: ?>
+
+                                            <?php foreach ($recentOrders as $order): ?>
+
+                                                <tr>
+
+                                                    <td>
+
+                                                        <div class="px-3">
+
+                                                            <a
+                                                                href="orders/detail.php?id=<?= (int) $order['id'] ?>"
+                                                                class="text-sm font-weight-bold"
+                                                            >
+                                                                #<?= htmlspecialchars(
+                                                                    $order['order_number']
+                                                                ) ?>
+                                                            </a>
+
+                                                            <p class="text-xs text-secondary mb-0">
+
+                                                                <?= date(
+                                                                    'd M Y',
+                                                                    strtotime($order['created_at'])
+                                                                ) ?>
+
+                                                            </p>
+
+                                                        </div>
+
+                                                    </td>
+
+
+                                                    <td>
+
+                                                        <span class="text-sm">
+
+                                                            <?= htmlspecialchars(
+                                                                $order['billing_full_name']
+                                                            ) ?>
+
+                                                        </span>
+
+                                                    </td>
+
+
+                                                    <td>
+
+                                                        <span class="text-sm font-weight-bold">
+
+                                                            PKR <?= number_format(
+                                                                (float) $order['total_amount'],
+                                                                2
+                                                            ) ?>
+
+                                                        </span>
+
+                                                    </td>
+
+
+                                                    <td>
+
+                                                        <?php if ($order['order_status'] === 'delivered'): ?>
+
+                                                            <span class="badge badge-sm bg-gradient-success">
+                                                                Delivered
+                                                            </span>
+
+                                                        <?php elseif ($order['order_status'] === 'shipped'): ?>
+
+                                                            <span class="badge badge-sm bg-gradient-warning">
+                                                                Shipped
+                                                            </span>
+
+                                                        <?php elseif ($order['order_status'] === 'cancelled'): ?>
+
+                                                            <span class="badge badge-sm bg-gradient-danger">
+                                                                Cancelled
+                                                            </span>
+
+                                                        <?php else: ?>
+
+                                                            <span class="badge badge-sm bg-gradient-info">
+                                                                Processing
+                                                            </span>
+
+                                                        <?php endif; ?>
+
+                                                    </td>
+
+                                                </tr>
+
+                                            <?php endforeach; ?>
+
+                                        <?php endif; ?>
+
+                                    </tbody>
+
+                                </table>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- Top Products -->
+                <div class="col-lg-5">
+
+                    <div class="card h-100">
+
+                        <div class="card-header pb-0">
+
+                            <h6 class="mb-1">
+                                Top Selling Products
+                            </h6>
+
+                            <p class="text-sm mb-0 text-secondary">
+                                Products with highest sales quantity
+                            </p>
+
+                        </div>
+
+
+                        <div class="card-body">
+
+                            <?php if (empty($topProducts)): ?>
+
+                                <p class="text-sm text-secondary">
+                                    No product sales yet.
+                                </p>
+
+                            <?php else: ?>
+
+                                <?php foreach ($topProducts as $product): ?>
+
+                                    <div class="d-flex align-items-center mb-3">
+
+                                        <?php if (!empty($product['product_image'])): ?>
+
+                                            <img
+                                                src="../public/uploads/products/<?= htmlspecialchars(
+                                                    $product['product_image']
+                                                ) ?>"
+                                                alt="<?= htmlspecialchars(
+                                                    $product['product_name']
+                                                ) ?>"
+                                                class="product-dashboard-image me-3"
+                                            >
+
+                                        <?php else: ?>
+
+                                            <div
+                                                class="product-dashboard-image me-3 bg-gray-200 d-flex align-items-center justify-content-center"
+                                            >
+
+                                                <i class="fa-solid fa-box text-secondary"></i>
+
+                                            </div>
+
+                                        <?php endif; ?>
+
+
+                                        <div class="flex-grow-1">
+
+                                            <h6 class="text-sm mb-0">
+
+                                                <?= htmlspecialchars(
+                                                    $product['product_name']
+                                                ) ?>
+
+                                            </h6>
+
+                                            <p class="text-xs text-secondary mb-0">
+
+                                                <?= number_format(
+                                                    (int) $product['quantity_sold']
+                                                ) ?>
+
+                                                sold
+
+                                            </p>
+
+                                        </div>
+
+
+                                        <div class="text-end">
+
+                                            <span class="text-sm font-weight-bold">
+
+                                                PKR <?= number_format(
+                                                    (float) $product['total_sales'],
+                                                    0
+                                                ) ?>
+
+                                            </span>
+
+                                        </div>
+
+                                    </div>
+
+                                <?php endforeach; ?>
+
+                            <?php endif; ?>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- Admin Footer -->
+            <?php require_once '../includes/admin-footer.php'; ?>
+
+        </div>
+
+    </main>
+
+
+
+    <!-- ====================================================== -->
+    <!-- JAVASCRIPT -->
+    <!-- ====================================================== -->
+
+    <script src="assets/js/core/popper.min.js"></script>
+
+    <script src="assets/js/core/bootstrap.min.js"></script>
+
+    <script src="assets/js/plugins/perfect-scrollbar.min.js"></script>
+
+    <script src="assets/js/plugins/smooth-scrollbar.min.js"></script>
+
+    <script src="assets/js/plugins/chartjs.min.js"></script>
+
+
+    <script>
+
+        /*
+        |--------------------------------------------------------------------------
+        | Daily Sales Chart
+        |--------------------------------------------------------------------------
+        */
+
+        const dailyLabels = <?= json_encode($dailyLabels) ?>;
+
+        const dailySales = <?= json_encode($dailySalesValues) ?>;
+
+
+        const dailyCanvas =
+            document.getElementById('dailySalesChart');
+
+
+        if (dailyCanvas) {
+
+            new Chart(dailyCanvas, {
+
+                type: 'bar',
+
+                data: {
+
+                    labels: dailyLabels,
+
+                    datasets: [{
+
+                        label: 'Sales',
+
+                        data: dailySales,
+
+                        borderWidth: 0,
+
+                        borderRadius: 5
+
+                    }]
+
+                },
+
+
+                options: {
+
+                    responsive: true,
+
+                    maintainAspectRatio: false,
+
+                    plugins: {
+
+                        legend: {
+                            display: false
+                        }
+
+                    },
+
+                    scales: {
+
+                        y: {
+
+                            beginAtZero: true,
+
+                            ticks: {
+
+                                callback: function(value) {
+
+                                    return 'PKR ' +
+                                        Number(value).toLocaleString();
+
+                                }
+
+                            }
+
+                        }
+
+                    }
+
+                }
+
+            });
+
+        }
+
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Monthly Sales Chart
+        |--------------------------------------------------------------------------
+        */
+
+        const monthlyLabels =
+            <?= json_encode($monthlyLabels) ?>;
+
+        const monthlySales =
+            <?= json_encode(array_values($monthlySales)) ?>;
+
+
+        const monthlyCanvas =
+            document.getElementById('monthlySalesChart');
+
+
+        if (monthlyCanvas) {
+
+            new Chart(monthlyCanvas, {
+
+                type: 'line',
+
+                data: {
+
+                    labels: monthlyLabels,
+
+                    datasets: [{
+
+                        label: 'Sales',
+
+                        data: monthlySales,
+
+                        tension: 0.4,
+
+                        borderWidth: 2,
+
+                        pointRadius: 4,
+
+                        fill: false
+
+                    }]
+
+                },
+
+
+                options: {
+
+                    responsive: true,
+
+                    maintainAspectRatio: false,
+
+                    plugins: {
+
+                        legend: {
+                            display: false
+                        }
+
+                    },
+
+                    scales: {
+
+                        y: {
+
+                            beginAtZero: true,
+
+                            ticks: {
+
+                                callback: function(value) {
+
+                                    return 'PKR ' +
+                                        Number(value).toLocaleString();
+
+                                }
+
+                            }
+
+                        }
+
+                    }
+
+                }
+
+            });
+
+        }
+
+    </script>
+
+
+    <script>
+
+        var win =
+            navigator.platform.indexOf('Win') > -1;
+
+        if (
+            win &&
+            document.querySelector('#sidenav-scrollbar')
+        ) {
+
+            var options = {
+                damping: '0.5'
+            };
+
+            Scrollbar.init(
+                document.querySelector('#sidenav-scrollbar'),
+                options
+            );
+
+        }
+
+    </script>
+
+
+    <script src="assets/js/material-dashboard.min.js?v=3.2.0"></script>
+
 </body>
 
 </html>
