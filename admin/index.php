@@ -1048,7 +1048,7 @@ $topProducts = $stmt->fetchAll();
 
                                 <?php foreach ($topProducts as $product): ?>
 
-                                    <div class="d-flex align-items-center mb-3">
+                                    <div class="flex-wrap wrap d-flex align-items-center mb-3">
 
                                         <?php if (!empty($product['product_image'])): ?>
 

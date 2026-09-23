@@ -17,6 +17,9 @@ $pageTitle = "Products";
 $successMessage = Session::getFlash('success');
 $errorMessage = Session::getFlash('error');
 
+$search = trim($_GET['search'] ?? '');
+
+
 
 // =========================
 // FETCH PRODUCTS
@@ -36,10 +39,28 @@ $sql = "SELECT
         FROM products p
         INNER JOIN categories c
             ON c.id = p.category_id
+        WHERE p.name LIKE :search OR
+        c.name LIKE :search OR
+        p.stock LIKE :search OR
+        (
+        :searchStatus = 'active' 
+        AND 
+        p.status = 1
+        )
+        OR
+        (
+        :searchStatus = 'inactive'
+        AND
+        p.status = 0
+        )
         ORDER BY p.id DESC";
 
 $stmt = $pdo->prepare($sql);
-$stmt->execute();
+$statusValue = '%' . $search . '%';
+$stmt->execute([
+    ':search' => $statusValue,
+    ':searchStatus' => strtolower($search)
+]);
 
 $products = $stmt->fetchAll();
 
@@ -125,7 +146,7 @@ $products = $stmt->fetchAll();
              PAGE HEADER
         ========================== -->
 
-            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
+            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
 
                 <div>
                     <h4 class="fw-bold text-dark mb-0">
@@ -135,11 +156,16 @@ $products = $stmt->fetchAll();
                 </div>
 
 
-                <div class="d-flex align-items-center gap-3 border rounded ps-4">
+                <form method="GET" class="d-flex align-items-center gap-2">
 
-                    <input type="text" class="form-control" placeholder="Search products..." style="width: 220px;">
+                    <input type="text" name="search" class="form-control border border-radius-md ps-3"
+                        placeholder="Search products..." value="<?= htmlspecialchars($search) ?>" style="width: 220px;">
 
-                </div>
+                    <button type="submit" class="btn btn-primary mb-0">
+                        Search
+                    </button>
+
+                </form>
 
             </div>
 
@@ -422,70 +448,55 @@ $products = $stmt->fetchAll();
      DELETE PRODUCT MODAL
 ========================== -->
 
-<div class="modal fade" id="deleteProductModal" tabindex="-1">
+    <div class="modal fade" id="deleteProductModal" tabindex="-1">
 
-    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
 
-        <div class="modal-content text-center p-3">
+            <div class="modal-content text-center p-3">
 
-            <div class="text-danger fs-1 mb-2">
-                <i class="fa-solid fa-circle-exclamation"></i>
-            </div>
+                <div class="text-danger fs-1 mb-2">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                </div>
 
-            <h6 class="fw-bold">
-                Are you sure?
-            </h6>
+                <h6 class="fw-bold">
+                    Are you sure?
+                </h6>
 
-            <p class="small text-muted mb-3">
+                <p class="small text-muted mb-3">
 
-                Do you want to delete
+                    Do you want to delete
 
-                <strong id="deleteProductName"></strong>?
+                    <strong id="deleteProductName"></strong>?
 
-            </p>
-
-
-            <div class="d-flex justify-content-center gap-2">
-
-                <!-- Cancel -->
-                <button
-                    type="button"
-                    class="btn btn-light btn-sm"
-                    data-bs-dismiss="modal"
-                >
-                    Cancel
-                </button>
+                </p>
 
 
-                <!-- Delete -->
-                <form
-                    method="POST"
-                    action="delete.php"
-                    id="deleteProductForm"
-                >
+                <div class="d-flex justify-content-center gap-2">
 
-                    <input
-                        type="hidden"
-                        name="product_id"
-                        id="deleteProductId"
-                    >
-
-                    <button
-                        type="submit"
-                        class="btn btn-danger btn-sm"
-                    >
-                        Yes, Delete
+                    <!-- Cancel -->
+                    <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">
+                        Cancel
                     </button>
 
-                </form>
+
+                    <!-- Delete -->
+                    <form method="POST" action="delete.php" id="deleteProductForm">
+
+                        <input type="hidden" name="product_id" id="deleteProductId">
+
+                        <button type="submit" class="btn btn-danger btn-sm">
+                            Yes, Delete
+                        </button>
+
+                    </form>
+
+                </div>
 
             </div>
 
         </div>
 
     </div>
-
-</div>
 
 
     <!-- Popper -->
@@ -506,45 +517,43 @@ $products = $stmt->fetchAll();
 </body>
 <script>
 
-document.addEventListener('DOMContentLoaded', function () {
+    document.addEventListener('DOMContentLoaded', function () {
 
-    const deleteModal =
-        document.getElementById('deleteProductModal');
+        const deleteModal =
+            document.getElementById('deleteProductModal');
 
-    const deleteProductId =
-        document.getElementById('deleteProductId');
+        const deleteProductId =
+            document.getElementById('deleteProductId');
 
-    const deleteProductName =
-        document.getElementById('deleteProductName');
-
-
-    deleteModal.addEventListener(
-        'show.bs.modal',
-        function (event) {
-
-            const button = event.relatedTarget;
+        const deleteProductName =
+            document.getElementById('deleteProductName');
 
 
-            // Get product information
-            const productId =
-                button.getAttribute('data-product-id');
+        deleteModal.addEventListener(
+            'show.bs.modal',
+            function (event) {
 
-            const productName =
-                button.getAttribute('data-product-name');
+                const button = event.relatedTarget;
 
 
-            // Put values into modal
-            deleteProductId.value = productId;
+                // Get product information
+                const productId =
+                    button.getAttribute('data-product-id');
 
-            deleteProductName.textContent = productName;
+                const productName =
+                    button.getAttribute('data-product-name');
 
-        }
-    );
 
-});
+                // Put values into modal
+                deleteProductId.value = productId;
+
+                deleteProductName.textContent = productName;
+
+            }
+        );
+
+    });
 
 </script>
 
 </html>
-
-

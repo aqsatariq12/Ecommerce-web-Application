@@ -333,7 +333,7 @@ $orderItems = Order::getItems($order["id"]);
     </form>
 
 <?php endif; ?>                   
-                                    <a href="shop.php" class="btn btn-outline-primary-2 btn-order btn-block">
+                                    <a href="all_products.php" class="btn btn-outline-primary-2 btn-order btn-block">
                                         CONTINUE SHOPPING
                                     </a>
                                 </div>

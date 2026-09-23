@@ -486,11 +486,10 @@ $total = $subtotal + $shippingCost;
 										</div>
 										<!-- End .accordion -->
 
-										<button type="submit" 
+										<a href="all_products.php"
 											class="btn btn-outline-primary-2 btn-order btn-block">
 											<span class="btn-text">Place Order</span>
-											<span class="btn-hover-text">Proceed to Checkout</span>
-										</button>
+										</a>
 									</div><!-- End .summary -->
 								</aside><!-- End .col-lg-3 -->
 							</div><!-- End .row -->

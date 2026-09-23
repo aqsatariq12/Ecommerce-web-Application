@@ -943,27 +943,12 @@ if ($isLoggedIn && Auth::isCustomer()) {
 
                                             <a href="products.php" class="banner banner-menu">
 
-                                                <img src="assets/images/menu/banner-1.jpg" alt="Banner">
+                                                <img src="assets/images/menu/banner-1.png" alt="Banner">
 
 
                                                 <div class="banner-content banner-content-top">
 
-                                                    <div class="banner-title text-white">
 
-                                                        Last
-                                                        <br>
-
-                                                        Chance
-
-                                                        <br>
-
-                                                        <span>
-                                                            <strong>
-                                                                Sale
-                                                            </strong>
-                                                        </span>
-
-                                                    </div>
 
                                                 </div>
 

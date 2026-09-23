@@ -17,6 +17,7 @@ $pageTitle = "Categories";
 $successMessage = Session::getFlash('success');
 $errorMessage = Session::getFlash('error');
 
+$search = trim($_GET['search'] ?? '');
 
 // =========================
 // FETCH CATEGORIES
@@ -33,6 +34,16 @@ $sql = "SELECT
         FROM categories c
         LEFT JOIN products p
             ON p.category_id = c.id
+
+        WHERE c.name LIKE :search
+            OR (
+            :searchStatus = 'active'
+            AND c.status = 1
+            )
+            OR (
+            :searchStatus = 'inactive'
+            AND c.status = 0
+            )
         GROUP BY
             c.id,
             c.name,
@@ -43,7 +54,13 @@ $sql = "SELECT
         ORDER BY c.id DESC";
 
 $stmt = $pdo->prepare($sql);
-$stmt->execute();
+$searchValue = '%' . $search . '%';
+$stmt->execute(
+    [
+        ':search' => $searchValue,
+        'searchStatus' => strtolower($search)
+    ]
+);
 
 $categories = $stmt->fetchAll();
 
@@ -181,11 +198,17 @@ $categories = $stmt->fetchAll();
                     </h4>
                 </div>
 
-                <div class="d-flex align-items-center gap-3 border rounded ps-4">
+                <form method="GET" class="d-flex align-items-center gap-2">
 
-                    <input type="text" class="form-control" placeholder="Search categories..." style="width: 220px;">
+                    <input type="text" name="search" class="form-control border border-radius-md ps-3" placeholder="Search categories..."
+                        value="<?= htmlspecialchars($search) ?>" style="width: 220px;">
 
-                </div>
+                    <button type="submit" class="btn btn-primary mb-0">
+                        Search
+                    </button>
+
+                </form>
+
             </div>
 
 
