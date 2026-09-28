@@ -46,6 +46,7 @@ $productId = '';
 $title = '';
 $subtitle = '';
 $oldPrice = '';
+$newPrice = '';
 $countdownUntil = '';
 $buttonText = 'Shop Now';
 $buttonLink = 'product-detail.php';
@@ -58,64 +59,173 @@ $status = 1;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
+    // =========================
+    // GET FORM VALUES
+    // =========================
+
     $productId = (int) ($_POST['product_id'] ?? 0);
 
     $title = trim($_POST['title'] ?? '');
 
     $subtitle = trim($_POST['subtitle'] ?? '');
 
-    $oldPrice = trim($_POST['old_price'] ?? '');
+    $newPrice = trim($_POST['new_price'] ?? '');
 
     $countdownUntil = trim($_POST['countdown_until'] ?? '');
 
     $buttonText = trim($_POST['button_text'] ?? '');
 
-    $buttonLink = trim($_POST['button_link'] ?? '');
+    // Button link is fixed
+    $buttonLink = 'product-detail.php';
 
-    $status = isset($_POST['status']) ? 1 : 0;
+    $status = ($_POST['status'] ?? 'inactive') === 'active' ? 1 : 0;
 
 
     // =========================
-    // VALIDATION
+    // VALIDATE PRODUCT
     // =========================
 
     if ($productId <= 0) {
 
         $errorMessage = "Please select a product.";
 
-    } elseif ($title === '') {
+    }
 
-        $errorMessage = "Deal title is required.";
 
-    } elseif (strlen($title) > 200) {
+    // =========================
+    // GET ACTUAL PRODUCT PRICE
+    // =========================
 
-        $errorMessage = "Deal title cannot exceed 200 characters.";
+    if (!$errorMessage) {
 
-    } elseif ($subtitle !== '' && strlen($subtitle) > 255) {
+        $productPriceSql = "SELECT price
+                            FROM products
+                            WHERE id = :id
+                            AND status = 1
+                            LIMIT 1";
 
-        $errorMessage = "Subtitle cannot exceed 255 characters.";
+        $productPriceStmt = $pdo->prepare($productPriceSql);
 
-    } elseif ($oldPrice !== '' && (!is_numeric($oldPrice) || $oldPrice < 0)) {
+        $productPriceStmt->execute([
+            ':id' => $productId
+        ]);
 
-        $errorMessage = "Please enter a valid old price.";
+        $selectedProduct = $productPriceStmt->fetch(PDO::FETCH_ASSOC);
 
-    } elseif ($buttonText === '') {
 
-        $errorMessage = "Button text is required.";
+        if (!$selectedProduct) {
 
-    } elseif (strlen($buttonText) > 100) {
+            $errorMessage = "Selected product was not found.";
 
-        $errorMessage = "Button text cannot exceed 100 characters.";
+        } else {
 
-    } elseif ($buttonLink === '') {
+            // Always get old price from database
+            $oldPrice = (float) $selectedProduct['price'];
 
-        $errorMessage = "Button link is required.";
+        }
 
     }
 
 
     // =========================
-    // IMAGE VALIDATION
+    // VALIDATE TITLE
+    // =========================
+
+    if (!$errorMessage && $title === '') {
+
+        $errorMessage = "Deal title is required.";
+
+    } elseif (!$errorMessage && strlen($title) > 200) {
+
+        $errorMessage = "Deal title cannot exceed 200 characters.";
+
+    }
+
+
+    // =========================
+    // VALIDATE SUBTITLE
+    // =========================
+
+    if (
+        !$errorMessage &&
+        $subtitle !== '' &&
+        strlen($subtitle) > 255
+    ) {
+
+        $errorMessage = "Subtitle cannot exceed 255 characters.";
+
+    }
+
+
+    // =========================
+    // VALIDATE NEW PRICE
+    // =========================
+
+    if (!$errorMessage) {
+
+        if ($newPrice === '' || !is_numeric($newPrice)) {
+
+            $errorMessage = "Please enter a valid new price.";
+
+        } elseif ((float) $newPrice <= 0) {
+
+            $errorMessage = "New price must be greater than 0.";
+
+        } elseif ((float) $newPrice >= $oldPrice) {
+
+            $errorMessage =
+                "New price must be less than the old price.";
+
+        }
+
+    }
+
+
+    // =========================
+    // VALIDATE COUNTDOWN
+    // =========================
+
+    if (!$errorMessage && $countdownUntil !== '') {
+
+        $countdownTimestamp = strtotime($countdownUntil);
+
+
+        if ($countdownTimestamp === false) {
+
+            $errorMessage =
+                "Please enter a valid countdown date and time.";
+
+        } elseif ($countdownTimestamp <= time()) {
+
+            $errorMessage =
+                "Countdown date and time must be in the future.";
+
+        }
+
+    }
+
+
+    // =========================
+    // VALIDATE BUTTON TEXT
+    // =========================
+
+    if (!$errorMessage && $buttonText === '') {
+
+        $errorMessage = "Button text is required.";
+
+    } elseif (
+        !$errorMessage &&
+        strlen($buttonText) > 100
+    ) {
+
+        $errorMessage =
+            "Button text cannot exceed 100 characters.";
+
+    }
+
+
+    // =========================
+    // VALIDATE IMAGE
     // =========================
 
     if (!$errorMessage) {
@@ -125,14 +235,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_FILES['background_image']['error'] !== UPLOAD_ERR_OK
         ) {
 
-            $errorMessage = "Please select a deal background image.";
+            $errorMessage =
+                "Please select a deal background image.";
 
         } else {
 
             $image = $_FILES['background_image'];
 
-            // Get actual MIME type
-            $imageType = mime_content_type($image['tmp_name']);
+            $imageType = mime_content_type(
+                $image['tmp_name']
+            );
 
             $allowedTypes = [
                 'image/jpeg',
@@ -140,13 +252,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'image/webp'
             ];
 
+
             if (!in_array($imageType, $allowedTypes, true)) {
 
-                $errorMessage = "Only JPG, PNG and WebP images are allowed.";
+                $errorMessage =
+                    "Only JPG, PNG and WebP images are allowed.";
 
             } elseif ($image['size'] > 5 * 1024 * 1024) {
 
-                $errorMessage = "Image size must not exceed 5MB.";
+                $errorMessage =
+                    "Image size must not exceed 5MB.";
 
             }
 
@@ -164,7 +279,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $uploadDirectory = '../../public/uploads/deals/';
 
 
-        // Create directory if it does not exist
+        // Create directory if needed
 
         if (!is_dir($uploadDirectory)) {
 
@@ -191,7 +306,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 
         // =========================
-        // UNIQUE IMAGE NAME
+        // IMAGE NAME
         // =========================
 
         $imageName =
@@ -203,21 +318,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $extension;
 
 
-        $imagePath = $uploadDirectory . $imageName;
+        $imagePath =
+            $uploadDirectory . $imageName;
 
 
         // =========================
         // MOVE IMAGE
         // =========================
 
-        if (!move_uploaded_file(
-            $_FILES['background_image']['tmp_name'],
-            $imagePath
-        )) {
+        if (
+            !move_uploaded_file(
+                $_FILES['background_image']['tmp_name'],
+                $imagePath
+            )
+        ) {
 
-            $errorMessage = "Failed to upload deal image.";
+            $errorMessage =
+                "Failed to upload deal image.";
 
         } else {
+
+            // =========================
+            // FORMAT COUNTDOWN
+            // =========================
+
+            $countdownUntil =
+                $countdownUntil !== ''
+                    ? date(
+                        'Y-m-d H:i:s',
+                        strtotime($countdownUntil)
+                    )
+                    : null;
+
 
             // =========================
             // DEAL DATA
@@ -234,21 +366,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         ? $subtitle
                         : null,
 
-                'old_price' =>
-                    $oldPrice !== ''
-                        ? $oldPrice
-                        : null,
+                'old_price' => $oldPrice,
 
-                'countdown_until' =>
-                    $countdownUntil !== ''
-                        ? $countdownUntil
-                        : null,
+                'new_price' => (float) $newPrice,
+
+                'countdown_until' => $countdownUntil,
 
                 'background_image' => $imageName,
 
                 'button_text' => $buttonText,
 
-                'button_link' => $buttonLink,
+                'button_link' => 'product-detail.php',
 
                 'status' => $status
 
@@ -261,19 +389,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             try {
 
-                Deal::create($data);
+                $result = Deal::create($data);
+
+
+                if (!$result) {
+
+                    throw new Exception(
+                        "Deal insert failed."
+                    );
+
+                }
+
 
                 Session::setFlash(
                     'success',
                     'Deal created successfully.'
                 );
 
+
                 header('Location: index.php');
+
                 exit;
 
-            } catch (PDOException $e) {
 
-                // Remove uploaded image if insert fails
+            } catch (Exception $e) {
+
+                // Remove image if database insert fails
 
                 if (file_exists($imagePath)) {
 
@@ -281,8 +422,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 }
 
+
                 $errorMessage =
-                    'Failed to create deal. Please try again.';
+                    'Failed to create deal: ' .
+                    $e->getMessage();
+
             }
 
         }
@@ -301,39 +445,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <meta charset="utf-8">
 
-    <meta name="viewport"
-        content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-    <link rel="apple-touch-icon"
-        sizes="76x76"
-        href="../assets/img/apple-icon.png">
+    <link rel="apple-touch-icon" sizes="76x76" href="../assets/img/apple-icon.png">
 
-    <link rel="icon"
-        type="image/png"
-        href="../assets/img/favicon.png">
+    <link rel="icon" type="image/png" href="../assets/img/favicon.png">
 
     <title>Create Deal - ClothWear</title>
 
 
     <!-- Fonts -->
 
-    <link rel="stylesheet"
-        href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700,900">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700,900">
 
 
     <!-- Nucleo Icons -->
 
-    <link href="../assets/css/nucleo-icons.css"
-        rel="stylesheet">
+    <link href="../assets/css/nucleo-icons.css" rel="stylesheet">
 
-    <link href="../assets/css/nucleo-svg.css"
-        rel="stylesheet">
+    <link href="../assets/css/nucleo-svg.css" rel="stylesheet">
 
 
     <!-- Font Awesome -->
 
-    <script src="https://kit.fontawesome.com/42d5adcbca.js"
-        crossorigin="anonymous"></script>
+    <script src="https://kit.fontawesome.com/42d5adcbca.js" crossorigin="anonymous"></script>
 
 
     <!-- Material Icons -->
@@ -344,9 +479,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <!-- Material Dashboard CSS -->
 
-    <link id="pagestyle"
-        href="../assets/css/material-dashboard.css?v=3.2.0"
-        rel="stylesheet">
+    <link id="pagestyle" href="../assets/css/material-dashboard.css?v=3.2.0" rel="stylesheet">
 
 
     <!-- =========================
@@ -354,7 +487,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     ========================== -->
 
     <style>
-
         /* =========================
            FORM CARD
         ========================== */
@@ -638,7 +770,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             margin-bottom: 0;
 
         }
-
     </style>
 
 </head>
@@ -696,8 +827,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 <!-- BACK BUTTON -->
 
-                <a href="index.php"
-                    class="btn btn-outline-secondary btn-sm">
+                <a href="index.php" class="btn btn-outline-secondary btn-sm">
 
                     <i class="fa-solid fa-arrow-left me-1"></i>
 
@@ -756,16 +886,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                             <?php if ($errorMessage): ?>
 
-                                <div class="alert alert-danger alert-dismissible fade show"
-                                    role="alert">
+                                <div class="alert alert-danger alert-dismissible fade show" role="alert">
 
                                     <i class="fa-solid fa-circle-exclamation me-2"></i>
 
                                     <?= htmlspecialchars($errorMessage) ?>
 
-                                    <button type="button"
-                                        class="btn-close"
-                                        data-bs-dismiss="alert">
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert">
                                     </button>
 
                                 </div>
@@ -777,10 +904,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                  FORM
                             ========================== -->
 
-                            <form
-                                method="POST"
-                                action=""
-                                enctype="multipart/form-data">
+                            <form method="POST" action="" enctype="multipart/form-data">
 
 
                                 <!-- =========================
@@ -798,11 +922,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     </label>
 
 
-                                    <select
-                                        id="productId"
-                                        name="product_id"
-                                        class="deal-input"
-                                        required>
+                                    <select id="productId" name="product_id" class="deal-input" required>
 
                                         <option value="">
 
@@ -813,11 +933,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                                         <?php foreach ($products as $product): ?>
 
-                                            <option
-                                                value="<?= (int) $product['id'] ?>"
-                                                <?= ((int) $productId === (int) $product['id'])
-                                                    ? 'selected'
-                                                    : '' ?>>
+                                            <option value="<?= (int) $product['id'] ?>"
+                                                data-price="<?= htmlspecialchars($product['price']) ?>" <?= ((int) $productId === (int) $product['id'])
+                                                      ? 'selected'
+                                                      : '' ?>>
 
                                                 <?= htmlspecialchars($product['name']) ?>
 
@@ -858,15 +977,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     </label>
 
 
-                                    <input
-                                        type="text"
-                                        id="dealTitle"
-                                        name="title"
-                                        class="deal-input"
-                                        maxlength="200"
-                                        value="<?= htmlspecialchars($title) ?>"
-                                        placeholder="e.g. Summer Sale"
-                                        required>
+                                    <input type="text" id="dealTitle" name="title" class="deal-input" maxlength="200"
+                                        value="<?= htmlspecialchars($title) ?>" placeholder="e.g. Summer Sale" required>
 
 
                                     <span class="field-help">
@@ -893,13 +1005,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     </label>
 
 
-                                    <input
-                                        type="text"
-                                        id="dealSubtitle"
-                                        name="subtitle"
-                                        class="deal-input"
-                                        maxlength="255"
-                                        value="<?= htmlspecialchars($subtitle) ?>"
+                                    <input type="text" id="dealSubtitle" name="subtitle" class="deal-input"
+                                        maxlength="255" value="<?= htmlspecialchars($subtitle) ?>"
                                         placeholder="e.g. Get amazing discounts today">
 
 
@@ -916,6 +1023,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                      OLD PRICE
                                 ========================== -->
 
+                                <!-- =========================
+     OLD PRICE
+========================== -->
+
                                 <div class="deal-field">
 
                                     <label for="oldPrice">
@@ -927,20 +1038,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     </label>
 
 
-                                    <input
-                                        type="number"
-                                        id="oldPrice"
-                                        name="old_price"
-                                        class="deal-input"
-                                        min="0"
-                                        step="0.01"
-                                        value="<?= htmlspecialchars($oldPrice) ?>"
-                                        placeholder="e.g. 99.99">
+                                    <input type="number" id="oldPrice" name="old_price" class="deal-input" step="0.01"
+                                        value="<?= htmlspecialchars($oldPrice) ?>" readonly>
 
 
                                     <span class="field-help">
 
-                                        Optional original price. It will appear as the crossed-out price.
+                                        Original product price. This is automatically loaded from the product.
+
+                                    </span>
+
+                                </div>
+
+                                <!-- =========================
+     NEW PRICE
+========================== -->
+
+                                <div class="deal-field">
+
+                                    <label for="newPrice">
+
+                                        <i class="fa-solid fa-tags"></i>
+
+                                        New Deal Price
+
+                                    </label>
+
+
+                                    <input type="number" id="newPrice" name="new_price" class="deal-input" min="0.01"
+                                        step="0.01" value="<?= htmlspecialchars($newPrice) ?>" placeholder="e.g. 79.99"
+                                        required>
+
+
+                                    <span class="field-help">
+
+                                        Enter a price lower than the original product price.
 
                                     </span>
 
@@ -962,11 +1094,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     </label>
 
 
-                                    <input
-                                        type="datetime-local"
-                                        id="countdownUntil"
-                                        name="countdown_until"
-                                        class="deal-input"
+                                    <input type="datetime-local" id="countdownUntil" name="countdown_until"
+                                        class="deal-input" min="<?= date('Y-m-d\TH:i') ?>"
                                         value="<?= htmlspecialchars($countdownUntil) ?>">
 
 
@@ -994,13 +1123,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     </label>
 
 
-                                    <input
-                                        type="file"
-                                        id="backgroundImage"
-                                        name="background_image"
-                                        class="deal-input"
-                                        accept="image/jpeg,image/png,image/webp"
-                                        required>
+                                    <input type="file" id="backgroundImage" name="background_image" class="deal-input"
+                                        accept="image/jpeg,image/png,image/webp" required>
 
 
                                     <span class="field-help">
@@ -1010,10 +1134,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     </span>
 
 
-                                    <img
-                                        id="imagePreview"
-                                        class="deal-image-preview"
-                                        alt="Deal image preview">
+                                    <img id="imagePreview" class="deal-image-preview" alt="Deal image preview">
 
                                 </div>
 
@@ -1033,15 +1154,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     </label>
 
 
-                                    <input
-                                        type="text"
-                                        id="buttonText"
-                                        name="button_text"
-                                        class="deal-input"
-                                        maxlength="100"
-                                        value="<?= htmlspecialchars($buttonText) ?>"
-                                        placeholder="e.g. Shop Now"
-                                        required>
+                                    <input type="text" id="buttonText" name="button_text" class="deal-input"
+                                        maxlength="100" value="<?= htmlspecialchars($buttonText) ?>"
+                                        placeholder="e.g. Shop Now" required>
 
 
                                     <span class="field-help">
@@ -1057,7 +1172,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                      BUTTON LINK
                                 ========================== -->
 
-                                <div class="deal-field">
+                                <!-- <div class="deal-field">
 
                                     <label for="buttonLink">
 
@@ -1068,15 +1183,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     </label>
 
 
-                                    <input
-                                        type="text"
-                                        id="buttonLink"
-                                        name="button_link"
-                                        class="deal-input"
-                                        maxlength="255"
-                                        value="<?= htmlspecialchars($buttonLink) ?>"
-                                        placeholder="e.g. product-detail.php?id=1"
-                                        required>
+                                    <input type="text" id="buttonLink" name="button_link" class="deal-input"
+                                        maxlength="255" value="<?= htmlspecialchars($buttonLink) ?>"
+                                        placeholder="e.g. product-detail.php?id=1" required>
 
 
                                     <span class="field-help">
@@ -1085,7 +1194,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                                     </span>
 
-                                </div>
+                                </div> -->
 
 
                                 <!-- =========================
@@ -1103,21 +1212,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     </label>
 
 
-                                    <select
-                                        id="dealStatus"
-                                        name="status"
-                                        class="deal-input"
-                                        required>
+                                    <select id="dealStatus" name="status" class="deal-input" required>
 
-                                        <option value="active"
-                                            <?= $status === 1 ? 'selected' : '' ?>>
+                                        <option value="active" <?= $status === 1 ? 'selected' : '' ?>>
 
                                             Active
 
                                         </option>
 
-                                        <option value="inactive"
-                                            <?= $status === 0 ? 'selected' : '' ?>>
+                                        <option value="inactive" <?= $status === 0 ? 'selected' : '' ?>>
 
                                             Inactive
 
@@ -1144,8 +1247,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                                     <!-- CANCEL -->
 
-                                    <a href="index.php"
-                                        class="btn btn-light cancel-btn">
+                                    <a href="index.php" class="btn btn-light cancel-btn">
 
                                         <i class="fa-solid fa-xmark me-1"></i>
 
@@ -1156,9 +1258,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                                     <!-- CREATE -->
 
-                                    <button
-                                        type="submit"
-                                        class="btn bg-gradient-dark create-btn">
+                                    <button type="submit" class="btn bg-gradient-dark create-btn">
 
                                         <i class="fa-solid fa-plus me-1"></i>
 
@@ -1234,6 +1334,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 imagePreview.style.display =
                     'none';
 
+            }
+
+        });
+
+    </script>
+
+    <script>
+
+        const productSelect =
+            document.getElementById('productId');
+
+        const oldPriceInput =
+            document.getElementById('oldPrice');
+
+        const newPriceInput =
+            document.getElementById('newPrice');
+
+
+        productSelect.addEventListener('change', function () {
+
+            const selectedOption =
+                this.options[this.selectedIndex];
+
+
+            const productPrice =
+                selectedOption.getAttribute('data-price');
+
+
+            if (productPrice) {
+
+                oldPriceInput.value =
+                    parseFloat(productPrice).toFixed(2);
+
+                newPriceInput.value = '';
+
+                newPriceInput.max =
+                    productPrice;
+
+            } else {
+
+                oldPriceInput.value = '';
+
+                newPriceInput.value = '';
+
+                newPriceInput.removeAttribute('max');
             }
 
         });

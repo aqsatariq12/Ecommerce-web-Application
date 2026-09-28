@@ -10,7 +10,7 @@ require_once '../core/Deal.php';
 $categories = Category::getActiveCategories();
 $products = Product::getNewArrivals();
 $sliders = Slider::getActiveSliders();
-$deals = Deal::getActiveDeals();
+$deals = Deal::getFeaturedDeals(2);
 $bestSellingProducts = Product::getBestSelling();
 $featuredDeal = $deals[0] ?? null;
 
@@ -97,6 +97,130 @@ include '../includes/header.php';
             .mobile-subtitle {
                 margin-left: 180px !important;
             }
+        }
+
+        /* =========================================
+   DEAL COUNTDOWN
+========================================= */
+
+        .deal-bottom {
+            margin-top: 20px;
+            margin-left: 50px !important;
+        }
+
+        .deal-countdown {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        /* Individual countdown box */
+        .countdown-box {
+            min-width: 58px;
+            height: 58px;
+
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+
+            background: rgba(255, 255, 255, 0.95);
+
+            border-radius: 8px;
+
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.12);
+
+            padding: 5px 7px;
+        }
+
+        /* Large number */
+        .countdown-number {
+            display: block;
+
+            font-size: 22px;
+            font-weight: 700;
+            line-height: 1;
+
+            color: #222;
+        }
+
+        /* Small label */
+        .countdown-label {
+            display: block;
+
+            margin-top: 5px;
+
+            font-size: 9px;
+            font-weight: 600;
+
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+
+            color: #777;
+        }
+
+        /* : separators */
+        .countdown-separator {
+            font-size: 22px;
+            font-weight: 700;
+
+            color: #fff;
+
+            margin-top: -8px;
+        }
+
+        /* Seconds slightly highlighted */
+        .countdown-seconds {
+            animation: countdownPulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes countdownPulse {
+
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.04);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+
+        }
+
+
+        /* =========================================
+   MOBILE
+========================================= */
+
+        @media (max-width: 575px) {
+
+            .deal-countdown {
+                gap: 5px;
+            }
+
+            .countdown-box {
+                min-width: 48px;
+                height: 50px;
+                border-radius: 6px;
+            }
+
+            .countdown-number {
+                font-size: 18px;
+            }
+
+            .countdown-label {
+                font-size: 8px;
+                margin-top: 4px;
+            }
+
+            .countdown-separator {
+                font-size: 18px;
+            }
+
         }
     </style>
 </head>
@@ -458,7 +582,7 @@ include '../includes/header.php';
 
                                                 </a>
 
-                                                
+
 
                                                 <div class="product-action">
 
@@ -673,7 +797,7 @@ include '../includes/header.php';
 
                                     <h3 class="product-title">
 
-                                        <a href="product-detail.php?id=<?= $deal['product_id'] ?>">
+                                        <a href="product-detail.php?id=<?= (int) $deal['product_id'] ?>">
 
                                             <?= htmlspecialchars($deal['product_name']) ?>
 
@@ -682,7 +806,7 @@ include '../includes/header.php';
                                     </h3>
 
 
-                                    <div class="product-price">
+                                    <!-- <div class="product-price">
 
                                         <span class="new-price">
 
@@ -701,11 +825,37 @@ include '../includes/header.php';
 
                                         <?php endif; ?>
 
+                                    </div> -->
+                                    <div class="product-price">
+
+                                        <span class="new-price">
+
+                                            $<?= number_format(
+                                                (float) $deal['new_price'],
+                                                2
+                                            ) ?>
+
+                                        </span>
+
+
+                                        <?php if (!empty($deal['old_price'])): ?>
+
+                                            <span class="old-price">
+
+                                                Was $<?= number_format(
+                                                    (float) $deal['old_price'],
+                                                    2
+                                                ) ?>
+
+                                            </span>
+
+                                        <?php endif; ?>
+
                                     </div>
                                     <!-- End .product-price -->
 
 
-                                    <a href="product-detail.php?id=<?= $deal['product_id'] ?>" class="btn btn-link">
+                                    <a href="product-detail.php?id=<?= (int) $deal['product_id'] ?>" class="btn btn-link">
 
                                         <span>
                                             <?= htmlspecialchars($deal['button_text']) ?>
@@ -725,7 +875,7 @@ include '../includes/header.php';
                                     <?php if (!empty($deal['countdown_until'])): ?>
 
                                         <div class="deal-countdown"
-                                            data-until="<?= htmlspecialchars($deal['countdown_until']) ?>">
+                                            data-until="<?= date('Y-m-d\TH:i:s', strtotime($deal['countdown_until'])) ?>">
                                         </div>
 
                                     <?php endif; ?>
@@ -747,7 +897,7 @@ include '../includes/header.php';
 
                 <div class="more-container text-center mt-1 mb-5">
 
-                    <a href="products.php" class="btn btn-outline-dark-2 btn-round btn-more">
+                    <a href="deals.php" class="btn btn-outline-dark-2 btn-round btn-more">
 
                         <span>
                             Shop more Outlet deals
@@ -891,26 +1041,51 @@ include '../includes/header.php';
                                                         alt="<?= htmlspecialchars($product['name']) ?>" class="product-image">
 
                                                 </a>
-                                                
+
 
 
                                                 <!-- PRODUCT ACTION -->
                                                 <div class="product-action">
+                                                    <div>
 
-                                                    <a href="#" class="btn-product btn-cart" title="Add to cart">
+                                                        <?php if ($product['stock'] > 0): ?>
 
-                                                        <span>
-                                                            add to cart
-                                                        </span>
+                                                            <form action="add-to-cart.php" method="POST">
 
-                                                    </a>
+                                                                <input type="hidden" name="product_id"
+                                                                    value="<?= (int) $product['id'] ?>">
 
-                                                                                                    <a href="product-detail.php?id=<?= (int) $product['id'] ?>"
-                                                    class="btn-product" title="View Details">
+                                                                <input type="hidden" name="quantity" value="1">
 
-                                                    <i class="icon-eye"></i>
+                                                                <button type="submit" class="btn-product btn-cart"
+                                                                    title="Add to cart">
 
-                                                </a>
+                                                                    <span>add to cart</span>
+
+                                                                </button>
+
+                                                            </form>
+
+                                                        <?php else: ?>
+
+                                                            <button type="button" class="btn-product btn-cart" title="Out of stock"
+                                                                disabled>
+
+                                                                <span>out of stock</span>
+
+                                                            </button>
+
+                                                        <?php endif; ?>
+                                                    </div>
+                                                    <div>
+
+                                                        <a href="product-detail.php?id=<?= (int) $product['id'] ?>"
+                                                            class="btn-product" title="View Details">
+
+                                                            <i class="icon-eye"></i>
+
+                                                        </a>
+                                                    </div>
 
                                                 </div>
 
@@ -955,12 +1130,7 @@ include '../includes/header.php';
                                                 <!-- RATINGS -->
                                                 <div class="ratings-container">
 
-                                                    <div class="ratings">
-
-                                                        <div class="ratings-val" style="width: 100%;">
-                                                        </div>
-
-                                                    </div>
+                                                    
 
                                                     <span class="ratings-text">
 
@@ -1078,6 +1248,55 @@ include '../includes/header.php';
     <script src="assets/js/jquery.plugin.min.js"></script>
     <script src="assets/js/jquery.magnific-popup.min.js"></script>
     <script src="assets/js/jquery.countdown.min.js"></script>
+    <script>
+        $(document).ready(function () {
+
+            $('.deal-countdown').each(function () {
+
+                const countdownElement = $(this);
+                const until = countdownElement.data('until');
+
+                if (!until) {
+                    return;
+                }
+
+                const targetDate = new Date(until);
+
+                countdownElement.countdown({
+                    until: targetDate,
+                    format: 'DHMS',
+                    layout:
+                        '<div class="countdown-box">' +
+                        '<span class="countdown-number">{dn}</span>' +
+                        '<span class="countdown-label">Days</span>' +
+                        '</div>' +
+
+                        '<div class="countdown-separator">:</div>' +
+
+                        '<div class="countdown-box">' +
+                        '<span class="countdown-number">{hn}</span>' +
+                        '<span class="countdown-label">Hours</span>' +
+                        '</div>' +
+
+                        '<div class="countdown-separator">:</div>' +
+
+                        '<div class="countdown-box">' +
+                        '<span class="countdown-number">{mn}</span>' +
+                        '<span class="countdown-label">Minutes</span>' +
+                        '</div>' +
+
+                        '<div class="countdown-separator">:</div>' +
+
+                        '<div class="countdown-box countdown-seconds">' +
+                        '<span class="countdown-number">{sn}</span>' +
+                        '<span class="countdown-label">Seconds</span>' +
+                        '</div>'
+                });
+
+            });
+
+        });
+    </script>
     <!-- Main JS File -->
     <script src="assets/js/main.js"></script>
     <script src="assets/js/demos/demo-4.js"></script>

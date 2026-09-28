@@ -1,6 +1,8 @@
 <?php
 
 require_once '../core/Product.php';
+require_once '../core/Middleware.php';
+Middleware::customer();
 
 $products = Product::getAllGroupedByCategory();
 
@@ -28,6 +30,196 @@ foreach ($products as $product) {
     <!-- Your existing Molla CSS -->
     <link rel="stylesheet" href="assets/css/bootstrap.min.css">
     <link rel="stylesheet" href="assets/css/style.css">
+    <style>
+        /* =========================================
+       ALL PRODUCTS HEADER
+    ========================================= */
+
+        .all-products-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 30px;
+            text-align: left;
+        }
+
+        .all-products-title {
+            flex: 1;
+        }
+
+        .all-products-title .page-title {
+            margin-bottom: 5px;
+        }
+
+        .all-products-title p {
+            color: #777;
+        }
+
+
+        /* =========================================
+       SEARCH BOX
+    ========================================= */
+
+        .product-search-box {
+            width: 320px;
+            flex-shrink: 0;
+        }
+
+        .search-wrapper {
+            position: relative;
+            width: 100%;
+        }
+
+        .product-search-input {
+            width: 100%;
+            height: 48px;
+            padding: 0 45px 0 45px;
+
+            border: 1px solid #e5e5e5;
+            border-radius: 24px;
+
+            background: #fff;
+
+            font-size: 14px;
+            color: #333;
+
+            outline: none;
+
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.06);
+
+            transition: all 0.25s ease;
+        }
+
+        .product-search-input::placeholder {
+            color: #999;
+        }
+
+        .product-search-input:focus {
+            border-color: #c96;
+            box-shadow: 0 6px 22px rgba(0, 0, 0, 0.10);
+        }
+
+        .search-wrapper>.icon-search {
+            position: absolute;
+
+            left: 18px;
+            top: 50%;
+
+            transform: translateY(-50%);
+
+            font-size: 17px;
+            color: #777;
+
+            pointer-events: none;
+        }
+
+        .search-clear {
+            position: absolute;
+
+            right: 12px;
+            top: 50%;
+
+            transform: translateY(-50%);
+
+            width: 28px;
+            height: 28px;
+
+            border: 0;
+            border-radius: 50%;
+
+            background: #f3f3f3;
+
+            color: #777;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            padding: 0;
+
+            cursor: pointer;
+
+            transition: all 0.2s ease;
+        }
+
+        .search-clear:hover {
+            background: #333;
+            color: #fff;
+        }
+
+
+        /* =========================================
+       NO SEARCH RESULTS
+    ========================================= */
+
+        .no-search-results {
+            display: none;
+
+            text-align: center;
+
+            padding: 70px 20px;
+        }
+
+        .no-search-results .search-empty-icon {
+            font-size: 45px;
+            color: #ccc;
+
+            margin-bottom: 20px;
+        }
+
+        .no-search-results h3 {
+            margin-bottom: 8px;
+            font-size: 22px;
+        }
+
+        .no-search-results p {
+            color: #888;
+            margin-bottom: 0;
+        }
+
+
+        /* =========================================
+       MOBILE
+    ========================================= */
+
+        @media (max-width: 767px) {
+
+            .all-products-header {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 20px;
+                text-align: center;
+            }
+
+            .product-search-box {
+                width: 100%;
+                max-width: 100%;
+            }
+
+            .product-search-input {
+                height: 46px;
+            }
+
+        }
+
+
+        /* =========================================
+       SMALL MOBILE
+    ========================================= */
+
+        @media (max-width: 480px) {
+
+            .all-products-header {
+                gap: 15px;
+            }
+
+            .product-search-input {
+                height: 44px;
+                font-size: 13px;
+            }
+
+        }
+    </style>
 
 </head>
 
@@ -39,19 +231,59 @@ foreach ($products as $product) {
         <div class="page-header text-center">
             <div class="container">
 
-                <h1 class="page-title">
-                    All Products
-                </h1>
+                <div class="all-products-header">
 
-                <p>
-                    Explore all our products by category.
-                </p>
+                    <div class="all-products-title">
+
+                        <h1 class="page-title mb-1">
+                            All Products
+                        </h1>
+
+                        <p class="mb-0">
+                            Explore all our products by category.
+                        </p>
+
+                    </div>
+
+                    <!-- Product Search -->
+                    <div class="product-search-box">
+
+                        <div class="search-wrapper">
+
+                            <i class="icon-search"></i>
+
+                            <input type="text" id="productSearch" class="product-search-input"
+                                placeholder="Search products..." autocomplete="off">
+
+                            <button type="button" id="clearSearch" class="search-clear" title="Clear search"
+                                style="display: none;">
+                                <i class="icon-close"></i>
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </div>
 
             </div>
         </div>
         <div class="page-content">
 
             <div class="container">
+                <div id="noSearchResults" class="no-search-results">
+
+                    <div class="search-empty-icon">
+                        <i class="icon-search"></i>
+                    </div>
+
+                    <h3>No products found</h3>
+
+                    <p>
+                        We couldn't find any product matching your search.
+                    </p>
+
+                </div>
 
                 <?php if (empty($groupedProducts)): ?>
 
@@ -69,8 +301,8 @@ foreach ($products as $product) {
 
                     <?php foreach ($groupedProducts as $categoryName => $categoryProducts): ?>
 
-                        <div class="mb-5">
-
+                        <div class="mb-5 product-category-section"
+                            data-category="<?= htmlspecialchars(strtolower($categoryName)) ?>">
                             <!-- Category Name -->
                             <div class="heading heading-center mb-3">
 
@@ -86,8 +318,8 @@ foreach ($products as $product) {
 
                                 <?php foreach ($categoryProducts as $product): ?>
 
-                                    <div class="col-6 col-md-4 col-lg-3">
-
+                                    <div class="col-6 col-md-4 col-lg-3 product-search-item"
+                                        data-product-name="<?= htmlspecialchars(strtolower($product['name'])) ?>">
                                         <div class="product">
 
                                             <!-- Product Image -->
@@ -210,6 +442,145 @@ foreach ($products as $product) {
     <!-- Main JS -->
 
     <script src="assets/js/main.js"></script>
+    <script>
+
+        document.addEventListener('DOMContentLoaded', function () {
+
+            const searchInput = document.getElementById('productSearch');
+            const clearButton = document.getElementById('clearSearch');
+            const noResults = document.getElementById('noSearchResults');
+
+            const products = document.querySelectorAll('.product-search-item');
+            const categories = document.querySelectorAll('.product-category-section');
+
+
+            function searchProducts() {
+
+                const searchValue = searchInput.value
+                    .trim()
+                    .toLowerCase();
+
+                let visibleProducts = 0;
+
+
+                products.forEach(function (product) {
+
+                    const productName =
+                        product.getAttribute('data-product-name') || '';
+
+                    if (
+                        searchValue === '' ||
+                        productName.includes(searchValue)
+                    ) {
+
+                        product.style.display = '';
+
+                        visibleProducts++;
+
+                    } else {
+
+                        product.style.display = 'none';
+
+                    }
+
+                });
+
+
+                /*
+                 * Hide category heading if
+                 * all products inside it are hidden.
+                 */
+
+                categories.forEach(function (category) {
+
+                    const categoryProducts =
+                        category.querySelectorAll('.product-search-item');
+
+                    let categoryHasProduct = false;
+
+                    categoryProducts.forEach(function (product) {
+
+                        if (product.style.display !== 'none') {
+                            categoryHasProduct = true;
+                        }
+
+                    });
+
+                    if (categoryHasProduct) {
+
+                        category.style.display = '';
+
+                    } else {
+
+                        category.style.display = 'none';
+
+                    }
+
+                });
+
+
+                /*
+                 * Show/hide no-results message
+                 */
+
+                if (searchValue !== '' && visibleProducts === 0) {
+
+                    noResults.style.display = 'block';
+
+                } else {
+
+                    noResults.style.display = 'none';
+
+                }
+
+
+                /*
+                 * Show/hide clear button
+                 */
+
+                if (searchValue !== '') {
+
+                    clearButton.style.display = 'flex';
+
+                } else {
+
+                    clearButton.style.display = 'none';
+
+                }
+
+            }
+
+
+            /*
+             * Search while typing
+             */
+
+            searchInput.addEventListener(
+                'input',
+                searchProducts
+            );
+
+
+            /*
+             * Clear search
+             */
+
+            clearButton.addEventListener(
+                'click',
+                function () {
+
+                    searchInput.value = '';
+
+                    searchInput.focus();
+
+                    searchProducts();
+
+                }
+            );
+
+        });
+
+    </script>
 
 </body>
 

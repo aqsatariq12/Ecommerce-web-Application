@@ -359,9 +359,128 @@ if ($isLoggedIn && Auth::isCustomer()) {
     html {
         scroll-behavior: smooth;
     }
-    #newArrival, #dealsOutlet, #trendingProducts {
-    scroll-margin-top: 100px;
-}
+
+    #newArrival,
+    #dealsOutlet,
+    #trendingProducts {
+        scroll-margin-top: 100px;
+    }
+
+    /* =========================================================
+   TOP HEADER - LOGGED IN USER
+   ========================================================= */
+
+    .header-top .header-right {
+        display: flex !important;
+        align-items: center;
+        justify-content: flex-end;
+    }
+
+    .header-top .top-menu {
+        display: flex !important;
+        align-items: center;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .header-top .top-menu>li {
+        display: block !important;
+        position: relative;
+    }
+
+    .header-top .top-menu>li>a {
+        display: block !important;
+        color: #333;
+        font-size: 13px;
+        line-height: 1.5;
+        padding: 8px 0;
+        white-space: nowrap;
+    }
+
+    .header-top .top-menu>li>a:hover {
+        color: #3399ff;
+    }
+
+    /* Logout dropdown */
+    .header-top .top-menu>li>ul {
+        position: absolute;
+        top: 100%;
+        right: 0;
+
+        min-width: 130px;
+
+        margin: 0;
+        padding: 8px 0;
+
+        background: #fff;
+        border: 1px solid #eee;
+
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.10);
+
+        z-index: 9999;
+
+        visibility: hidden;
+        opacity: 0;
+
+        transition: all 0.2s ease;
+    }
+
+    /* Show dropdown when hovering */
+    .header-top .top-menu>li:hover>ul {
+        visibility: visible;
+        opacity: 1;
+    }
+
+    /* Logout item */
+    .header-top .top-menu>li>ul>li {
+        display: block;
+        margin: 0;
+        padding: 0;
+    }
+
+    .header-top .top-menu>li>ul>li button {
+        display: block;
+
+        width: 100%;
+
+        border: 0;
+        background: transparent;
+
+        padding: 8px 15px;
+
+        color: #333;
+        font-size: 13px;
+
+        text-align: left;
+
+        cursor: pointer;
+    }
+
+    .header-top .top-menu>li>ul>li button:hover {
+        color: #3399ff;
+        background: #f8f8f8;
+    }
+
+
+    /* =========================================================
+   MOBILE
+   ========================================================= */
+
+    @media (max-width: 991px) {
+
+        .header-top .header-right {
+            display: flex !important;
+        }
+
+        .header-top .top-menu {
+            display: flex !important;
+        }
+
+        .header-top .top-menu>li>a {
+            font-size: 12px;
+        }
+
+    }
 </style>
 
 
@@ -391,98 +510,35 @@ if ($isLoggedIn && Auth::isCustomer()) {
 
                     <li>
 
-                        <a href="#">
-                            Links
-                        </a>
+                        <?php if ($isLoggedIn && Auth::isCustomer()): ?>
 
-                        <ul>
+                            <a href="#">
+                                Welcome, <?= htmlspecialchars($user['name']) ?>
+                            </a>
 
-                            <!-- Currency -->
-                            <li>
+                            <ul>
 
-                                <div class="header-dropdown">
+                                <li>
 
-                                    <a href="#">
-                                        USD
-                                    </a>
+                                    <form action="/public/logout.php" method="POST" style="margin: 0;">
 
-                                    <div class="header-menu">
-
-                                        <ul>
-                                            <li>
-                                                <a href="#">EUR</a>
-                                            </li>
-
-                                            <li>
-                                                <a href="#">USD</a>
-                                            </li>
-                                        </ul>
-
-                                    </div>
-
-                                </div>
-
-                            </li>
-
-
-                            <!-- Language -->
-                            <li>
-
-                                <div class="header-dropdown">
-
-                                    <a href="#">
-                                        English
-                                    </a>
-
-                                    <div class="header-menu">
-
-                                        <ul>
-
-                                            <li>
-                                                <a href="#">English</a>
-                                            </li>
-
-                                            <li>
-                                                <a href="#">French</a>
-                                            </li>
-
-                                            <li>
-                                                <a href="#">Spanish</a>
-                                            </li>
-
-                                        </ul>
-
-                                    </div>
-
-                                </div>
-
-                            </li>
-
-
-                            <!-- Login -->
-                            <li>
-
-                                <?php if ($isLoggedIn): ?>
-
-                                    <form action="/public/logout.php" method="POST" style="display: inline;">
-                                        <button type="submit" class="border-0 bg-transparent ml-3">
+                                        <button type="submit">
                                             Logout
                                         </button>
+
                                     </form>
 
-                                <?php else: ?>
+                                </li>
 
-                                    <a href="login.php">
-                                        Sign in / Sign up
-                                    </a>
+                            </ul>
 
-                                <?php endif; ?>
+                        <?php else: ?>
 
+                            <a href="login.php">
+                                Sign in / Sign up
+                            </a>
 
-
-                            </li>
-
-                        </ul>
+                        <?php endif; ?>
 
                     </li>
 
@@ -539,21 +595,21 @@ if ($isLoggedIn && Auth::isCustomer()) {
 
                 <!-- ================= SEARCH ================= -->
 
-                <div class="custom-header-search" id="customHeaderSearch">
+                <!-- <div class="custom-header-search" id="customHeaderSearch"> -->
 
-                    <!-- Search Icon -->
+                <!-- Search Icon -->
 
-                    <button type="button" class="custom-search-toggle" id="customSearchToggle" aria-label="Search"
+                <!-- <button type="button" class="custom-search-toggle" id="customSearchToggle" aria-label="Search"
                         aria-expanded="false">
 
                         <i class="icon-search"></i>
 
-                    </button>
+                    </button> -->
 
 
-                    <!-- Search Input -->
+                <!-- Search Input -->
 
-                    <form action="products.php" method="get" class="custom-search-form" id="customSearchForm">
+                <!-- <form action="products.php" method="get" class="custom-search-form" id="customSearchForm">
 
                         <input type="search" name="q" id="customSearchInput" placeholder="Search product..."
                             autocomplete="off" required>
@@ -565,9 +621,9 @@ if ($isLoggedIn && Auth::isCustomer()) {
 
                         </button>
 
-                    </form>
+                    </form> -->
 
-                </div>
+                <!-- </div> -->
 
                 <!-- ================= END SEARCH ================= -->
 
@@ -1041,7 +1097,7 @@ if ($isLoggedIn && Auth::isCustomer()) {
 
         <!-- Mobile Search -->
 
-        <form action="products.php" method="get" class="mobile-search">
+        <!-- <form action="products.php" method="get" class="mobile-search">
 
             <label for="mobile-search" class="sr-only">
                 Search
@@ -1057,7 +1113,7 @@ if ($isLoggedIn && Auth::isCustomer()) {
 
             </button>
 
-        </form>
+        </form> -->
 
 
         <!-- Mobile Tabs -->
@@ -1150,7 +1206,7 @@ if ($isLoggedIn && Auth::isCustomer()) {
 
                         <li>
 
-                            <a href="product-detail.php">
+                            <a href="all_products.php">
                                 Product
                             </a>
 

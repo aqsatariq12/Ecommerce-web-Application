@@ -86,8 +86,15 @@ $subtitle = $deal['subtitle'] ?? '';
 
 $oldPrice = $deal['old_price'] ?? '';
 
-$countdownUntil = $deal['countdown_until'] ?? '';
+$newPrice = $deal['new_price'] ?? '';
+$countdownUntil = '';
 
+if (!empty($deal['countdown_until'])) {
+    $countdownUntil = date(
+        'Y-m-d\TH:i',
+        strtotime($deal['countdown_until'])
+    );
+}
 $buttonText = $deal['button_text'] ?? 'Shop Now';
 
 $buttonLink = $deal['button_link'] ?? 'product-detail.php';
@@ -109,13 +116,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $subtitle = trim($_POST['subtitle'] ?? '');
 
-    $oldPrice = trim($_POST['old_price'] ?? '');
+    $newPrice = trim($_POST['new_price'] ?? '');
 
     $countdownUntil = trim($_POST['countdown_until'] ?? '');
 
     $buttonText = trim($_POST['button_text'] ?? '');
 
-    $buttonLink = trim($_POST['button_link'] ?? '');
+    // Button link is fixed
+    $buttonLink = 'product-detail.php';
 
     $statusValue = $_POST['status'] ?? 'active';
 
@@ -123,46 +131,144 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 
     // =========================
-    // VALIDATION
-    // =========================
+// VALIDATE PRODUCT
+// =========================
 
     if ($productId <= 0) {
 
         $errorMessage = "Please select a product.";
 
-    } elseif ($title === '') {
+    }
+
+
+    // =========================
+// GET ACTUAL PRODUCT PRICE
+// =========================
+
+    if (!$errorMessage) {
+
+        $productPriceSql = "SELECT price
+                        FROM products
+                        WHERE id = :id
+                        AND status = 1
+                        LIMIT 1";
+
+        $productPriceStmt = $pdo->prepare($productPriceSql);
+
+        $productPriceStmt->execute([
+            ':id' => $productId
+        ]);
+
+        $selectedProduct = $productPriceStmt->fetch(PDO::FETCH_ASSOC);
+
+
+        if (!$selectedProduct) {
+
+            $errorMessage = "Selected product was not found.";
+
+        } else {
+
+            // Always use the current product price
+            $oldPrice = (float) $selectedProduct['price'];
+
+        }
+
+    }
+
+
+    // =========================
+// VALIDATE TITLE
+// =========================
+
+    if (!$errorMessage && $title === '') {
 
         $errorMessage = "Deal title is required.";
 
-    } elseif (strlen($title) > 200) {
+    } elseif (!$errorMessage && strlen($title) > 200) {
 
         $errorMessage = "Deal title cannot exceed 200 characters.";
 
-    } elseif (
-        $subtitle !== ''
-        && strlen($subtitle) > 255
+    }
+
+
+    // =========================
+// VALIDATE SUBTITLE
+// =========================
+
+    if (
+        !$errorMessage &&
+        $subtitle !== '' &&
+        strlen($subtitle) > 255
     ) {
 
         $errorMessage = "Subtitle cannot exceed 255 characters.";
 
-    } elseif (
-        $oldPrice !== ''
-        && (!is_numeric($oldPrice) || $oldPrice < 0)
-    ) {
+    }
 
-        $errorMessage = "Please enter a valid old price.";
 
-    } elseif ($buttonText === '') {
+    // =========================
+// VALIDATE NEW PRICE
+// =========================
+
+    if (!$errorMessage) {
+
+        if ($newPrice === '' || !is_numeric($newPrice)) {
+
+            $errorMessage = "Please enter a valid new price.";
+
+        } elseif ((float) $newPrice <= 0) {
+
+            $errorMessage = "New price must be greater than 0.";
+
+        } elseif ((float) $newPrice >= $oldPrice) {
+
+            $errorMessage =
+                "New price must be less than the old price.";
+
+        }
+
+    }
+
+
+    // =========================
+// VALIDATE COUNTDOWN
+// =========================
+
+    if (!$errorMessage && $countdownUntil !== '') {
+
+        $countdownTimestamp = strtotime($countdownUntil);
+
+
+        if ($countdownTimestamp === false) {
+
+            $errorMessage =
+                "Please enter a valid countdown date and time.";
+
+        } elseif ($countdownTimestamp <= time()) {
+
+            $errorMessage =
+                "Countdown date and time must be in the future.";
+
+        }
+
+    }
+
+
+    // =========================
+// VALIDATE BUTTON TEXT
+// =========================
+
+    if (!$errorMessage && $buttonText === '') {
 
         $errorMessage = "Button text is required.";
 
-    } elseif (strlen($buttonText) > 100) {
+    } elseif (
+        !$errorMessage &&
+        strlen($buttonText) > 100
+    ) {
 
-        $errorMessage = "Button text cannot exceed 100 characters.";
-
-    } elseif ($buttonLink === '') {
-
-        $errorMessage = "Button link is required.";
+        $errorMessage =
+            "Button text cannot exceed 100 characters.";
 
     }
 
@@ -321,9 +427,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ? $oldPrice
                 : null,
 
+
+
+            'new_price' => (float) $newPrice,
+
             'countdown_until' =>
                 $countdownUntil !== ''
-                ? $countdownUntil
+                ? date(
+                    'Y-m-d H:i:s',
+                    strtotime($countdownUntil)
+                )
                 : null,
 
             'background_image' =>
@@ -954,15 +1067,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                                         <?php foreach ($products as $product): ?>
 
-                                            <option value="<?= (int) $product['id'] ?>" <?= $productId === (int) $product['id']
-                                                   ? 'selected'
-                                                   : '' ?>>
+                                            <option value="<?= (int) $product['id'] ?>"
+                                                data-price="<?= htmlspecialchars($product['price']) ?>"
+                                                <?= $productId === (int) $product['id'] ? 'selected' : '' ?>>
 
-                                                <?= htmlspecialchars(
-                                                    $product['name']
-                                                ) ?>
+                                                <?= htmlspecialchars($product['name']) ?>
 
                                                 -
+
                                                 $<?= number_format(
                                                     (float) $product['price'],
                                                     2
@@ -1057,13 +1169,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     </label>
 
 
-                                    <input type="number" id="oldPrice" name="old_price" class="deal-input" min="0"
-                                        step="0.01" value="<?= htmlspecialchars($oldPrice) ?>" placeholder="e.g. 99.99">
+                                    <input type="number" id="oldPrice" class="deal-input" step="0.01"
+                                        value="<?= htmlspecialchars($oldPrice) ?>" readonly>
 
 
                                     <span class="field-help">
 
-                                        Optional original price. It will appear as the crossed-out price.
+                                        Original product price. This is automatically loaded from the product.
+                                    </span>
+
+                                </div>
+
+                                <!-- =========================
+     NEW PRICE
+========================== -->
+
+                                <div class="deal-field">
+
+                                    <label for="newPrice">
+
+                                        <i class="fa-solid fa-tags"></i>
+
+                                        New Deal Price
+
+                                    </label>
+
+
+                                    <input type="number" id="newPrice" name="new_price" class="deal-input" min="0.01"
+                                        step="0.01" value="<?= htmlspecialchars($newPrice) ?>" placeholder="e.g. 79.99"
+                                        required>
+
+
+                                    <span class="field-help">
+
+                                        Enter a price lower than the original product price.
 
                                     </span>
 
@@ -1203,7 +1342,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                      BUTTON LINK
                                 ========================== -->
 
-                                <div class="deal-field">
+                                <!-- <div class="deal-field">
 
                                     <label for="buttonLink">
 
@@ -1225,7 +1364,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                                     </span>
 
-                                </div>
+                                </div> -->
 
 
                                 <!-- =========================
@@ -1385,6 +1524,97 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     </script>
 
+    <script>
+
+        const productSelect =
+            document.getElementById('productId');
+
+        const oldPriceInput =
+            document.getElementById('oldPrice');
+
+        const newPriceInput =
+            document.getElementById('newPrice');
+
+
+        productSelect.addEventListener('change', function () {
+
+            const selectedOption =
+                this.options[this.selectedIndex];
+
+
+            const productPrice =
+                selectedOption.getAttribute('data-price');
+
+
+            if (productPrice) {
+
+                oldPriceInput.value =
+                    parseFloat(productPrice).toFixed(2);
+
+                newPriceInput.value = '';
+
+                newPriceInput.max =
+                    productPrice;
+
+            } else {
+
+                oldPriceInput.value = '';
+
+                newPriceInput.value = '';
+
+                newPriceInput.removeAttribute('max');
+
+            }
+
+        });
+
+    </script>
+
+<script>
+
+    const productSelect =
+        document.getElementById('productId');
+
+    const oldPriceInput =
+        document.getElementById('oldPrice');
+
+    const newPriceInput =
+        document.getElementById('newPrice');
+
+
+    productSelect.addEventListener('change', function () {
+
+        const selectedOption =
+            this.options[this.selectedIndex];
+
+
+        const productPrice =
+            selectedOption.getAttribute('data-price');
+
+
+        if (productPrice) {
+
+            oldPriceInput.value =
+                parseFloat(productPrice).toFixed(2);
+
+            newPriceInput.value = '';
+
+            newPriceInput.max =
+                productPrice;
+
+        } else {
+
+            oldPriceInput.value = '';
+
+            newPriceInput.value = '';
+
+            newPriceInput.removeAttribute('max');
+
+        }
+
+    });
+
+</script>
 
     <!-- =========================
          JAVASCRIPT

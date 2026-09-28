@@ -334,25 +334,34 @@ $topProducts = $stmt->fetchAll();
 <html lang="en">
 
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <link rel="apple-touch-icon" sizes="76x76" href="assets/img/apple-icon.png">
-  <link rel="icon" type="image/png" href="assets/img/favicon.png">
-  <title>
-    Material Dashboard 3 by Creative Tim
-  </title>
-  <!--     Fonts and icons     -->
-  <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700,900" />
-  <!-- Nucleo Icons -->
-  <link href="assets/css/nucleo-icons.css" rel="stylesheet" />
-  <link href="assets/css/nucleo-svg.css" rel="stylesheet" />
-  <!-- Font Awesome Icons -->
-  <script src="https://kit.fontawesome.com/42d5adcbca.js" crossorigin="anonymous"></script>
-  <!-- Material Icons -->
-  <link rel="stylesheet"
-    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" />
-  <!-- CSS Files -->
-  <link id="pagestyle" href="assets/css/material-dashboard.css?v=3.2.0" rel="stylesheet" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="apple-touch-icon" sizes="76x76" href="assets/img/apple-icon.png">
+    <link rel="icon" type="image/png" href="assets/img/favicon.png">
+    <title>
+        Material Dashboard 3 by Creative Tim
+    </title>
+    <!--     Fonts and icons     -->
+    <link rel="stylesheet" type="text/css"
+        href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700,900" />
+    <!-- Nucleo Icons -->
+    <link href="assets/css/nucleo-icons.css" rel="stylesheet" />
+    <link href="assets/css/nucleo-svg.css" rel="stylesheet" />
+    <!-- Font Awesome Icons -->
+    <script src="https://kit.fontawesome.com/42d5adcbca.js" crossorigin="anonymous"></script>
+    <!-- Material Icons -->
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <!-- CSS Files -->
+    <link id="pagestyle" href="assets/css/material-dashboard.css?v=3.2.0" rel="stylesheet" />
+    <style>
+        /* Top Selling Products Scroll */
+        .top-selling-scroll {
+            max-height: 400px;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+    </style>
 </head>
 
 <body class="g-sidenav-show bg-gray-100">
@@ -367,9 +376,7 @@ $topProducts = $stmt->fetchAll();
 
 
     <!-- Main Content -->
-    <main
-        class="main-content position-relative max-height-vh-100 h-100 border-radius-lg"
-    >
+    <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg">
 
         <div class="container-fluid py-4">
 
@@ -433,8 +440,7 @@ $topProducts = $stmt->fetchAll();
 
 
                                 <div
-                                    class="icon icon-md icon-shape bg-gradient-dark shadow-dark shadow text-center border-radius-lg"
-                                >
+                                    class="icon icon-md icon-shape bg-gradient-dark shadow-dark shadow text-center border-radius-lg">
 
                                     <i class="material-symbols-rounded opacity-10">
                                         payments
@@ -487,8 +493,7 @@ $topProducts = $stmt->fetchAll();
 
 
                                 <div
-                                    class="icon icon-md icon-shape bg-gradient-info shadow-dark shadow text-center border-radius-lg"
-                                >
+                                    class="icon icon-md icon-shape bg-gradient-info shadow-dark shadow text-center border-radius-lg">
 
                                     <i class="material-symbols-rounded opacity-10">
                                         shopping_cart
@@ -541,8 +546,7 @@ $topProducts = $stmt->fetchAll();
 
 
                                 <div
-                                    class="icon icon-md icon-shape bg-gradient-success shadow-dark shadow text-center border-radius-lg"
-                                >
+                                    class="icon icon-md icon-shape bg-gradient-success shadow-dark shadow text-center border-radius-lg">
 
                                     <i class="material-symbols-rounded opacity-10">
                                         person
@@ -595,8 +599,7 @@ $topProducts = $stmt->fetchAll();
 
 
                                 <div
-                                    class="icon icon-md icon-shape bg-gradient-warning shadow-dark shadow text-center border-radius-lg"
-                                >
+                                    class="icon icon-md icon-shape bg-gradient-warning shadow-dark shadow text-center border-radius-lg">
 
                                     <i class="material-symbols-rounded opacity-10">
                                         inventory_2
@@ -767,10 +770,7 @@ $topProducts = $stmt->fetchAll();
 
                             <div class="chart-container">
 
-                                <canvas
-                                    id="dailySalesChart"
-                                    class="chart-canvas"
-                                ></canvas>
+                                <canvas id="dailySalesChart" class="chart-canvas"></canvas>
 
                             </div>
 
@@ -800,10 +800,7 @@ $topProducts = $stmt->fetchAll();
 
                             <div class="chart-container">
 
-                                <canvas
-                                    id="monthlySalesChart"
-                                    class="chart-canvas"
-                                ></canvas>
+                                <canvas id="monthlySalesChart" class="chart-canvas"></canvas>
 
                             </div>
 
@@ -846,10 +843,7 @@ $topProducts = $stmt->fetchAll();
                                 </div>
 
 
-                                <a
-                                    href="orders/index.php"
-                                    class="btn btn-sm bg-gradient-dark mb-0"
-                                >
+                                <a href="orders/index.php" class="btn btn-sm bg-gradient-dark mb-0">
                                     View All
                                 </a>
 
@@ -868,19 +862,23 @@ $topProducts = $stmt->fetchAll();
 
                                         <tr>
 
-                                            <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                            <th
+                                                class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
                                                 Order
                                             </th>
 
-                                            <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                            <th
+                                                class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
                                                 Customer
                                             </th>
 
-                                            <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                            <th
+                                                class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
                                                 Total
                                             </th>
 
-                                            <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                            <th
+                                                class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
                                                 Status
                                             </th>
 
@@ -895,10 +893,7 @@ $topProducts = $stmt->fetchAll();
 
                                             <tr>
 
-                                                <td
-                                                    colspan="4"
-                                                    class="text-center py-4"
-                                                >
+                                                <td colspan="4" class="text-center py-4">
 
                                                     <p class="text-sm text-secondary mb-0">
                                                         No orders yet.
@@ -918,10 +913,8 @@ $topProducts = $stmt->fetchAll();
 
                                                         <div class="px-3">
 
-                                                            <a
-                                                                href="orders/detail.php?id=<?= (int) $order['id'] ?>"
-                                                                class="text-sm font-weight-bold"
-                                                            >
+                                                            <a href="orders/detail.php?id=<?= (int) $order['id'] ?>"
+                                                                class="text-sm font-weight-bold">
                                                                 #<?= htmlspecialchars(
                                                                     $order['order_number']
                                                                 ) ?>
@@ -1036,7 +1029,7 @@ $topProducts = $stmt->fetchAll();
                         </div>
 
 
-                        <div class="card-body">
+                        <div class="card-body top-selling-scroll">
 
                             <?php if (empty($topProducts)): ?>
 
@@ -1052,21 +1045,16 @@ $topProducts = $stmt->fetchAll();
 
                                         <?php if (!empty($product['product_image'])): ?>
 
-                                            <img
-                                                src="../public/uploads/products/<?= htmlspecialchars(
-                                                    $product['product_image']
-                                                ) ?>"
-                                                alt="<?= htmlspecialchars(
-                                                    $product['product_name']
-                                                ) ?>"
-                                                class="product-dashboard-image me-3"
-                                            >
+                                            <img src="../public/uploads/products/<?= htmlspecialchars(
+                                                $product['product_image']
+                                            ) ?>" alt="<?= htmlspecialchars(
+                                                 $product['product_name']
+                                             ) ?>" class="product-dashboard-image me-3">
 
                                         <?php else: ?>
 
                                             <div
-                                                class="product-dashboard-image me-3 bg-gray-200 d-flex align-items-center justify-content-center"
-                                            >
+                                                class="product-dashboard-image me-3 bg-gray-200 d-flex align-items-center justify-content-center">
 
                                                 <i class="fa-solid fa-box text-secondary"></i>
 
@@ -1215,7 +1203,7 @@ $topProducts = $stmt->fetchAll();
 
                             ticks: {
 
-                                callback: function(value) {
+                                callback: function (value) {
 
                                     return 'PKR ' +
                                         Number(value).toLocaleString();
@@ -1304,7 +1292,7 @@ $topProducts = $stmt->fetchAll();
 
                             ticks: {
 
-                                callback: function(value) {
+                                callback: function (value) {
 
                                     return 'PKR ' +
                                         Number(value).toLocaleString();

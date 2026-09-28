@@ -18,6 +18,7 @@ class Deal
                     d.title,
                     d.subtitle,
                     d.old_price,
+                    d.new_price,
                     d.countdown_until,
                     d.background_image,
                     d.button_text,
@@ -35,6 +36,10 @@ class Deal
 
                 WHERE d.status = 1
                 AND p.status = 1
+                AND (
+                d.countdown_until IS NULL
+                OR d.countdown_until > NOW()
+                )
 
                 ORDER BY d.id ASC";
 
@@ -44,6 +49,59 @@ class Deal
         return $stmt->fetchAll();
     }
 
+    // ==================================================
+// GET FEATURED ACTIVE DEALS
+// Used on homepage
+// Only returns 2 deals
+// ==================================================
+
+    public static function getFeaturedDeals($limit = 2)
+    {
+        global $pdo;
+
+        $limit = (int) $limit;
+
+        if ($limit <= 0) {
+            $limit = 2;
+        }
+
+        $sql = "SELECT
+                d.id,
+                d.title,
+                d.subtitle,
+                d.old_price,
+                d.new_price,
+                d.countdown_until,
+                d.background_image,
+                d.button_text,
+                d.button_link,
+
+                p.id AS product_id,
+                p.name AS product_name,
+                p.price AS product_price,
+                p.image AS product_image
+
+            FROM deals d
+
+            INNER JOIN products p
+                ON d.product_id = p.id
+
+            WHERE d.status = 1
+            AND p.status = 1
+            AND (
+    d.countdown_until IS NULL
+    OR d.countdown_until > NOW()
+)
+
+            ORDER BY d.id ASC
+
+            LIMIT $limit";
+
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute();
+
+        return $stmt->fetchAll();
+    }
 
     // ==================================================
     // GET ALL DEALS
@@ -60,6 +118,7 @@ class Deal
                     d.title,
                     d.subtitle,
                     d.old_price,
+                    d.new_price,
                     d.countdown_until,
                     d.background_image,
                     d.button_text,
@@ -100,6 +159,7 @@ class Deal
                     d.title,
                     d.subtitle,
                     d.old_price,
+                    d.new_price,
                     d.countdown_until,
                     d.background_image,
                     d.button_text,
@@ -129,6 +189,90 @@ class Deal
         return $stmt->fetch();
     }
 
+    // ==================================================
+// GET ACTIVE DEAL BY PRODUCT
+// Used on product detail page
+// ==================================================
+
+    // public static function getActiveDealByProductId($productId)
+// {
+//     global $pdo;
+
+    //     $sql = "SELECT
+//                 d.id,
+//                 d.product_id,
+//                 d.title,
+//                 d.subtitle,
+//                 d.old_price,
+//                 d.new_price,
+//                 d.countdown_until,
+//                 d.background_image,
+//                 d.button_text,
+//                 d.button_link
+
+    //             FROM deals d
+
+    //             WHERE d.product_id = :product_id
+//             AND d.status = 1
+//             AND (
+//                 d.countdown_until IS NULL
+//                 OR d.countdown_until > NOW()
+//             )
+
+    //             ORDER BY d.id DESC
+
+    //             LIMIT 1";
+
+    //     $stmt = $pdo->prepare($sql);
+
+    //     $stmt->execute([
+//         ':product_id' => $productId
+//     ]);
+
+    //     return $stmt->fetch();
+// }
+
+    public static function getActiveDealByProductId($productId)
+    {
+        global $pdo;
+
+        $sql = "SELECT
+                d.id,
+                d.product_id,
+                d.title,
+                d.subtitle,
+                d.old_price,
+                d.new_price,
+                d.countdown_until,
+                d.background_image,
+                d.button_text,
+                d.button_link
+
+            FROM deals d
+
+            INNER JOIN products p
+                ON d.product_id = p.id
+
+            WHERE d.product_id = :product_id
+            AND d.status = 1
+            AND p.status = 1
+            AND (
+                d.countdown_until IS NULL
+                OR d.countdown_until > NOW()
+            )
+
+            ORDER BY d.id DESC
+
+            LIMIT 1";
+
+        $stmt = $pdo->prepare($sql);
+
+        $stmt->execute([
+            ':product_id' => $productId
+        ]);
+
+        return $stmt->fetch();
+    }
 
     // ==================================================
     // CREATE DEAL
@@ -143,6 +287,7 @@ class Deal
                     title,
                     subtitle,
                     old_price,
+                    new_price,
                     countdown_until,
                     background_image,
                     button_text,
@@ -155,6 +300,7 @@ class Deal
                     :title,
                     :subtitle,
                     :old_price,
+                    :new_price,
                     :countdown_until,
                     :background_image,
                     :button_text,
@@ -168,6 +314,7 @@ class Deal
             ':product_id' => $data['product_id'],
             ':title' => $data['title'],
             ':subtitle' => $data['subtitle'],
+            ':new_price' => $data['new_price'],
             ':old_price' => $data['old_price'],
             ':countdown_until' => $data['countdown_until'],
             ':background_image' => $data['background_image'],
@@ -193,6 +340,7 @@ class Deal
                     title = :title,
                     subtitle = :subtitle,
                     old_price = :old_price,
+                    new_price = :new_price,
                     countdown_until = :countdown_until,
                     background_image = :background_image,
                     button_text = :button_text,
@@ -209,6 +357,7 @@ class Deal
             ':title' => $data['title'],
             ':subtitle' => $data['subtitle'],
             ':old_price' => $data['old_price'],
+            ':new_price' => $data['new_price'],
             ':countdown_until' => $data['countdown_until'],
             ':background_image' => $data['background_image'],
             ':button_text' => $data['button_text'],

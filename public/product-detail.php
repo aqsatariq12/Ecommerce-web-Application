@@ -3,6 +3,8 @@ require_once '../core/Middleware.php';
 Middleware::customer();
 
 require_once '../core/Product.php';
+require_once '../core/Deal.php';
+
 $productId = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
 if (!$productId) {
     header("Location: index.php");
@@ -14,7 +16,7 @@ if (!$product) {
     header("Location: index.php");
     exit;
 }
-
+$activeDeal = Deal::getActiveDealByProductId($productId);
 $youMayAlsoLike = Product::getOneProductPerCategory($productId);
 
 
@@ -124,9 +126,26 @@ include '../includes/header.php';
 
 
                                         <!-- Price -->
+                                        <!-- Price -->
                                         <div class="product-price mb-3" style="font-size: 28px; font-weight: 600;">
 
-                                            $<?= number_format($product['price'], 2) ?>
+                                            <?php if ($activeDeal): ?>
+
+                                                <span class="new-price">
+                                                    $<?= number_format((float) $activeDeal['new_price'], 2) ?>
+                                                </span>
+
+                                                <span class="old-price" style="font-size: 18px; margin-left: 8px;">
+
+                                                    Was $<?= number_format((float) $activeDeal['old_price'], 2) ?>
+
+                                                </span>
+
+                                            <?php else: ?>
+
+                                                $<?= number_format((float) $product['price'], 2) ?>
+
+                                            <?php endif; ?>
 
                                         </div>
 
@@ -408,8 +427,25 @@ include '../includes/header.php';
                                         </li>
 
                                         <li>
+
                                             <strong>Price:</strong>
-                                            $<?= number_format($product['price'], 2) ?>
+
+                                            <?php if ($activeDeal): ?>
+
+                                                $<?= number_format((float) $activeDeal['new_price'], 2) ?>
+
+                                                <span style="text-decoration: line-through; margin-left: 5px;">
+
+                                                    $<?= number_format((float) $activeDeal['old_price'], 2) ?>
+
+                                                </span>
+
+                                            <?php else: ?>
+
+                                                $<?= number_format((float) $product['price'], 2) ?>
+
+                                            <?php endif; ?>
+
                                         </li>
 
                                         <li>

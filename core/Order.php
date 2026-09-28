@@ -1,6 +1,7 @@
 <?php
 
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/Deal.php';
 
 class Order
 {
@@ -14,10 +15,105 @@ class Order
         global $pdo;
 
         // Calculate subtotal from database cart items
-        $subtotal = 0;
+        // $subtotal = 0;
+
+        // foreach ($cartItems as $item) {
+        //     $subtotal += $item['unit_price'] * $item['quantity'];
+        // }
+
+        /*
+         * Get current prices from database
+         *
+         * Cart prices are NOT trusted here because
+         * a deal may have started or expired since
+         * the product was added to the cart.
+         */
+
+        $freshCartItems = [];
 
         foreach ($cartItems as $item) {
-            $subtotal += $item['unit_price'] * $item['quantity'];
+
+            $productId = (int) $item['product_id'];
+            $quantity = (int) $item['quantity'];
+
+            /*
+             * Get current product price and stock
+             */
+            $productSql = "SELECT
+                        id,
+                        name,
+                        price,
+                        stock,
+                        status
+                   FROM products
+                   WHERE id = :product_id
+                   LIMIT 1";
+
+            $productStmt = $pdo->prepare($productSql);
+
+            $productStmt->execute([
+                'product_id' => $productId
+            ]);
+
+            $product = $productStmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$product) {
+                throw new Exception(
+                    "Product not found."
+                );
+            }
+
+            /*
+             * Product must still be active
+             */
+            if ((int) $product['status'] !== 1) {
+                throw new Exception(
+                    "Product is no longer available: " .
+                    $product['name']
+                );
+            }
+
+            /*
+             * Check if product currently has an active deal
+             */
+            $deal = Deal::getActiveDealByProductId($productId);
+
+            if ($deal) {
+
+                /*
+                 * Deal is currently active
+                 */
+                $currentPrice = (float) $deal['new_price'];
+
+            } else {
+
+                /*
+                 * No active deal
+                 */
+                $currentPrice = (float) $product['price'];
+            }
+
+            /*
+             * Store fresh price for this order
+             */
+            $freshCartItems[] = [
+                'product_id' => $productId,
+                'name' => $product['name'],
+                'quantity' => $quantity,
+                'unit_price' => $currentPrice,
+                'stock' => (int) $product['stock']
+            ];
+        }
+
+        /*
+         * Calculate subtotal using CURRENT prices
+         */
+        $subtotal = 0;
+
+        foreach ($freshCartItems as $item) {
+
+            $subtotal +=
+                $item['unit_price'] * $item['quantity'];
         }
 
         // Shipping cost
@@ -153,24 +249,15 @@ class Order
             $stockStmt = $pdo->prepare($stockSql);
 
 
-            foreach ($cartItems as $item) {
+            foreach ($freshCartItems as $item) {
 
                 $quantity = (int) $item['quantity'];
                 $productId = (int) $item['product_id'];
-
-                /*
-                 * Reduce stock only if enough stock is available
-                 */
 
                 $stockStmt->execute([
                     'quantity' => $quantity,
                     'product_id' => $productId
                 ]);
-
-                /*
-                 * If no row was updated,
-                 * product does not have enough stock.
-                 */
 
                 if ($stockStmt->rowCount() === 0) {
 
@@ -180,18 +267,8 @@ class Order
                     );
                 }
 
-
-                /*
-                 * Calculate item subtotal
-                 */
-
                 $itemSubtotal =
                     $item['unit_price'] * $quantity;
-
-
-                /*
-                 * Insert order item
-                 */
 
                 $itemStmt->execute([
                     'order_id' => $orderId,
@@ -243,9 +320,43 @@ class Order
             'user_id' => $userId
         ]);
 
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+        return $stmt->fetch();
     }
 
+
+    // public static function getItems($orderId)
+    // {
+    //     global $pdo;
+
+    //     $sql = "SELECT
+    //             oi.id,
+    //             oi.order_id,
+    //             oi.product_id,
+    //             oi.quantity,
+    //             oi.unit_price,
+    //             oi.subtotal,
+
+    //             p.name,
+    //             p.slug,
+    //             p.image
+
+    //         FROM order_items oi
+
+    //         INNER JOIN products p
+    //             ON oi.product_id = p.id
+
+    //         WHERE oi.order_id = :order_id
+
+    //         ORDER BY oi.id ASC";
+
+    //     $stmt = $pdo->prepare($sql);
+
+    //     $stmt->execute([
+    //         'order_id' => $orderId
+    //     ]);
+
+    //     return $stmt->fetchAll();
+    // }
 
     public static function getItems($orderId)
     {
@@ -280,8 +391,6 @@ class Order
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
-
-
     public static function getByUserId($userId)
     {
         global $pdo;
@@ -307,7 +416,7 @@ class Order
             'user_id' => $userId
         ]);
 
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $stmt->fetchAll();
     }
 
 

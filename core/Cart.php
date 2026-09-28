@@ -77,6 +77,38 @@ class Cart
 
             }
 
+
+            // Get active deal price if available
+            $unitPrice = $product['price'];
+
+            $sql = "SELECT new_price
+        FROM deals
+        WHERE product_id = :product_id
+        AND status = 1
+        AND (
+            countdown_until IS NULL
+            OR countdown_until > NOW()
+        )
+        ORDER BY id DESC
+        LIMIT 1";
+
+            $stmt = $pdo->prepare($sql);
+
+            $stmt->execute([
+                'product_id' => $productId
+            ]);
+
+            $activeDeal = $stmt->fetch();
+
+
+            // If active deal exists, use deal price
+            if ($activeDeal) {
+
+                $unitPrice = $activeDeal['new_price'];
+
+            }
+
+
             if ($product['stock'] < $quantity) {
 
                 throw new Exception("Not enough stock available.");
@@ -96,7 +128,7 @@ class Cart
                 'product_id' => $productId
             ]);
 
-            $cartItem = $stmt->fetch(PDO::FETCH_ASSOC);
+            $cartItem = $stmt->fetch();
 
 
             if ($cartItem) {
@@ -111,13 +143,15 @@ class Cart
                 }
 
                 $sql = "UPDATE cart_items
-                        SET quantity = :quantity
-                        WHERE id = :id";
+        SET quantity = :quantity,
+            unit_price = :unit_price
+        WHERE id = :id";
 
                 $stmt = $pdo->prepare($sql);
 
                 $stmt->execute([
                     'quantity' => $newQuantity,
+                    'unit_price' => $unitPrice,
                     'id' => $cartItem['id']
                 ]);
 
@@ -134,7 +168,7 @@ class Cart
                     'cart_id' => $cartId,
                     'product_id' => $productId,
                     'quantity' => $quantity,
-                    'unit_price' => $product['price']
+                    'unit_price' => $unitPrice
                 ]);
 
             }
@@ -270,21 +304,83 @@ class Cart
     }
 
     public static function clearCart($userId)
-{
-    global $pdo;
+    {
+        global $pdo;
 
-    $sql = "DELETE ci
+        $sql = "DELETE ci
             FROM cart_items ci
             INNER JOIN carts c
                 ON ci.cart_id = c.id
             WHERE c.user_id = :user_id";
 
-    $stmt = $pdo->prepare($sql);
+        $stmt = $pdo->prepare($sql);
 
-    $stmt->execute([
-        'user_id' => $userId
-    ]);
+        $stmt->execute([
+            'user_id' => $userId
+        ]);
 
-    return true;
-}
+        return true;
+    }
+
+    public static function getCartItemsWithCurrentPrices($userId)
+    {
+        global $pdo;
+
+        $sql = "SELECT
+                c.id,
+                c.product_id,
+                c.quantity,
+
+                p.name,
+                p.price AS product_price,
+                p.stock,
+                p.image,
+                p.status,
+
+                d.id AS deal_id,
+                d.new_price AS deal_price
+
+            FROM cart_items c
+
+            INNER JOIN products p
+                ON c.product_id = p.id
+
+            LEFT JOIN deals d
+                ON d.product_id = p.id
+                AND d.status = 1
+                AND (
+                    d.countdown_until IS NULL
+                    OR d.countdown_until > NOW()
+                )
+
+            WHERE c.user_id = :user_id
+
+            ORDER BY c.id ASC";
+
+        $stmt = $pdo->prepare($sql);
+
+        $stmt->execute([
+            'user_id' => $userId
+        ]);
+
+        $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        foreach ($items as &$item) {
+
+            if ($item['deal_id'] !== null) {
+
+                $item['unit_price'] =
+                    (float) $item['deal_price'];
+
+            } else {
+
+                $item['unit_price'] =
+                    (float) $item['product_price'];
+            }
+        }
+
+        unset($item);
+
+        return $items;
+    }
 }
