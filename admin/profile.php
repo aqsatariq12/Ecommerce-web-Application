@@ -146,45 +146,34 @@ $totalSales = (float) $stmt->fetchColumn();
 
     <meta charset="utf-8" />
 
-    <meta name="viewport"
-        content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-    <link rel="apple-touch-icon"
-        sizes="76x76"
-        href="assets/img/apple-icon.png">
+    <link rel="apple-touch-icon" sizes="76x76" href="assets/img/apple-icon.png">
 
-    <link rel="icon"
-        type="image/png"
-        href="assets/img/favicon.png">
+    <link rel="icon" type="image/png" href="assets/img/favicon.png">
 
     <title>
-        <?= htmlspecialchars($pageTitle) ?> | ClothWear Admin
+        <?= htmlspecialchars($pageTitle) ?> | ElectroCart Admin
     </title>
 
     <!-- Fonts -->
-    <link rel="stylesheet"
-        type="text/css"
+    <link rel="stylesheet" type="text/css"
         href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700,900" />
 
     <!-- Nucleo Icons -->
-    <link href="assets/css/nucleo-icons.css"
-        rel="stylesheet" />
+    <link href="assets/css/nucleo-icons.css" rel="stylesheet" />
 
-    <link href="assets/css/nucleo-svg.css"
-        rel="stylesheet" />
+    <link href="assets/css/nucleo-svg.css" rel="stylesheet" />
 
     <!-- Font Awesome -->
-    <script src="https://kit.fontawesome.com/42d5adcbca.js"
-        crossorigin="anonymous"></script>
+    <script src="https://kit.fontawesome.com/42d5adcbca.js" crossorigin="anonymous"></script>
 
     <!-- Material Icons -->
     <link rel="stylesheet"
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" />
 
     <!-- Material Dashboard -->
-    <link id="pagestyle"
-        href="assets/css/material-dashboard.css?v=3.2.0"
-        rel="stylesheet" />
+    <link id="pagestyle" href="assets/css/material-dashboard.css?v=3.2.0" rel="stylesheet" />
 
 </head>
 
@@ -204,8 +193,7 @@ $totalSales = (float) $stmt->fetchColumn();
                  PROFILE HEADER
             ====================================================== -->
 
-            <div class="page-header min-height-200 border-radius-xl mt-4"
-                style="
+            <div class="page-header min-height-200 border-radius-xl mt-4" style="
                     background-image:
                     url('https://images.unsplash.com/photo-1557683316-973673baf926?auto=format&fit=crop&w=1920&q=80');
                 ">
@@ -305,7 +293,7 @@ $totalSales = (float) $stmt->fetchColumn();
 
                                 <p class="text-sm">
                                     This is the account information of the
-                                    currently logged-in ClothWear administrator.
+                                    currently logged-in ElectroCart administrator.
                                 </p>
 
                                 <hr class="horizontal gray-light my-4">
@@ -584,7 +572,7 @@ $totalSales = (float) $stmt->fetchColumn();
                                                 <div class="text-center mt-3">
 
                                                     <h4 class="mb-0">
-                                                        PKR <?= number_format($totalSales, 2) ?>
+                                                        $ <?= number_format($totalSales, 2) ?>
                                                     </h4>
 
                                                     <p class="text-sm mb-0">
@@ -795,39 +783,30 @@ $totalSales = (float) $stmt->fetchColumn();
                 </div>
 
 
-                <a href="javascript:void(0)"
-                    class="switch-trigger background-color">
+                <a href="javascript:void(0)" class="switch-trigger background-color">
 
                     <div class="badge-colors my-2 text-start">
 
-                        <span class="badge filter bg-gradient-primary"
-                            data-color="primary"
+                        <span class="badge filter bg-gradient-primary" data-color="primary"
                             onclick="sidebarColor(this)">
                         </span>
 
-                        <span class="badge filter bg-gradient-dark active"
-                            data-color="dark"
+                        <span class="badge filter bg-gradient-dark active" data-color="dark"
                             onclick="sidebarColor(this)">
                         </span>
 
-                        <span class="badge filter bg-gradient-info"
-                            data-color="info"
+                        <span class="badge filter bg-gradient-info" data-color="info" onclick="sidebarColor(this)">
+                        </span>
+
+                        <span class="badge filter bg-gradient-success" data-color="success"
                             onclick="sidebarColor(this)">
                         </span>
 
-                        <span class="badge filter bg-gradient-success"
-                            data-color="success"
+                        <span class="badge filter bg-gradient-warning" data-color="warning"
                             onclick="sidebarColor(this)">
                         </span>
 
-                        <span class="badge filter bg-gradient-warning"
-                            data-color="warning"
-                            onclick="sidebarColor(this)">
-                        </span>
-
-                        <span class="badge filter bg-gradient-danger"
-                            data-color="danger"
-                            onclick="sidebarColor(this)">
+                        <span class="badge filter bg-gradient-danger" data-color="danger" onclick="sidebarColor(this)">
                         </span>
 
                     </div>
@@ -852,20 +831,17 @@ $totalSales = (float) $stmt->fetchColumn();
 
                 <div class="d-flex">
 
-                    <button class="btn bg-gradient-dark px-3 mb-2"
-                        data-class="bg-gradient-dark"
+                    <button class="btn bg-gradient-dark px-3 mb-2" data-class="bg-gradient-dark"
                         onclick="sidebarType(this)">
                         Dark
                     </button>
 
-                    <button class="btn bg-gradient-dark px-3 mb-2 ms-2"
-                        data-class="bg-transparent"
+                    <button class="btn bg-gradient-dark px-3 mb-2 ms-2" data-class="bg-transparent"
                         onclick="sidebarType(this)">
                         Transparent
                     </button>
 
-                    <button class="btn bg-gradient-dark px-3 mb-2 ms-2 active"
-                        data-class="bg-white"
+                    <button class="btn bg-gradient-dark px-3 mb-2 ms-2 active" data-class="bg-white"
                         onclick="sidebarType(this)">
                         White
                     </button>
@@ -888,9 +864,7 @@ $totalSales = (float) $stmt->fetchColumn();
 
                     <div class="form-check form-switch ps-0 ms-auto my-auto">
 
-                        <input class="form-check-input mt-1 ms-auto"
-                            type="checkbox"
-                            id="navbarFixed"
+                        <input class="form-check-input mt-1 ms-auto" type="checkbox" id="navbarFixed"
                             onclick="navbarFixed(this)">
 
                     </div>
@@ -911,9 +885,7 @@ $totalSales = (float) $stmt->fetchColumn();
 
                     <div class="form-check form-switch ps-0 ms-auto my-auto">
 
-                        <input class="form-check-input mt-1 ms-auto"
-                            type="checkbox"
-                            id="dark-version"
+                        <input class="form-check-input mt-1 ms-auto" type="checkbox" id="dark-version"
                             onclick="darkMode(this)">
 
                     </div>

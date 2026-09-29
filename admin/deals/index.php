@@ -90,40 +90,31 @@ $deals = $stmt->fetchAll();
 
     <meta charset="utf-8" />
 
-    <meta name="viewport"
-        content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-    <link rel="apple-touch-icon"
-        sizes="76x76"
-        href="../assets/img/apple-icon.png">
+    <link rel="apple-touch-icon" sizes="76x76" href="../assets/img/apple-icon.png">
 
-    <link rel="icon"
-        type="image/png"
-        href="../assets/img/favicon.png">
+    <link rel="icon" type="image/png" href="../assets/img/favicon.png">
 
-    <title>Deals - ClothWear</title>
+    <title>Deals - ElectroCart</title>
 
 
     <!-- Fonts -->
 
-    <link rel="stylesheet"
-        type="text/css"
+    <link rel="stylesheet" type="text/css"
         href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700,900" />
 
 
     <!-- Nucleo Icons -->
 
-    <link href="../assets/css/nucleo-icons.css"
-        rel="stylesheet" />
+    <link href="../assets/css/nucleo-icons.css" rel="stylesheet" />
 
-    <link href="../assets/css/nucleo-svg.css"
-        rel="stylesheet" />
+    <link href="../assets/css/nucleo-svg.css" rel="stylesheet" />
 
 
     <!-- Font Awesome -->
 
-    <link rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
 
     <!-- Material Icons -->
@@ -134,13 +125,10 @@ $deals = $stmt->fetchAll();
 
     <!-- Material Dashboard -->
 
-    <link id="pagestyle"
-        href="../assets/css/material-dashboard.css?v=3.2.0"
-        rel="stylesheet" />
+    <link id="pagestyle" href="../assets/css/material-dashboard.css?v=3.2.0" rel="stylesheet" />
 
 
     <style>
-
         /* =========================
            SEARCH
         ========================= */
@@ -251,7 +239,6 @@ $deals = $stmt->fetchAll();
             border-radius: 8px;
 
         }
-
     </style>
 
 </head>
@@ -294,16 +281,13 @@ $deals = $stmt->fetchAll();
 
             <?php if ($successMessage): ?>
 
-                <div class="alert alert-success alert-dismissible fade show"
-                    role="alert">
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
 
                     <i class="fa-solid fa-circle-check me-2"></i>
 
                     <?= htmlspecialchars($successMessage) ?>
 
-                    <button type="button"
-                        class="btn-close"
-                        data-bs-dismiss="alert">
+                    <button type="button" class="btn-close" data-bs-dismiss="alert">
                     </button>
 
                 </div>
@@ -317,16 +301,13 @@ $deals = $stmt->fetchAll();
 
             <?php if ($errorMessage): ?>
 
-                <div class="alert alert-danger alert-dismissible fade show"
-                    role="alert">
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
 
                     <i class="fa-solid fa-circle-exclamation me-2"></i>
 
                     <?= htmlspecialchars($errorMessage) ?>
 
-                    <button type="button"
-                        class="btn-close"
-                        data-bs-dismiss="alert">
+                    <button type="button" class="btn-close" data-bs-dismiss="alert">
                     </button>
 
                 </div>
@@ -354,19 +335,12 @@ $deals = $stmt->fetchAll();
 
                 <!-- SEARCH -->
 
-                <form method="GET"
-                    class="deal-search-form d-flex align-items-center gap-2">
+                <form method="GET" class="deal-search-form d-flex align-items-center gap-2">
 
-                    <input
-                        type="text"
-                        name="search"
-                        class="form-control border border-radius-md ps-3"
-                        placeholder="Search deals..."
-                        value="<?= htmlspecialchars($search) ?>"
-                        style="width: 220px;">
+                    <input type="text" name="search" class="form-control border border-radius-md ps-3"
+                        placeholder="Search deals..." value="<?= htmlspecialchars($search) ?>" style="width: 220px;">
 
-                    <button type="submit"
-                        class="btn btn-primary mb-0">
+                    <button type="submit" class="btn btn-primary mb-0">
 
                         Search
 
@@ -398,8 +372,7 @@ $deals = $stmt->fetchAll();
 
                         <!-- ADD DEAL -->
 
-                        <a href="create.php"
-                            class="btn bg-gradient-dark btn-sm">
+                        <a href="create.php" class="btn bg-gradient-dark btn-sm">
 
                             <i class="fa-solid fa-plus me-1"></i>
 
@@ -477,7 +450,8 @@ $deals = $stmt->fetchAll();
 
                                     <!-- ACTION -->
 
-                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-end pe-4">
+                                    <th
+                                        class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-end pe-4">
 
                                         Action
 
@@ -503,8 +477,7 @@ $deals = $stmt->fetchAll();
 
                                     <tr>
 
-                                        <td colspan="6"
-                                            class="text-center py-5">
+                                        <td colspan="6" class="text-center py-5">
 
                                             <i class="fa-solid fa-tags text-secondary fs-3 mb-3"></i>
 
@@ -545,17 +518,14 @@ $deals = $stmt->fetchAll();
                                                         <?php if (!empty($deal['background_image'])): ?>
 
 
-                                                            <img
-                                                                src="../../public/uploads/deals/<?= htmlspecialchars($deal['background_image']) ?>"
-                                                                alt="<?= htmlspecialchars($deal['title']) ?>"
-                                                                class="deal-image">
+                                                            <img src="../../public/uploads/deals/<?= htmlspecialchars($deal['background_image']) ?>"
+                                                                alt="<?= htmlspecialchars($deal['title']) ?>" class="deal-image">
 
 
                                                         <?php else: ?>
 
 
-                                                            <div
-                                                                class="bg-gray-100 border-radius-lg d-flex align-items-center justify-content-center"
+                                                            <div class="bg-gray-100 border-radius-lg d-flex align-items-center justify-content-center"
                                                                 style="width:55px;height:55px;">
 
                                                                 <i class="fa-solid fa-image text-secondary"></i>
@@ -612,15 +582,13 @@ $deals = $stmt->fetchAll();
 
                                                     <?php if (!empty($deal['product_image'])): ?>
 
-                                                        <img
-                                                            src="../../public/uploads/products/<?= htmlspecialchars($deal['product_image']) ?>"
+                                                        <img src="../../public/uploads/products/<?= htmlspecialchars($deal['product_image']) ?>"
                                                             alt="<?= htmlspecialchars($deal['product_name']) ?>"
                                                             class="product-image me-3">
 
                                                     <?php else: ?>
 
-                                                        <div
-                                                            class="bg-gray-100 border-radius-lg d-flex align-items-center justify-content-center me-3"
+                                                        <div class="bg-gray-100 border-radius-lg d-flex align-items-center justify-content-center me-3"
                                                             style="width:45px;height:45px;">
 
                                                             <i class="fa-solid fa-image text-secondary"></i>
@@ -763,10 +731,8 @@ $deals = $stmt->fetchAll();
 
                                                 <!-- EDIT -->
 
-                                                <a
-                                                    href="edit.php?id=<?= (int) $deal['id'] ?>"
-                                                    class="btn btn-link text-secondary p-0 me-3"
-                                                    title="Edit Deal">
+                                                <a href="edit.php?id=<?= (int) $deal['id'] ?>"
+                                                    class="btn btn-link text-secondary p-0 me-3" title="Edit Deal">
 
                                                     <i class="fa-solid fa-pen"></i>
 
@@ -775,8 +741,7 @@ $deals = $stmt->fetchAll();
 
                                                 <!-- STATUS -->
 
-                                                <a
-                                                    href="update-status.php?id=<?= (int) $deal['id'] ?>&status=<?= ((int) $deal['status'] === 1) ? 0 : 1 ?>"
+                                                <a href="update-status.php?id=<?= (int) $deal['id'] ?>&status=<?= ((int) $deal['status'] === 1) ? 0 : 1 ?>"
                                                     class="btn btn-link text-warning p-0 me-3"
                                                     title="<?= ((int) $deal['status'] === 1) ? 'Deactivate Deal' : 'Activate Deal' ?>">
 
@@ -795,11 +760,8 @@ $deals = $stmt->fetchAll();
 
                                                 <!-- DELETE -->
 
-                                                <button
-                                                    type="button"
-                                                    class="btn btn-link text-danger p-0"
-                                                    data-bs-toggle="modal"
-                                                    data-bs-target="#deleteDealModal"
+                                                <button type="button" class="btn btn-link text-danger p-0"
+                                                    data-bs-toggle="modal" data-bs-target="#deleteDealModal"
                                                     data-deal-id="<?= (int) $deal['id'] ?>"
                                                     data-deal-title="<?= htmlspecialchars($deal['title']) ?>"
                                                     title="Delete Deal">
@@ -849,9 +811,7 @@ $deals = $stmt->fetchAll();
          DELETE DEAL MODAL
     =================================================== -->
 
-    <div class="modal fade"
-        id="deleteDealModal"
-        tabindex="-1">
+    <div class="modal fade" id="deleteDealModal" tabindex="-1">
 
 
         <div class="modal-dialog modal-dialog-centered modal-sm">
@@ -896,10 +856,7 @@ $deals = $stmt->fetchAll();
 
                     <!-- CANCEL -->
 
-                    <button
-                        type="button"
-                        class="btn btn-light btn-sm"
-                        data-bs-dismiss="modal">
+                    <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">
 
                         Cancel
 
@@ -908,21 +865,13 @@ $deals = $stmt->fetchAll();
 
                     <!-- DELETE FORM -->
 
-                    <form
-                        method="POST"
-                        action="delete.php"
-                        id="deleteDealForm">
+                    <form method="POST" action="delete.php" id="deleteDealForm">
 
 
-                        <input
-                            type="hidden"
-                            name="deal_id"
-                            id="deleteDealId">
+                        <input type="hidden" name="deal_id" id="deleteDealId">
 
 
-                        <button
-                            type="submit"
-                            class="btn btn-danger btn-sm">
+                        <button type="submit" class="btn btn-danger btn-sm">
 
                             Yes, Delete
 

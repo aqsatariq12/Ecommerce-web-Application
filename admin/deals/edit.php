@@ -532,7 +532,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <link rel="icon" type="image/png" href="../assets/img/favicon.png">
 
-    <title>Edit Deal - ClothWear</title>
+    <title>Edit Deal - ElectroCart</title>
 
 
     <!-- Fonts -->
@@ -1570,51 +1570,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     </script>
 
-<script>
+    <script>
 
-    const productSelect =
-        document.getElementById('productId');
+        const productSelect =
+            document.getElementById('productId');
 
-    const oldPriceInput =
-        document.getElementById('oldPrice');
+        const oldPriceInput =
+            document.getElementById('oldPrice');
 
-    const newPriceInput =
-        document.getElementById('newPrice');
-
-
-    productSelect.addEventListener('change', function () {
-
-        const selectedOption =
-            this.options[this.selectedIndex];
+        const newPriceInput =
+            document.getElementById('newPrice');
 
 
-        const productPrice =
-            selectedOption.getAttribute('data-price');
+        productSelect.addEventListener('change', function () {
+
+            const selectedOption =
+                this.options[this.selectedIndex];
 
 
-        if (productPrice) {
+            const productPrice =
+                selectedOption.getAttribute('data-price');
 
-            oldPriceInput.value =
-                parseFloat(productPrice).toFixed(2);
 
-            newPriceInput.value = '';
+            if (productPrice) {
 
-            newPriceInput.max =
-                productPrice;
+                oldPriceInput.value =
+                    parseFloat(productPrice).toFixed(2);
 
-        } else {
+                newPriceInput.value = '';
 
-            oldPriceInput.value = '';
+                newPriceInput.max =
+                    productPrice;
 
-            newPriceInput.value = '';
+            } else {
 
-            newPriceInput.removeAttribute('max');
+                oldPriceInput.value = '';
 
-        }
+                newPriceInput.value = '';
 
-    });
+                newPriceInput.removeAttribute('max');
 
-</script>
+            }
+
+        });
+
+    </script>
 
     <!-- =========================
          JAVASCRIPT

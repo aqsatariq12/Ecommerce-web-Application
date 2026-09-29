@@ -9,6 +9,7 @@ require_once '../core/Shipping.php';
 require_once '../core/Session.php';
 require_once '../core/Address.php';
 require_once '../core/Order.php';
+require_once '../config/stripe.php';
 
 Session::start();
 
@@ -31,7 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 	 * Validate payment method
 	 */
 
-	if (!in_array($paymentMethod, ['cod', 'paypal'], true)) {
+	if (!in_array($paymentMethod, ['cod', 'stripe'], true)) {
 		die("Invalid payment method.");
 	}
 
@@ -110,17 +111,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 	if (!$shippingMethod) {
 		die("Invalid shipping method.");
 	}
-
 	/*
-	 * PayPal will be implemented in the next phase.
-	 *
-	 * For now only COD creates an order.
+	 * Stripe payment
 	 */
 
-	if ($paymentMethod === 'paypal') {
-		die("PayPal payment will be implemented next.");
-	}
+	if ($paymentMethod === 'stripe') {
 
+		header("Location: stripe-checkout.php");
+
+		exit;
+	}
 	/*
 	 * Create COD order
 	 */
@@ -222,15 +222,15 @@ $total = $subtotal + $shippingCost;
 <html lang="en">
 
 
-<!-- molla/checkout.php  22 Nov 2019 09:55:06 GMT -->
+<!-- ElectroCart/checkout.php  22 Nov 2019 09:55:06 GMT -->
 
 <head>
 	<meta charset="UTF-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-	<title>Molla - Bootstrap eCommerce Template</title>
+	<title>ElectroCart - Bootstrap eCommerce Template</title>
 	<meta name="keywords" content="HTML5 Template">
-	<meta name="description" content="Molla - Bootstrap eCommerce Template">
+	<meta name="description" content="ElectroCart - Bootstrap eCommerce Template">
 	<meta name="author" content="p-themes">
 	<!-- Favicon -->
 	<link rel="apple-touch-icon" sizes="180x180" href="assets/images/icons/apple-touch-icon.png">
@@ -239,8 +239,8 @@ $total = $subtotal + $shippingCost;
 	<link rel="manifest" href="assets/images/icons/site.html">
 	<link rel="mask-icon" href="assets/images/icons/safari-pinned-tab.svg" color="#666666">
 	<link rel="shortcut icon" href="assets/images/icons/favicon.ico">
-	<meta name="apple-mobile-web-app-title" content="Molla">
-	<meta name="application-name" content="Molla">
+	<meta name="apple-mobile-web-app-title" content="ElectroCart">
+	<meta name="application-name" content="ElectroCart">
 	<meta name="msapplication-TileColor" content="#cc9966">
 	<meta name="msapplication-config" content="assets/images/icons/browserconfig.xml">
 	<meta name="theme-color" content="#ffffff">
@@ -348,21 +348,8 @@ $total = $subtotal + $shippingCost;
 									<input type="email" name="email" class="form-control"
 										value="<?= htmlspecialchars($user["email"]) ?>" required>
 
-									<div class="custom-control custom-checkbox">
-										<input type="checkbox" class="custom-control-input" id="checkout-create-acc">
-										<label class="custom-control-label" for="checkout-create-acc">Create an
-											account?</label>
-									</div><!-- End .custom-checkbox -->
 
-									<div class="custom-control custom-checkbox">
-										<input type="checkbox" class="custom-control-input" id="checkout-diff-address">
-										<label class="custom-control-label" for="checkout-diff-address">Ship to a
-											different address?</label>
-									</div><!-- End .custom-checkbox -->
 
-									<label>Order notes (optional)</label>
-									<textarea class="form-control" cols="30" rows="4"
-										placeholder="Notes about your order, e.g. special notes for delivery"></textarea>
 								</div><!-- End .col-lg-9 -->
 								<aside class="col-lg-3">
 									<div class="summary">
@@ -456,18 +443,20 @@ $total = $subtotal + $shippingCost;
 
 											<!-- PayPal -->
 
+											<!-- Stripe -->
+
 											<div class="card">
 
-												<div class="card-header" id="heading-paypal">
+												<div class="card-header" id="heading-stripe">
 
 													<h2 class="card-title">
 
-														<label for="payment-paypal" style="cursor: pointer; margin: 0;">
+														<label for="payment-stripe" style="cursor: pointer; margin: 0;">
 
-															<input type="radio" id="payment-paypal"
-																name="payment_method" value="paypal">
+															<input type="radio" id="payment-stripe"
+																name="payment_method" value="stripe">
 
-															PayPal
+															Pay Online with Stripe
 
 														</label>
 
@@ -477,7 +466,7 @@ $total = $subtotal + $shippingCost;
 
 												<div class="card-body">
 
-													Pay securely using PayPal Sandbox.
+													Pay securely online using Stripe.
 
 												</div>
 
@@ -515,6 +504,6 @@ $total = $subtotal + $shippingCost;
 </body>
 
 
-<!-- molla/checkout.php  22 Nov 2019 09:55:06 GMT -->
+<!-- ElectroCart/checkout.php  22 Nov 2019 09:55:06 GMT -->
 
 </html>

@@ -55,7 +55,7 @@ $totalUsers = count($users);
           type="image/png"
           href="../assets/img/favicon.png">
 
-    <title>Users - ClothWear Admin</title>
+    <title>Users - ElectroCart Admin</title>
 
 
     <!-- Fonts -->

@@ -26,17 +26,17 @@ include '../includes/header.php';
 <html lang="en">
 
 
-<!-- molla/product-gallery.html  22 Nov 2019 10:03:27 GMT -->
+<!-- ElectroCart/product-gallery.html  22 Nov 2019 10:03:27 GMT -->
 
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>
-        <?= htmlspecialchars($product['name']) ?> - ClothWear
+        <?= htmlspecialchars($product['name']) ?> - ElectroCart
     </title>
     <meta name="keywords" content="HTML5 Template">
-    <meta name="description" content="Molla - Bootstrap eCommerce Template">
+    <meta name="description" content="ElectroCart - Bootstrap eCommerce Template">
     <meta name="author" content="p-themes">
     <!-- Favicon -->
     <link rel="apple-touch-icon" sizes="180x180" href="assets/images/icons/apple-touch-icon.png">
@@ -45,8 +45,8 @@ include '../includes/header.php';
     <link rel="manifest" href="assets/images/icons/site.html">
     <link rel="mask-icon" href="assets/images/icons/safari-pinned-tab.svg" color="#666666">
     <link rel="shortcut icon" href="assets/images/icons/favicon.ico">
-    <meta name="apple-mobile-web-app-title" content="Molla">
-    <meta name="application-name" content="Molla">
+    <meta name="apple-mobile-web-app-title" content="ElectroCart">
+    <meta name="application-name" content="ElectroCart">
     <meta name="msapplication-TileColor" content="#cc9966">
     <meta name="msapplication-config" content="assets/images/icons/browserconfig.xml">
     <meta name="theme-color" content="#ffffff">
@@ -83,7 +83,7 @@ include '../includes/header.php';
                                 <!-- End .pager-nav -->
                             </div><!-- End .container -->
                         </nav><!-- End .breadcrumb-nav -->
-                        <div class="container">
+                        <div class="container" id="productDetail">
 
                             <div class="row align-items-center bg-light">
 
@@ -283,6 +283,8 @@ include '../includes/header.php';
 
                                                 <?php if ($product['stock'] > 0): ?>
 
+                                                    <input type="hidden" name="redirect" value="product-detail.php?id=<?= (int) $product['id'] ?>#productDetail">
+
                                                     <button type="submit" class="btn-product btn-cart">
                                                         <span>add to cart</span>
                                                     </button>
@@ -300,17 +302,6 @@ include '../includes/header.php';
                                         </form>
 
 
-                                        <div class="details-action-wrapper">
-
-                                            <a href="#" class="btn-product btn-wishlist" title="Wishlist">
-                                                <span>Add to Wishlist</span>
-                                            </a>
-
-                                            <a href="#" class="btn-product btn-compare" title="Compare">
-                                                <span>Add to Compare</span>
-                                            </a>
-
-                                        </div>
 
                                     </div>
 

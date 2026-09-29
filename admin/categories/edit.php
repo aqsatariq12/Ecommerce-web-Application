@@ -361,7 +361,7 @@ if (
 
     <link rel="icon" type="image/png" href="../assets/img/favicon.png">
 
-    <title>Edit Category - ClothWear</title>
+    <title>Edit Category - ElectroCart</title>
 
 
     <!-- Fonts -->

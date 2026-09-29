@@ -484,7 +484,7 @@ if (
 
     <link rel="icon" type="image/png" href="../assets/img/favicon.png">
 
-    <title>Edit Product - ClothWear</title>
+    <title>Edit Product - ElectroCart</title>
 
 
     <!-- Fonts -->

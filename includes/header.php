@@ -263,7 +263,7 @@ if ($isLoggedIn && Auth::isCustomer()) {
 
 
     /* =========================================================
-   REMOVE OLD MOLLA DESKTOP SEARCH AREA
+   REMOVE OLD ElectroCart DESKTOP SEARCH AREA
    ========================================================= */
 
     .header-middle .header-center {
@@ -579,7 +579,7 @@ if ($isLoggedIn && Auth::isCustomer()) {
                 <!-- Logo -->
                 <a href="index.php" class="logo">
 
-                    <img src="assets/images/demos/demo-4/logo.png" alt="Molla Logo" width="105" height="25">
+                    <img src="/public/assets/images/demos/demo-4/pic.png" alt="ElectroCart Logo" width="250">
 
                 </a>
 
@@ -1416,6 +1416,17 @@ if ($isLoggedIn && Auth::isCustomer()) {
             }
 
         });
+
+    });
+</script>
+
+<script>
+    window.addEventListener('pageshow', function (event) {
+
+        // If browser restored this page from Back/Forward cache
+        if (event.persisted) {
+            window.location.reload();
+        }
 
     });
 </script>

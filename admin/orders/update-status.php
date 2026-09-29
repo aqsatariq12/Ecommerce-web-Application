@@ -3,6 +3,7 @@
 require_once '../../core/Middleware.php';
 require_once '../../config/database.php';
 require_once '../../core/Session.php';
+require_once '../../config/stripe.php';
 
 Middleware::admin();
 Session::start();
@@ -58,7 +59,9 @@ if ($orderId <= 0) {
 $allowedPaymentStatuses = [
     'pending',
     'completed',
-    'failed'
+    'failed',
+    'refunded'
+
 ];
 
 
@@ -120,11 +123,14 @@ try {
     // =================================================
 
     $sql = "SELECT
-                id,
-                order_status
-            FROM orders
-            WHERE id = :id
-            LIMIT 1";
+            id,
+            order_status,
+            payment_method,
+            payment_status,
+            transaction_id
+        FROM orders
+        WHERE id = :id
+        LIMIT 1";
 
     $stmt = $pdo->prepare($sql);
 
@@ -152,7 +158,105 @@ try {
     // =================================================
 
     $currentOrderStatus = $order['order_status'];
+    // =================================================
+// VALIDATE ORDER STATUS TRANSITION
+// =================================================
 
+    $allowedOrderTransitions = [
+
+        'processing' => [
+            'processing',
+            'shipped',
+            'cancelled'
+        ],
+
+        'shipped' => [
+            'shipped',
+            'delivered',
+            'cancelled'
+        ],
+
+        'delivered' => [
+            'delivered'
+        ],
+
+        'cancelled' => [
+            'cancelled'
+        ]
+
+    ];
+
+
+    if (
+        !in_array(
+            $orderStatus,
+            $allowedOrderTransitions[$currentOrderStatus],
+            true
+        )
+    ) {
+
+        throw new Exception(
+            'Invalid order status transition.'
+        );
+    }
+
+    // =================================================
+// VALIDATE PAYMENT STATUS TRANSITION
+// =================================================
+
+    $currentPaymentStatus = $order['payment_status'];
+    $paymentMethod = $order['payment_method'];
+
+    $allowedPaymentTransitions = [
+
+        'pending' => [
+            'pending',
+            'completed',
+            'failed'
+        ],
+
+        'completed' => [
+            'completed',
+            'refunded'
+        ],
+
+        'failed' => [
+            'failed'
+        ],
+
+        'refunded' => [
+            'refunded'
+        ]
+
+    ];
+
+
+    if (
+        !in_array(
+            $paymentStatus,
+            $allowedPaymentTransitions[$currentPaymentStatus],
+            true
+        )
+    ) {
+
+        throw new Exception(
+            'Invalid payment status transition.'
+        );
+    }
+
+    // =================================================
+// COD CANNOT BE REFUNDED
+// =================================================
+
+    if (
+        $paymentMethod === 'cod' &&
+        $paymentStatus === 'refunded'
+    ) {
+
+        throw new Exception(
+            'COD orders cannot be marked as refunded.'
+        );
+    }
 
     // =================================================
     // GET ORDER ITEMS
@@ -187,12 +291,43 @@ try {
         $orderStatus === 'cancelled'
     ) {
 
+        /*
+         * =========================================
+         * REFUND STRIPE PAYMENT
+         * =========================================
+         */
+
+        if (
+            $order['payment_method'] === 'stripe' &&
+            $order['payment_status'] === 'completed' &&
+            !empty($order['transaction_id'])
+        ) {
+
+            \Stripe\Refund::create([
+                'payment_intent' => $order['transaction_id']
+            ]);
+
+            /*
+             * Stripe refund successful
+             *
+             * Mark payment as refunded
+             */
+
+            $paymentStatus = 'refunded';
+        }
+
+
+        /*
+         * =========================================
+         * RESTORE STOCK
+         * =========================================
+         */
+
         $stockSql = "UPDATE products
-                     SET stock = stock + :quantity
-                     WHERE id = :product_id";
+                 SET stock = stock + :quantity
+                 WHERE id = :product_id";
 
         $stockStmt = $pdo->prepare($stockSql);
-
 
         foreach ($items as $item) {
 
@@ -200,55 +335,6 @@ try {
                 ':quantity' => (int) $item['quantity'],
                 ':product_id' => (int) $item['product_id']
             ]);
-        }
-    }
-
-
-    // =================================================
-    // CASE 2:
-    // CANCELLED ORDER IS BEING RESTORED
-    //
-    // Example:
-    // cancelled -> processing
-    // cancelled -> shipped
-    // =================================================
-
-    if (
-        $currentOrderStatus === 'cancelled' &&
-        $orderStatus !== 'cancelled'
-    ) {
-
-        $stockSql = "UPDATE products
-                     SET stock = stock - :quantity
-                     WHERE id = :product_id
-                     AND stock >= :quantity";
-
-        $stockStmt = $pdo->prepare($stockSql);
-
-
-        foreach ($items as $item) {
-
-            $quantity = (int) $item['quantity'];
-
-            $productId = (int) $item['product_id'];
-
-
-            $stockStmt->execute([
-                ':quantity' => $quantity,
-                ':product_id' => $productId
-            ]);
-
-
-            // =========================================
-            // NOT ENOUGH STOCK
-            // =========================================
-
-            if ($stockStmt->rowCount() === 0) {
-
-                throw new Exception(
-                    'Not enough stock to restore this order.'
-                );
-            }
         }
     }
 

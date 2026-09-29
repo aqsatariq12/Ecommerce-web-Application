@@ -58,83 +58,54 @@ $totalOrders = count($orders);
 
     <meta charset="utf-8">
 
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <link
-        rel="apple-touch-icon"
-        sizes="76x76"
-        href="../assets/img/apple-icon.png"
-    >
+    <link rel="apple-touch-icon" sizes="76x76" href="../assets/img/apple-icon.png">
 
-    <link
-        rel="icon"
-        type="image/png"
-        href="../assets/img/favicon.png"
-    >
+    <link rel="icon" type="image/png" href="../assets/img/favicon.png">
 
-    <title>Orders - ClothWear Admin</title>
+    <title>Orders - ElectroCart Admin</title>
 
 
     <!-- =================================================
          FONTS
     ================================================== -->
 
-    <link
-        rel="stylesheet"
-        type="text/css"
-        href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700,900"
-    >
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700,900">
 
 
     <!-- =================================================
          NUCLEO ICONS
     ================================================== -->
 
-    <link
-        href="../assets/css/nucleo-icons.css"
-        rel="stylesheet"
-    >
+    <link href="../assets/css/nucleo-icons.css" rel="stylesheet">
 
-    <link
-        href="../assets/css/nucleo-svg.css"
-        rel="stylesheet"
-    >
+    <link href="../assets/css/nucleo-svg.css" rel="stylesheet">
 
 
     <!-- =================================================
          FONT AWESOME
     ================================================== -->
 
-    <link
-        rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
-    >
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
 
     <!-- =================================================
          MATERIAL ICONS
     ================================================== -->
 
-    <link
-        rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0"
-    >
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0">
 
 
     <!-- =================================================
          MATERIAL DASHBOARD
     ================================================== -->
 
-    <link
-        id="pagestyle"
-        href="../assets/css/material-dashboard.css?v=3.2.0"
-        rel="stylesheet"
-    >
+    <link id="pagestyle" href="../assets/css/material-dashboard.css?v=3.2.0" rel="stylesheet">
 
 
     <style>
-
         /* =====================================================
            PAGE HEADER
         ===================================================== */
@@ -299,11 +270,9 @@ $totalOrders = count($orders);
 
             border-radius: 50%;
 
-            background: linear-gradient(
-                135deg,
-                #e9efff,
-                #f3f5ff
-            );
+            background: linear-gradient(135deg,
+                    #e9efff,
+                    #f3f5ff);
 
             color: #5e72e4;
 
@@ -396,8 +365,7 @@ $totalOrders = count($orders);
             border-color: #5e72e4;
 
             box-shadow:
-                0 0 0 3px
-                rgba(94, 114, 228, 0.1);
+                0 0 0 3px rgba(94, 114, 228, 0.1);
         }
 
         .payment-method {
@@ -720,7 +688,6 @@ $totalOrders = count($orders);
             }
 
         }
-
     </style>
 
 </head>
@@ -747,9 +714,7 @@ $totalOrders = count($orders);
          MAIN CONTENT
     ====================================================== -->
 
-    <main
-        class="main-content position-relative max-height-vh-100 h-100 border-radius-lg"
-    >
+    <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg">
 
         <div class="container-fluid py-4">
 
@@ -760,20 +725,13 @@ $totalOrders = count($orders);
 
             <?php if ($successMessage): ?>
 
-                <div
-                    class="alert alert-success alert-dismissible fade show orders-alert"
-                    role="alert"
-                >
+                <div class="alert alert-success alert-dismissible fade show orders-alert" role="alert">
 
                     <i class="fa-solid fa-circle-check me-2"></i>
 
                     <?= htmlspecialchars($successMessage) ?>
 
-                    <button
-                        type="button"
-                        class="btn-close"
-                        data-bs-dismiss="alert"
-                    ></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
 
                 </div>
 
@@ -786,20 +744,13 @@ $totalOrders = count($orders);
 
             <?php if ($errorMessage): ?>
 
-                <div
-                    class="alert alert-danger alert-dismissible fade show orders-alert"
-                    role="alert"
-                >
+                <div class="alert alert-danger alert-dismissible fade show orders-alert" role="alert">
 
                     <i class="fa-solid fa-circle-exclamation me-2"></i>
 
                     <?= htmlspecialchars($errorMessage) ?>
 
-                    <button
-                        type="button"
-                        class="btn-close"
-                        data-bs-dismiss="alert"
-                    ></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
 
                 </div>
 
@@ -927,347 +878,380 @@ $totalOrders = count($orders);
                             <tbody>
 
 
-                            <?php if (empty($orders)): ?>
+                                <?php if (empty($orders)): ?>
 
 
-                                <!-- EMPTY STATE -->
-
-                                <tr>
-
-                                    <td
-                                        colspan="7"
-                                        class="orders-empty-state"
-                                    >
-
-                                        <div class="orders-empty-icon">
-
-                                            <i class="fa-solid fa-box-open"></i>
-
-                                        </div>
-
-                                        <h6 class="orders-empty-title">
-                                            No orders found
-                                        </h6>
-
-                                        <p class="orders-empty-text">
-                                            Customer orders will appear here once they are placed.
-                                        </p>
-
-                                    </td>
-
-                                </tr>
-
-
-                            <?php else: ?>
-
-
-                                <?php foreach ($orders as $order): ?>
-
+                                    <!-- EMPTY STATE -->
 
                                     <tr>
 
+                                        <td colspan="7" class="orders-empty-state">
 
-                                        <!-- =====================================
-                                             ORDER
-                                        ====================================== -->
+                                            <div class="orders-empty-icon">
 
-                                        <td>
-
-                                            <div class="d-flex align-items-center">
-
-
-                                                <div class="order-icon me-3">
-
-                                                    <i class="fa-solid fa-receipt"></i>
-
-                                                </div>
-
-
-                                                <div>
-
-                                                    <h6 class="order-number">
-
-                                                        #<?= htmlspecialchars(
-                                                            $order['order_number']
-                                                        ) ?>
-
-                                                    </h6>
-
-                                                    <p class="order-id">
-
-                                                        Order ID:
-                                                        <?= (int) $order['id'] ?>
-
-                                                    </p>
-
-                                                </div>
+                                                <i class="fa-solid fa-box-open"></i>
 
                                             </div>
 
-                                        </td>
+                                            <h6 class="orders-empty-title">
+                                                No orders found
+                                            </h6>
 
-
-                                        <!-- =====================================
-                                             CUSTOMER
-                                        ====================================== -->
-
-                                        <td>
-
-                                            <div class="d-flex align-items-center">
-
-
-                                                <!-- Avatar -->
-
-                                                <div class="customer-avatar me-3">
-
-                                                    <?= htmlspecialchars(
-                                                        strtoupper(
-                                                            substr(
-                                                                trim($order['customer_name']),
-                                                                0,
-                                                                1
-                                                            )
-                                                        )
-                                                    ) ?>
-
-                                                </div>
-
-
-                                                <!-- Customer Details -->
-
-                                                <div>
-
-                                                    <p class="customer-name">
-
-                                                        <?= htmlspecialchars(
-                                                            $order['customer_name']
-                                                        ) ?>
-
-                                                    </p>
-
-                                                    <p class="customer-email">
-
-                                                        <?= htmlspecialchars(
-                                                            $order['customer_email']
-                                                        ) ?>
-
-                                                    </p>
-
-                                                </div>
-
-                                            </div>
-
-                                        </td>
-
-
-                                        <!-- =====================================
-                                             TOTAL
-                                        ====================================== -->
-
-                                        <td>
-
-                                            <p class="order-total">
-
-                                                PKR <?= number_format(
-                                                    (float) $order['total_amount'],
-                                                    2
-                                                ) ?>
-
+                                            <p class="orders-empty-text">
+                                                Customer orders will appear here once they are placed.
                                             </p>
 
                                         </td>
 
-
-                                        <!-- =====================================
-                                             PAYMENT
-                                        ====================================== -->
-
-                                        <td>
-
-                                            <select
-                                                name="payment_status"
-                                                class="form-select payment-status-select"
-                                                form="order-form-<?= (int) $order['id'] ?>"
-                                            >
-
-                                                <option
-                                                    value="pending"
-                                                    <?= $order['payment_status'] === 'pending'
-                                                        ? 'selected'
-                                                        : '' ?>
-                                                >
-                                                    Pending
-                                                </option>
-
-                                                <option
-                                                    value="completed"
-                                                    <?= $order['payment_status'] === 'completed'
-                                                        ? 'selected'
-                                                        : '' ?>
-                                                >
-                                                    Completed
-                                                </option>
-
-                                                <option
-                                                    value="failed"
-                                                    <?= $order['payment_status'] === 'failed'
-                                                        ? 'selected'
-                                                        : '' ?>
-                                                >
-                                                    Failed
-                                                </option>
-
-                                            </select>
-
-
-                                            <span class="payment-method">
-
-                                                <?= strtoupper(
-                                                    htmlspecialchars(
-                                                        $order['payment_method']
-                                                    )
-                                                ) ?>
-
-                                            </span>
-
-                                        </td>
-
-
-                                        <!-- =====================================
-                                             ORDER STATUS
-                                        ====================================== -->
-
-                                        <td>
-
-                                            <select
-                                                name="order_status"
-                                                class="form-select order-status-select"
-                                                form="order-form-<?= (int) $order['id'] ?>"
-                                            >
-
-                                                <option
-                                                    value="processing"
-                                                    <?= $order['order_status'] === 'processing'
-                                                        ? 'selected'
-                                                        : '' ?>
-                                                >
-                                                    Processing
-                                                </option>
-
-                                                <option
-                                                    value="shipped"
-                                                    <?= $order['order_status'] === 'shipped'
-                                                        ? 'selected'
-                                                        : '' ?>
-                                                >
-                                                    Shipped
-                                                </option>
-
-                                                <option
-                                                    value="delivered"
-                                                    <?= $order['order_status'] === 'delivered'
-                                                        ? 'selected'
-                                                        : '' ?>
-                                                >
-                                                    Delivered
-                                                </option>
-
-                                                <option
-                                                    value="cancelled"
-                                                    <?= $order['order_status'] === 'cancelled'
-                                                        ? 'selected'
-                                                        : '' ?>
-                                                >
-                                                    Cancelled
-                                                </option>
-
-                                            </select>
-
-                                        </td>
-
-
-                                        <!-- =====================================
-                                             DATE
-                                        ====================================== -->
-
-                                        <td>
-
-                                            <span class="order-date">
-
-                                                <?= date(
-                                                    'd M Y',
-                                                    strtotime($order['created_at'])
-                                                ) ?>
-
-                                            </span>
-
-                                        </td>
-
-
-                                        <!-- =====================================
-                                             ACTIONS
-                                        ====================================== -->
-
-                                        <td>
-
-                                            <div class="order-actions">
-
-
-                                                <!-- Update Status -->
-
-                                                <form
-                                                    method="POST"
-                                                    action="update-status.php"
-                                                    id="order-form-<?= (int) $order['id'] ?>"
-                                                    class="d-inline"
-                                                >
-
-                                                    <input
-                                                        type="hidden"
-                                                        name="order_id"
-                                                        value="<?= (int) $order['id'] ?>"
-                                                    >
-
-
-                                                    <button
-                                                        type="submit"
-                                                        class="btn bg-gradient-dark order-save-btn"
-                                                        title="Save Status"
-                                                    >
-
-                                                        <i class="fa-solid fa-check"></i>
-
-                                                        Save
-
-                                                    </button>
-
-                                                </form>
-
-
-                                                <!-- View Order -->
-
-                                                <a
-                                                    href="detail.php?id=<?= (int) $order['id'] ?>"
-                                                    class="btn order-view-btn"
-                                                    title="View Order"
-                                                >
-
-                                                    <i class="fa-solid fa-eye"></i>
-
-                                                </a>
-
-                                            </div>
-
-                                        </td>
-
-
                                     </tr>
 
 
-                                <?php endforeach; ?>
+                                <?php else: ?>
 
 
-                            <?php endif; ?>
+                                    <?php foreach ($orders as $order): ?>
+
+
+                                        <tr>
+
+
+                                            <!-- =====================================
+                                             ORDER
+                                        ====================================== -->
+
+                                            <td>
+
+                                                <div class="d-flex align-items-center">
+
+
+                                                    <div class="order-icon me-3">
+
+                                                        <i class="fa-solid fa-receipt"></i>
+
+                                                    </div>
+
+
+                                                    <div>
+
+                                                        <h6 class="order-number">
+
+                                                            #<?= htmlspecialchars(
+                                                                $order['order_number']
+                                                            ) ?>
+
+                                                        </h6>
+
+                                                        <p class="order-id">
+
+                                                            Order ID:
+                                                            <?= (int) $order['id'] ?>
+
+                                                        </p>
+
+                                                    </div>
+
+                                                </div>
+
+                                            </td>
+
+
+                                            <!-- =====================================
+                                             CUSTOMER
+                                        ====================================== -->
+
+                                            <td>
+
+                                                <div class="d-flex align-items-center">
+
+
+                                                    <!-- Avatar -->
+
+                                                    <div class="customer-avatar me-3">
+
+                                                        <?= htmlspecialchars(
+                                                            strtoupper(
+                                                                substr(
+                                                                    trim($order['customer_name']),
+                                                                    0,
+                                                                    1
+                                                                )
+                                                            )
+                                                        ) ?>
+
+                                                    </div>
+
+
+                                                    <!-- Customer Details -->
+
+                                                    <div>
+
+                                                        <p class="customer-name">
+
+                                                            <?= htmlspecialchars(
+                                                                $order['customer_name']
+                                                            ) ?>
+
+                                                        </p>
+
+                                                        <p class="customer-email">
+
+                                                            <?= htmlspecialchars(
+                                                                $order['customer_email']
+                                                            ) ?>
+
+                                                        </p>
+
+                                                    </div>
+
+                                                </div>
+
+                                            </td>
+
+
+                                            <!-- =====================================
+                                             TOTAL
+                                        ====================================== -->
+
+                                            <td>
+
+                                                <p class="order-total">
+
+                                                    $ <?= number_format(
+                                                        (float) $order['total_amount'],
+                                                        2
+                                                    ) ?>
+
+                                                </p>
+
+                                            </td>
+
+
+                                            <!-- =====================================
+                                             PAYMENT
+                                        ====================================== -->
+
+                                            <td>
+
+                                                <?php
+                                                $paymentMethod = $order['payment_method'];
+                                                $paymentStatus = $order['payment_status'];
+                                                ?>
+
+                                                <select name="payment_status" class="form-select payment-status-select"
+                                                    form="order-form-<?= (int) $order['id'] ?>">
+
+                                                    <?php if ($paymentMethod === 'cod'): ?>
+
+                                                        <?php if ($paymentStatus === 'pending'): ?>
+
+                                                            <option value="pending" selected>
+                                                                Pending
+                                                            </option>
+
+                                                            <option value="completed">
+                                                                Completed
+                                                            </option>
+
+                                                        <?php elseif ($paymentStatus === 'completed'): ?>
+
+                                                            <option value="completed" selected>
+                                                                Completed
+                                                            </option>
+
+                                                        <?php endif; ?>
+
+
+                                                    <?php elseif ($paymentMethod === 'stripe'): ?>
+
+                                                        <?php if ($paymentStatus === 'pending'): ?>
+
+                                                            <option value="pending" selected>
+                                                                Pending
+                                                            </option>
+
+                                                            <option value="completed">
+                                                                Completed
+                                                            </option>
+
+                                                            <option value="failed">
+                                                                Failed
+                                                            </option>
+
+                                                        <?php elseif ($paymentStatus === 'completed'): ?>
+
+                                                            <option value="completed" selected>
+                                                                Completed
+                                                            </option>
+
+                                                        <?php elseif ($paymentStatus === 'refunded'): ?>
+
+                                                            <option value="refunded" selected>
+                                                                Refunded
+                                                            </option>
+
+                                                        <?php elseif ($paymentStatus === 'failed'): ?>
+
+                                                            <option value="failed" selected>
+                                                                Failed
+                                                            </option>
+
+                                                        <?php elseif ($paymentStatus === 'refunded'): ?>
+
+                                                            <option value="refunded" selected>
+                                                                Refunded
+                                                            </option>
+
+                                                        <?php endif; ?>
+
+                                                    <?php endif; ?>
+
+                                                </select>
+
+
+                                                <span class="payment-method">
+
+                                                    <?= strtoupper(
+                                                        htmlspecialchars(
+                                                            $order['payment_method']
+                                                        )
+                                                    ) ?>
+
+                                                </span>
+
+                                            </td>
+
+
+                                            <!-- =====================================
+                                             ORDER STATUS
+                                        ====================================== -->
+
+                                            <td>
+
+                                                <?php
+                                                $orderStatus = $order['order_status'];
+                                                ?>
+
+                                                <select name="order_status" class="form-select order-status-select"
+                                                    form="order-form-<?= (int) $order['id'] ?>">
+
+                                                    <?php if ($orderStatus === 'processing'): ?>
+
+                                                        <option value="processing" selected>
+                                                            Processing
+                                                        </option>
+
+                                                        <option value="shipped">
+                                                            Shipped
+                                                        </option>
+
+                                                        <option value="cancelled">
+                                                            Cancelled
+                                                        </option>
+
+
+                                                    <?php elseif ($orderStatus === 'shipped'): ?>
+
+                                                        <option value="shipped" selected>
+                                                            Shipped
+                                                        </option>
+
+                                                        <option value="delivered">
+                                                            Delivered
+                                                        </option>
+
+                                                        <option value="cancelled">
+                                                            Cancelled
+                                                        </option>
+
+
+                                                    <?php elseif ($orderStatus === 'delivered'): ?>
+
+                                                        <option value="delivered" selected>
+                                                            Delivered
+                                                        </option>
+
+
+                                                    <?php elseif ($orderStatus === 'cancelled'): ?>
+
+                                                        <option value="cancelled" selected>
+                                                            Cancelled
+                                                        </option>
+
+                                                    <?php endif; ?>
+
+                                                </select>
+
+                                            </td>
+
+
+                                            <!-- =====================================
+                                             DATE
+                                        ====================================== -->
+
+                                            <td>
+
+                                                <span class="order-date">
+
+                                                    <?= date(
+                                                        'd M Y',
+                                                        strtotime($order['created_at'])
+                                                    ) ?>
+
+                                                </span>
+
+                                            </td>
+
+
+                                            <!-- =====================================
+                                             ACTIONS
+                                        ====================================== -->
+
+                                            <td>
+
+                                                <div class="order-actions">
+
+
+                                                    <!-- Update Status -->
+
+                                                    <form method="POST" action="update-status.php"
+                                                        id="order-form-<?= (int) $order['id'] ?>" class="d-inline">
+
+                                                        <input type="hidden" name="order_id" value="<?= (int) $order['id'] ?>">
+
+
+                                                        <button type="submit" class="btn bg-gradient-dark order-save-btn"
+                                                            title="Save Status">
+
+                                                            <i class="fa-solid fa-check"></i>
+
+                                                            Save
+
+                                                        </button>
+
+                                                    </form>
+
+
+                                                    <!-- View Order -->
+
+                                                    <a href="detail.php?id=<?= (int) $order['id'] ?>" class="btn order-view-btn"
+                                                        title="View Order">
+
+                                                        <i class="fa-solid fa-eye"></i>
+
+                                                    </a>
+
+                                                </div>
+
+                                            </td>
+
+
+                                        </tr>
+
+
+                                    <?php endforeach; ?>
+
+
+                                <?php endif; ?>
 
 
                             </tbody>

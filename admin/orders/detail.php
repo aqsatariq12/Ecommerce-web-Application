@@ -250,76 +250,46 @@ if ($paymentStatus === 'completed') {
 
     <meta charset="utf-8">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1, shrink-to-fit=no"
-    >
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-    <link
-        rel="apple-touch-icon"
-        sizes="76x76"
-        href="../assets/img/apple-icon.png"
-    >
+    <link rel="apple-touch-icon" sizes="76x76" href="../assets/img/apple-icon.png">
 
-    <link
-        rel="icon"
-        type="image/png"
-        href="../assets/img/favicon.png"
-    >
+    <link rel="icon" type="image/png" href="../assets/img/favicon.png">
 
     <title>
-        Order Details - ClothWear Admin
+        Order Details - ElectroCart Admin
     </title>
 
 
     <!-- Fonts -->
 
-    <link
-        rel="stylesheet"
-        href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700,900"
-    >
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700,900">
 
 
     <!-- Nucleo Icons -->
 
-    <link
-        href="../assets/css/nucleo-icons.css"
-        rel="stylesheet"
-    >
+    <link href="../assets/css/nucleo-icons.css" rel="stylesheet">
 
-    <link
-        href="../assets/css/nucleo-svg.css"
-        rel="stylesheet"
-    >
+    <link href="../assets/css/nucleo-svg.css" rel="stylesheet">
 
 
     <!-- Font Awesome -->
 
-    <link
-        rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
-    >
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
 
     <!-- Material Icons -->
 
-    <link
-        rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0"
-    >
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0">
 
 
     <!-- Material Dashboard -->
 
-    <link
-        id="pagestyle"
-        href="../assets/css/material-dashboard.css?v=3.2.0"
-        rel="stylesheet"
-    >
+    <link id="pagestyle" href="../assets/css/material-dashboard.css?v=3.2.0" rel="stylesheet">
 
 
     <style>
-
         /* ==================================================
            MAIN CARD
         ================================================== */
@@ -1076,14 +1046,14 @@ if ($paymentStatus === 'completed') {
             }
 
 
-            .order-card-header .d-flex > div:last-child {
+            .order-card-header .d-flex>div:last-child {
 
                 width: 100%;
 
             }
 
 
-            .order-card-header .d-flex > div:last-child .order-status-badge {
+            .order-card-header .d-flex>div:last-child .order-status-badge {
 
                 width: 100%;
 
@@ -1154,7 +1124,6 @@ if ($paymentStatus === 'completed') {
             }
 
         }
-
     </style>
 
 </head>
@@ -1206,10 +1175,7 @@ if ($paymentStatus === 'completed') {
                 </div>
 
 
-                <a
-                    href="index.php"
-                    class="btn btn-outline-secondary btn-sm mb-0 back-orders-btn"
-                >
+                <a href="index.php" class="btn btn-outline-secondary btn-sm mb-0 back-orders-btn">
 
                     <i class="fa-solid fa-arrow-left me-1"></i>
 
@@ -1401,7 +1367,7 @@ if ($paymentStatus === 'completed') {
                                     <?= !empty($shippingAddress)
                                         ? htmlspecialchars($shippingAddress)
                                         : 'N/A'
-                                    ?>
+                                        ?>
 
                                 </div>
 
@@ -1417,7 +1383,7 @@ if ($paymentStatus === 'completed') {
                                             $order['shipping_method_name']
                                         )
                                         : 'N/A'
-                                    ?>
+                                        ?>
 
                                 </div>
 
@@ -1563,14 +1529,9 @@ if ($paymentStatus === 'completed') {
 
                                         <tr>
 
-                                            <td
-                                                colspan="4"
-                                                class="text-center py-5"
-                                            >
+                                            <td colspan="4" class="text-center py-5">
 
-                                                <i
-                                                    class="fa-solid fa-box-open fa-2x text-secondary mb-3"
-                                                ></i>
+                                                <i class="fa-solid fa-box-open fa-2x text-secondary mb-3"></i>
 
                                                 <p class="text-sm text-secondary mb-0">
                                                     No items found for this order.
@@ -1596,11 +1557,9 @@ if ($paymentStatus === 'completed') {
 
                                                         <?php if (!empty($item['product_image'])): ?>
 
-                                                            <img
-                                                                src="../../public/uploads/products/<?= htmlspecialchars($item['product_image']) ?>"
+                                                            <img src="../../public/uploads/products/<?= htmlspecialchars($item['product_image']) ?>"
                                                                 alt="<?= htmlspecialchars($item['product_name']) ?>"
-                                                                class="product-image"
-                                                            >
+                                                                class="product-image">
 
                                                         <?php else: ?>
 
@@ -1631,7 +1590,7 @@ if ($paymentStatus === 'completed') {
                                                                         $item['category_name']
                                                                     )
                                                                     : 'No Category'
-                                                                ?>
+                                                                    ?>
 
                                                             </div>
 
@@ -1661,7 +1620,7 @@ if ($paymentStatus === 'completed') {
 
                                                     <span class="price-text">
 
-                                                        PKR
+                                                        $
                                                         <?= number_format(
                                                             (float) $item['unit_price'],
                                                             2
@@ -1678,7 +1637,7 @@ if ($paymentStatus === 'completed') {
 
                                                     <span class="price-text">
 
-                                                        PKR
+                                                        $
                                                         <?= number_format(
                                                             (float) $item['subtotal'],
                                                             2
@@ -1727,7 +1686,7 @@ if ($paymentStatus === 'completed') {
 
                                 <strong>
 
-                                    PKR
+                                    $
                                     <?= number_format(
                                         $subtotal,
                                         2
@@ -1746,7 +1705,7 @@ if ($paymentStatus === 'completed') {
 
                                 <strong>
 
-                                    PKR
+                                    $
                                     <?= number_format(
                                         $shipping,
                                         2
@@ -1765,7 +1724,7 @@ if ($paymentStatus === 'completed') {
 
                                 <strong>
 
-                                    -PKR
+                                    -$
                                     <?= number_format(
                                         $discount,
                                         2
@@ -1784,7 +1743,7 @@ if ($paymentStatus === 'completed') {
 
                                 <strong>
 
-                                    PKR
+                                    $
                                     <?= number_format(
                                         $grandTotal,
                                         2
@@ -1806,10 +1765,7 @@ if ($paymentStatus === 'completed') {
                     <div class="order-actions">
 
 
-                        <a
-                            href="index.php"
-                            class="btn btn-light mb-0"
-                        >
+                        <a href="index.php" class="btn btn-light mb-0">
 
                             <i class="fa-solid fa-arrow-left me-1"></i>
 
@@ -1818,11 +1774,7 @@ if ($paymentStatus === 'completed') {
                         </a>
 
 
-                        <button
-                            type="button"
-                            class="btn btn-outline-secondary mb-0"
-                            onclick="window.print()"
-                        >
+                        <button type="button" class="btn btn-outline-secondary mb-0" onclick="window.print()">
 
                             <i class="fa-solid fa-print me-1"></i>
 

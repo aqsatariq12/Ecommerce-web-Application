@@ -14,15 +14,15 @@ include '../includes/header.php';
 <html lang="en">
 
 
-<!-- molla/index-4.html  22 Nov 2019 09:53:08 GMT -->
+<!-- ElectroCart/index-4.html  22 Nov 2019 09:53:08 GMT -->
 
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>Clothwear - Deals</title>
+    <title>ElectroCart - Deals</title>
     <meta name="keywords" content="HTML5 Template">
-    <meta name="description" content="Molla - Bootstrap eCommerce Template">
+    <meta name="description" content="ElectroCart - Bootstrap eCommerce Template">
     <meta name="author" content="p-themes">
     <!-- Favicon -->
     <link rel="apple-touch-icon" sizes="180x180" href="assets/images/icons/apple-touch-icon.png">
@@ -31,8 +31,8 @@ include '../includes/header.php';
     <link rel="manifest" href="assets/images/icons/site.html">
     <link rel="mask-icon" href="assets/images/icons/safari-pinned-tab.svg" color="#666666">
     <link rel="shortcut icon" href="assets/images/icons/favicon.ico">
-    <meta name="apple-mobile-web-app-title" content="Molla">
-    <meta name="application-name" content="Molla">
+    <meta name="apple-mobile-web-app-title" content="ElectroCart">
+    <meta name="application-name" content="ElectroCart">
     <meta name="msapplication-TileColor" content="#cc9966">
     <meta name="msapplication-config" content="assets/images/icons/browserconfig.xml">
     <meta name="theme-color" content="#ffffff">
@@ -47,127 +47,127 @@ include '../includes/header.php';
     <link rel="stylesheet" href="assets/css/skins/skin-demo-4.css">
     <link rel="stylesheet" href="assets/css/demos/demo-4.css">
 
-<style>
-    .deal-bottom {
-    margin-top: 20px;
-    margin-left: 50px !important;
-}
+    <style>
+        .deal-bottom {
+            margin-top: 20px;
+            margin-left: 50px !important;
+        }
 
-.deal-countdown {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-}
+        .deal-countdown {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
 
-/* Individual countdown box */
-.countdown-box {
-    min-width: 58px;
-    height: 58px;
+        /* Individual countdown box */
+        .countdown-box {
+            min-width: 58px;
+            height: 58px;
 
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
 
-    background: rgba(255, 255, 255, 0.95);
+            background: rgba(255, 255, 255, 0.95);
 
-    border-radius: 8px;
+            border-radius: 8px;
 
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.12);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.12);
 
-    padding: 5px 7px;
-}
+            padding: 5px 7px;
+        }
 
-/* Large number */
-.countdown-number {
-    display: block;
+        /* Large number */
+        .countdown-number {
+            display: block;
 
-    font-size: 22px;
-    font-weight: 700;
-    line-height: 1;
+            font-size: 22px;
+            font-weight: 700;
+            line-height: 1;
 
-    color: #222;
-}
+            color: #222;
+        }
 
-/* Small label */
-.countdown-label {
-    display: block;
+        /* Small label */
+        .countdown-label {
+            display: block;
 
-    margin-top: 5px;
+            margin-top: 5px;
 
-    font-size: 9px;
-    font-weight: 600;
+            font-size: 9px;
+            font-weight: 600;
 
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
 
-    color: #777;
-}
+            color: #777;
+        }
 
-/* : separators */
-.countdown-separator {
-    font-size: 22px;
-    font-weight: 700;
+        /* : separators */
+        .countdown-separator {
+            font-size: 22px;
+            font-weight: 700;
 
-    color: #fff;
+            color: #fff;
 
-    margin-top: -8px;
-}
+            margin-top: -8px;
+        }
 
-/* Seconds slightly highlighted */
-.countdown-seconds {
-    animation: countdownPulse 1.5s ease-in-out infinite;
-}
+        /* Seconds slightly highlighted */
+        .countdown-seconds {
+            animation: countdownPulse 1.5s ease-in-out infinite;
+        }
 
-@keyframes countdownPulse {
+        @keyframes countdownPulse {
 
-    0% {
-        transform: scale(1);
-    }
+            0% {
+                transform: scale(1);
+            }
 
-    50% {
-        transform: scale(1.04);
-    }
+            50% {
+                transform: scale(1.04);
+            }
 
-    100% {
-        transform: scale(1);
-    }
+            100% {
+                transform: scale(1);
+            }
 
-}
+        }
 
 
-/* =========================================
+        /* =========================================
    MOBILE
 ========================================= */
 
-@media (max-width: 575px) {
+        @media (max-width: 575px) {
 
-    .deal-countdown {
-        gap: 5px;
-    }
+            .deal-countdown {
+                gap: 5px;
+            }
 
-    .countdown-box {
-        min-width: 48px;
-        height: 50px;
-        border-radius: 6px;
-    }
+            .countdown-box {
+                min-width: 48px;
+                height: 50px;
+                border-radius: 6px;
+            }
 
-    .countdown-number {
-        font-size: 18px;
-    }
+            .countdown-number {
+                font-size: 18px;
+            }
 
-    .countdown-label {
-        font-size: 8px;
-        margin-top: 4px;
-    }
+            .countdown-label {
+                font-size: 8px;
+                margin-top: 4px;
+            }
 
-    .countdown-separator {
-        font-size: 18px;
-    }
+            .countdown-separator {
+                font-size: 18px;
+            }
 
-}
-</style>
+        }
+    </style>
 </head>
 
 <body>
@@ -287,15 +287,15 @@ include '../includes/header.php';
 
                                         <div class="deal-bottom">
 
-                                    <?php if (!empty($deal['countdown_until'])): ?>
+                                            <?php if (!empty($deal['countdown_until'])): ?>
 
-                                        <div class="deal-countdown"
-                                            data-until="<?= date('Y-m-d\TH:i:s', strtotime($deal['countdown_until'])) ?>">
+                                                <div class="deal-countdown"
+                                                    data-until="<?= date('Y-m-d\TH:i:s', strtotime($deal['countdown_until'])) ?>">
+                                                </div>
+
+                                            <?php endif; ?>
+
                                         </div>
-
-                                    <?php endif; ?>
-
-                                </div>
 
                                     </div>
 
@@ -349,7 +349,7 @@ include '../includes/header.php';
     <script src="assets/js/demos/demo-4.js"></script>
 
 
-<script>
+    <script>
         $(document).ready(function () {
 
             $('.deal-countdown').each(function () {

@@ -25,15 +25,15 @@ include '../includes/header.php';
 <html lang="en">
 
 
-<!-- molla/index-4.html  22 Nov 2019 09:53:08 GMT -->
+<!-- ElectroCart/index-4.html  22 Nov 2019 09:53:08 GMT -->
 
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>Clothwear - Ecommerce</title>
+    <title>ElectroCart - Ecommerce</title>
     <meta name="keywords" content="HTML5 Template">
-    <meta name="description" content="Molla - Bootstrap eCommerce Template">
+    <meta name="description" content="ElectroCart - Bootstrap eCommerce Template">
     <meta name="author" content="p-themes">
     <!-- Favicon -->
     <link rel="apple-touch-icon" sizes="180x180" href="assets/images/icons/apple-touch-icon.png">
@@ -42,8 +42,8 @@ include '../includes/header.php';
     <link rel="manifest" href="assets/images/icons/site.html">
     <link rel="mask-icon" href="assets/images/icons/safari-pinned-tab.svg" color="#666666">
     <link rel="shortcut icon" href="assets/images/icons/favicon.ico">
-    <meta name="apple-mobile-web-app-title" content="Molla">
-    <meta name="application-name" content="Molla">
+    <meta name="apple-mobile-web-app-title" content="ElectroCart">
+    <meta name="application-name" content="ElectroCart">
     <meta name="msapplication-TileColor" content="#cc9966">
     <meta name="msapplication-config" content="assets/images/icons/browserconfig.xml">
     <meta name="theme-color" content="#ffffff">
@@ -453,6 +453,9 @@ include '../includes/header.php';
                                                             value="<?= (int) $product['id'] ?>">
 
                                                         <input type="hidden" name="quantity" value="1">
+
+                                                        <input type="hidden" name="redirect"     value="index.php#newArrival"
+">
 
                                                         <button type="submit" class="btn-product btn-cart" title="Add to cart">
 
@@ -1056,6 +1059,9 @@ include '../includes/header.php';
                                                                     value="<?= (int) $product['id'] ?>">
 
                                                                 <input type="hidden" name="quantity" value="1">
+                                                                
+
+                                                                <input type="hidden" name="redirect"     value="index.php#trendingProducts">
 
                                                                 <button type="submit" class="btn-product btn-cart"
                                                                     title="Add to cart">
@@ -1130,7 +1136,7 @@ include '../includes/header.php';
                                                 <!-- RATINGS -->
                                                 <div class="ratings-container">
 
-                                                    
+
 
                                                     <span class="ratings-text">
 
@@ -1304,6 +1310,6 @@ include '../includes/header.php';
 </body>
 
 
-<!-- molla/index-4.html  22 Nov 2019 09:54:18 GMT -->
+<!-- ElectroCart/index-4.html  22 Nov 2019 09:54:18 GMT -->
 
 </html>

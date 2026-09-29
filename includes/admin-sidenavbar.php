@@ -7,16 +7,19 @@ $currentPath = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
     <!-- Logo / Brand -->
     <div class="sidenav-header">
-        <i class="fas fa-times p-3 cursor-pointer text-dark opacity-5 position-absolute end-0 top-0 d-none d-xl-none"
-            aria-hidden="true" id="iconSidenav"></i>
+    <i class="fas fa-times p-3 cursor-pointer text-dark opacity-5 position-absolute end-0 top-0 d-none d-xl-none"
+        aria-hidden="true" id="iconSidenav"></i>
 
-        <a class="navbar-brand px-4 py-3 m-0" href="/admin/index.php">
-            <img src="/admin/assets/img/logo-ct-dark.png" class="navbar-brand-img" width="26" height="26"
-                alt="ClothWear">
-
-            <span class="ms-1 text-sm text-dark">ClothWear</span>
-        </a>
-    </div>
+    <a class="navbar-brand px-4 py-3 m-0" href="/admin/index.php">
+        <img 
+            src="/public/assets/images/demos/demo-4/pic.png" 
+            alt="ElectroCart Logo"
+            width="200"
+            height="auto"
+            style="max-height: 80px; width: auto; object-fit: contain;"
+        >
+    </a>
+</div>
 
     <hr class="horizontal dark mt-0 mb-2">
 
@@ -162,7 +165,7 @@ $currentPath = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
 
             <!-- Sign In -->
-            <li class="nav-item">
+            <!-- <li class="nav-item">
                 <a class="nav-link <?= $currentPath === '/admin/login.php' ? 'active bg-gradient-dark text-white' : 'text-dark' ?>"
                     href="/admin/login.php">
 
@@ -174,7 +177,7 @@ $currentPath = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
                         Sign In
                     </span>
                 </a>
-            </li>
+            </li> -->
 
 
 

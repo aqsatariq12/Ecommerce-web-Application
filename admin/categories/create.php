@@ -218,7 +218,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_category'])) {
 
     <link rel="icon" type="image/png" href="../assets/img/favicon.png">
 
-    <title>Create Category - ClothWear</title>
+    <title>Create Category - ElectroCart</title>
 
 
     <!-- Fonts -->

@@ -73,7 +73,7 @@ $categories = $stmt->fetchAll();
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <link rel="apple-touch-icon" sizes="76x76" href="../assets/img/apple-icon.png">
     <link rel="icon" type="image/png" href="../assets/img/favicon.png">
-    <title>Categories - ClothWear</title>
+    <title>Categories - ElectroCart</title>
 
     <!--     Fonts and icons     -->
     <link rel="stylesheet" type="text/css"
@@ -200,8 +200,9 @@ $categories = $stmt->fetchAll();
 
                 <form method="GET" class="d-flex align-items-center gap-2">
 
-                    <input type="text" name="search" class="form-control border border-radius-md ps-3" placeholder="Search categories..."
-                        value="<?= htmlspecialchars($search) ?>" style="width: 220px;">
+                    <input type="text" name="search" class="form-control border border-radius-md ps-3"
+                        placeholder="Search categories..." value="<?= htmlspecialchars($search) ?>"
+                        style="width: 220px;">
 
                     <button type="submit" class="btn btn-primary mb-0">
                         Search

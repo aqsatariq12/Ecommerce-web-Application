@@ -332,7 +332,7 @@ if (
 
     <link rel="icon" type="image/png" href="../assets/img/favicon.png">
 
-    <title>Create Product - ClothWear</title>
+    <title>Create Product - ElectroCart</title>
 
 
     <!-- Fonts -->

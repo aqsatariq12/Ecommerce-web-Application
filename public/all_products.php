@@ -25,9 +25,9 @@ foreach ($products as $product) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>All Products - ClothWear</title>
+    <title>All Products - ElectroCart</title>
 
-    <!-- Your existing Molla CSS -->
+    <!-- Your existing ElectroCart CSS -->
     <link rel="stylesheet" href="assets/css/bootstrap.min.css">
     <link rel="stylesheet" href="assets/css/style.css">
     <style>

@@ -191,72 +191,42 @@ $orderStatuses = $stmt->fetchAll();
 
     <meta charset="utf-8" />
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1, shrink-to-fit=no"
-    >
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-    <link
-        rel="apple-touch-icon"
-        sizes="76x76"
-        href="assets/img/apple-icon.png"
-    >
+    <link rel="apple-touch-icon" sizes="76x76" href="assets/img/apple-icon.png">
 
-    <link
-        rel="icon"
-        type="image/png"
-        href="assets/img/favicon.png"
-    >
+    <link rel="icon" type="image/png" href="assets/img/favicon.png">
 
     <title>
-        Reports - ClothWear Admin
+        Reports - ElectroCart Admin
     </title>
 
 
     <!-- Fonts -->
-    <link
-        rel="stylesheet"
-        type="text/css"
-        href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700,900"
-    />
+    <link rel="stylesheet" type="text/css"
+        href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700,900" />
 
 
     <!-- Nucleo Icons -->
-    <link
-        href="assets/css/nucleo-icons.css"
-        rel="stylesheet"
-    />
+    <link href="assets/css/nucleo-icons.css" rel="stylesheet" />
 
-    <link
-        href="assets/css/nucleo-svg.css"
-        rel="stylesheet"
-    />
+    <link href="assets/css/nucleo-svg.css" rel="stylesheet" />
 
 
     <!-- Font Awesome -->
-    <link
-        rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
-    >
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
 
     <!-- Material Icons -->
-    <link
-        rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0"
-    />
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" />
 
 
     <!-- Material Dashboard -->
-    <link
-        id="pagestyle"
-        href="assets/css/material-dashboard.css?v=3.2.0"
-        rel="stylesheet"
-    />
+    <link id="pagestyle" href="assets/css/material-dashboard.css?v=3.2.0" rel="stylesheet" />
 
 
     <style>
-
         .report-card {
             min-height: 145px;
         }
@@ -270,7 +240,6 @@ $orderStatuses = $stmt->fetchAll();
         .report-table td {
             vertical-align: middle;
         }
-
     </style>
 
 </head>
@@ -288,9 +257,7 @@ $orderStatuses = $stmt->fetchAll();
 
 
     <!-- Main Content -->
-    <main
-        class="main-content position-relative max-height-vh-100 h-100 border-radius-lg"
-    >
+    <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg">
 
         <div class="container-fluid py-4">
 
@@ -300,9 +267,7 @@ $orderStatuses = $stmt->fetchAll();
 
                 <div class="col-12">
 
-                    <div
-                        class="d-flex justify-content-between align-items-center mb-4"
-                    >
+                    <div class="d-flex justify-content-between align-items-center mb-4">
 
                         <div>
 
@@ -311,7 +276,7 @@ $orderStatuses = $stmt->fetchAll();
                             </h4>
 
                             <p class="text-sm text-secondary mb-0">
-                                Overview of your ClothWear store performance
+                                Overview of your ElectroCart store performance
                             </p>
 
                         </div>
@@ -349,7 +314,7 @@ $orderStatuses = $stmt->fetchAll();
                                         </p>
 
                                         <h5 class="font-weight-bolder mb-0">
-                                            PKR <?= number_format($todaySales, 2) ?>
+                                            $ <?= number_format($todaySales, 2) ?>
                                         </h5>
 
                                     </div>
@@ -360,8 +325,7 @@ $orderStatuses = $stmt->fetchAll();
                                 <div class="col-4 text-end">
 
                                     <div
-                                        class="icon icon-shape bg-gradient-dark shadow text-center border-radius-md report-icon"
-                                    >
+                                        class="icon icon-shape bg-gradient-dark shadow text-center border-radius-md report-icon">
 
                                         <i class="ni ni-money-coins text-lg opacity-10"></i>
 
@@ -397,7 +361,7 @@ $orderStatuses = $stmt->fetchAll();
                                         </p>
 
                                         <h5 class="font-weight-bolder mb-0">
-                                            PKR <?= number_format($totalSales, 2) ?>
+                                            $ <?= number_format($totalSales, 2) ?>
                                         </h5>
 
                                     </div>
@@ -408,8 +372,7 @@ $orderStatuses = $stmt->fetchAll();
                                 <div class="col-4 text-end">
 
                                     <div
-                                        class="icon icon-shape bg-gradient-success shadow text-center border-radius-md report-icon"
-                                    >
+                                        class="icon icon-shape bg-gradient-success shadow text-center border-radius-md report-icon">
 
                                         <i class="ni ni-chart-bar-32 text-lg opacity-10"></i>
 
@@ -456,8 +419,7 @@ $orderStatuses = $stmt->fetchAll();
                                 <div class="col-4 text-end">
 
                                     <div
-                                        class="icon icon-shape bg-gradient-info shadow text-center border-radius-md report-icon"
-                                    >
+                                        class="icon icon-shape bg-gradient-info shadow text-center border-radius-md report-icon">
 
                                         <i class="ni ni-cart text-lg opacity-10"></i>
 
@@ -504,8 +466,7 @@ $orderStatuses = $stmt->fetchAll();
                                 <div class="col-4 text-end">
 
                                     <div
-                                        class="icon icon-shape bg-gradient-warning shadow text-center border-radius-md report-icon"
-                                    >
+                                        class="icon icon-shape bg-gradient-warning shadow text-center border-radius-md report-icon">
 
                                         <i class="ni ni-single-02 text-lg opacity-10"></i>
 
@@ -553,9 +514,7 @@ $orderStatuses = $stmt->fetchAll();
 
                                 </div>
 
-                                <div
-                                    class="icon icon-shape bg-gradient-warning shadow text-center border-radius-md"
-                                >
+                                <div class="icon icon-shape bg-gradient-warning shadow text-center border-radius-md">
 
                                     <i class="fa-solid fa-clock text-lg opacity-10"></i>
 
@@ -592,9 +551,7 @@ $orderStatuses = $stmt->fetchAll();
 
                                 </div>
 
-                                <div
-                                    class="icon icon-shape bg-gradient-success shadow text-center border-radius-md"
-                                >
+                                <div class="icon icon-shape bg-gradient-success shadow text-center border-radius-md">
 
                                     <i class="fa-solid fa-circle-check text-lg opacity-10"></i>
 
@@ -645,15 +602,18 @@ $orderStatuses = $stmt->fetchAll();
 
                                         <tr>
 
-                                            <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                            <th
+                                                class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
                                                 Month
                                             </th>
 
-                                            <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                            <th
+                                                class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
                                                 Orders
                                             </th>
 
-                                            <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                            <th
+                                                class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
                                                 Sales
                                             </th>
 
@@ -668,10 +628,7 @@ $orderStatuses = $stmt->fetchAll();
 
                                             <tr>
 
-                                                <td
-                                                    colspan="3"
-                                                    class="text-center py-4"
-                                                >
+                                                <td colspan="3" class="text-center py-4">
 
                                                     <p class="text-sm text-secondary mb-0">
                                                         No sales data available.
@@ -712,7 +669,7 @@ $orderStatuses = $stmt->fetchAll();
                                                     <td>
 
                                                         <span class="text-sm font-weight-bold">
-                                                            PKR <?= number_format(
+                                                            $ <?= number_format(
                                                                 (float) $month['total_sales'],
                                                                 2
                                                             ) ?>
@@ -835,15 +792,18 @@ $orderStatuses = $stmt->fetchAll();
 
                                         <tr>
 
-                                            <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                            <th
+                                                class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
                                                 Product
                                             </th>
 
-                                            <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                            <th
+                                                class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
                                                 Quantity Sold
                                             </th>
 
-                                            <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                            <th
+                                                class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
                                                 Sales
                                             </th>
 
@@ -858,10 +818,7 @@ $orderStatuses = $stmt->fetchAll();
 
                                             <tr>
 
-                                                <td
-                                                    colspan="3"
-                                                    class="text-center py-4"
-                                                >
+                                                <td colspan="3" class="text-center py-4">
 
                                                     <p class="text-sm text-secondary mb-0">
                                                         No product sales available.
@@ -913,7 +870,7 @@ $orderStatuses = $stmt->fetchAll();
 
                                                         <span class="text-sm font-weight-bold">
 
-                                                            PKR <?= number_format(
+                                                            $ <?= number_format(
                                                                 (float) $product['total_sales'],
                                                                 2
                                                             ) ?>

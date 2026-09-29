@@ -62,15 +62,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <html lang="en">
 
 
-<!-- molla/login.php  22 Nov 2019 10:04:03 GMT -->
+<!-- ElectroCart/login.php  22 Nov 2019 10:04:03 GMT -->
 
 <head>
 	<meta charset="UTF-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-	<title>Molla - Bootstrap eCommerce Template</title>
+	<title>ElectroCart - Bootstrap eCommerce Template</title>
 	<meta name="keywords" content="HTML5 Template">
-	<meta name="description" content="Molla - Bootstrap eCommerce Template">
+	<meta name="description" content="ElectroCart - Bootstrap eCommerce Template">
 	<meta name="author" content="p-themes">
 	<!-- Favicon -->
 	<link rel="apple-touch-icon" sizes="180x180" href="assets/images/icons/apple-touch-icon.png">
@@ -79,8 +79,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 	<link rel="manifest" href="assets/images/icons/site.html">
 	<link rel="mask-icon" href="assets/images/icons/safari-pinned-tab.svg" color="#666666">
 	<link rel="shortcut icon" href="assets/images/icons/favicon.ico">
-	<meta name="apple-mobile-web-app-title" content="Molla">
-	<meta name="application-name" content="Molla">
+	<meta name="apple-mobile-web-app-title" content="ElectroCart">
+	<meta name="application-name" content="ElectroCart">
 	<meta name="msapplication-TileColor" content="#cc9966">
 	<meta name="msapplication-config" content="assets/images/icons/browserconfig.xml">
 	<meta name="theme-color" content="#ffffff">
@@ -88,6 +88,26 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 	<link rel="stylesheet" href="assets/css/bootstrap.min.css">
 	<!-- Main CSS File -->
 	<link rel="stylesheet" href="assets/css/style.css">
+	<style>
+		.login-page {
+			position: relative;
+			background-size: cover;
+			background-position: center;
+		}
+
+		.login-page::before {
+			content: "";
+			position: absolute;
+			inset: 0;
+			background: rgba(60, 45, 35, 0.35);
+			z-index: 0;
+		}
+
+		.login-page .container {
+			position: relative;
+			z-index: 1;
+		}
+	</style>
 </head>
 
 <body>
@@ -105,7 +125,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 			</nav><!-- End .breadcrumb-nav -->
 
 			<div class="login-page bg-image pt-8 pb-8 pt-md-12 pb-md-12 pt-lg-17 pb-lg-17"
-				style="background-image: url('assets/images/backgrounds/login-bg.jpg')">
+				style="background-image: url('assets/images/backgrounds/pic-bg.png')">
 				<div class="container">
 					<div class="form-box">
 						<div class="form-tab">
@@ -154,33 +174,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 												<i class="icon-long-arrow-right"></i>
 											</button>
 
-											<div class="custom-control custom-checkbox">
-												<input type="checkbox" class="custom-control-input"
-													id="signin-remember-2">
-												<label class="custom-control-label" for="signin-remember-2">Remember
-													Me</label>
-											</div><!-- End .custom-checkbox -->
 
-											<a href="#" class="forgot-link">Forgot Your Password?</a>
+
 										</div><!-- End .form-footer -->
 									</form>
-									<div class="form-choice">
-										<p class="text-center">or sign in with</p>
-										<div class="row">
-											<div class="col-sm-6">
-												<a href="#" class="btn btn-login btn-g">
-													<i class="icon-google"></i>
-													Login With Google
-												</a>
-											</div><!-- End .col-6 -->
-											<div class="col-sm-6">
-												<a href="#" class="btn btn-login btn-f">
-													<i class="icon-facebook-f"></i>
-													Login With Facebook
-												</a>
-											</div><!-- End .col-6 -->
-										</div><!-- End .row -->
-									</div><!-- End .form-choice -->
+
+									<!-- End .form-choice -->
 								</div><!-- .End .tab-pane -->
 								<div class="tab-pane fade" id="register-2" role="tabpanel"
 									aria-labelledby="register-tab-2">
@@ -221,23 +220,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 											</div><!-- End .custom-checkbox -->
 										</div><!-- End .form-footer -->
 									</form>
-									<div class="form-choice">
-										<p class="text-center">or sign in with</p>
-										<div class="row">
-											<div class="col-sm-6">
-												<a href="#" class="btn btn-login btn-g">
-													<i class="icon-google"></i>
-													Login With Google
-												</a>
-											</div><!-- End .col-6 -->
-											<div class="col-sm-6">
-												<a href="#" class="btn btn-login  btn-f">
-													<i class="icon-facebook-f"></i>
-													Login With Facebook
-												</a>
-											</div><!-- End .col-6 -->
-										</div><!-- End .row -->
-									</div><!-- End .form-choice -->
+
 								</div><!-- .End .tab-pane -->
 							</div><!-- End .tab-content -->
 						</div><!-- End .form-tab -->
@@ -264,6 +247,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 </body>
 
 
-<!-- molla/login.php  22 Nov 2019 10:04:03 GMT -->
+<!-- ElectroCart/login.php  22 Nov 2019 10:04:03 GMT -->
 
 </html>

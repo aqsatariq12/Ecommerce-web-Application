@@ -251,5 +251,14 @@ $user = Auth::user();
     </div>
 
 </nav>
+<script>
+    window.addEventListener('pageshow', function (event) {
 
+        // If browser restored this page from Back/Forward cache
+        if (event.persisted) {
+            window.location.reload();
+        }
+
+    });
+</script>
 <!-- End Navbar -->

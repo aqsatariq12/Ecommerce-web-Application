@@ -2,6 +2,7 @@
 
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/Deal.php';
+require_once __DIR__ . '/../config/stripe.php';
 
 class Order
 {
@@ -432,8 +433,8 @@ class Order
              * Get the order
              */
 
-            $orderSql = "SELECT id, order_status
-                     FROM orders
+            $orderSql = "SELECT id, order_status, payment_method, payment_status, transaction_id
+             FROM orders
                      WHERE id = :order_id
                      AND user_id = :user_id
                      LIMIT 1";
@@ -502,6 +503,38 @@ class Order
             /*
              * Cancel order
              */
+            /*
+             * Refund Stripe payment if this is a completed Stripe order
+             */
+
+            /*
+             * Refund Stripe payment if this is a completed Stripe order
+             */
+
+            if (
+                $order['payment_method'] === 'stripe' &&
+                $order['payment_status'] === 'completed' &&
+                !empty($order['transaction_id'])
+            ) {
+
+                \Stripe\Refund::create([
+                    'payment_intent' => $order['transaction_id']
+                ]);
+
+                /*
+                 * Mark payment as refunded
+                 */
+
+                $refundSql = "UPDATE orders
+                  SET payment_status = 'refunded'
+                  WHERE id = :order_id";
+
+                $refundStmt = $pdo->prepare($refundSql);
+
+                $refundStmt->execute([
+                    'order_id' => $orderId
+                ]);
+            }
 
             $cancelSql = "UPDATE orders
                       SET order_status = 'cancelled'

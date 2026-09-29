@@ -344,11 +344,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $countdownUntil =
                 $countdownUntil !== ''
-                    ? date(
-                        'Y-m-d H:i:s',
-                        strtotime($countdownUntil)
-                    )
-                    : null;
+                ? date(
+                    'Y-m-d H:i:s',
+                    strtotime($countdownUntil)
+                )
+                : null;
 
 
             // =========================
@@ -363,8 +363,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 'subtitle' =>
                     $subtitle !== ''
-                        ? $subtitle
-                        : null,
+                    ? $subtitle
+                    : null,
 
                 'old_price' => $oldPrice,
 
@@ -451,7 +451,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <link rel="icon" type="image/png" href="../assets/img/favicon.png">
 
-    <title>Create Deal - ClothWear</title>
+    <title>Create Deal - ElectroCart</title>
 
 
     <!-- Fonts -->

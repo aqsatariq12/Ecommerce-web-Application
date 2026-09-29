@@ -396,7 +396,7 @@ $topProducts = $stmt->fetchAll();
                         </h3>
 
                         <p class="mb-0 text-sm text-secondary">
-                            Overview of your ClothWear store
+                            Overview of your ElectroCart store
                         </p>
 
                     </div>
@@ -430,7 +430,7 @@ $topProducts = $stmt->fetchAll();
                                     </p>
 
                                     <h4 class="mb-0">
-                                        PKR <?= number_format(
+                                        $ <?= number_format(
                                             $todaySales,
                                             2
                                         ) ?>
@@ -650,7 +650,7 @@ $topProducts = $stmt->fetchAll();
                             </p>
 
                             <h5 class="font-weight-bolder mb-0">
-                                PKR <?= number_format(
+                                $ <?= number_format(
                                     $totalSales,
                                     2
                                 ) ?>
@@ -951,7 +951,7 @@ $topProducts = $stmt->fetchAll();
 
                                                         <span class="text-sm font-weight-bold">
 
-                                                            PKR <?= number_format(
+                                                            $ <?= number_format(
                                                                 (float) $order['total_amount'],
                                                                 2
                                                             ) ?>
@@ -1090,7 +1090,7 @@ $topProducts = $stmt->fetchAll();
 
                                             <span class="text-sm font-weight-bold">
 
-                                                PKR <?= number_format(
+                                                $ <?= number_format(
                                                     (float) $product['total_sales'],
                                                     0
                                                 ) ?>
@@ -1205,7 +1205,7 @@ $topProducts = $stmt->fetchAll();
 
                                 callback: function (value) {
 
-                                    return 'PKR ' +
+                                    return '$ ' +
                                         Number(value).toLocaleString();
 
                                 }
@@ -1294,7 +1294,7 @@ $topProducts = $stmt->fetchAll();
 
                                 callback: function (value) {
 
-                                    return 'PKR ' +
+                                    return '$ ' +
                                         Number(value).toLocaleString();
 
                                 }

@@ -53,7 +53,7 @@ if (empty($orderItems)) {
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
     <title>
-        Order Details - ClothWear
+        Order Details - ElectroCart
     </title>
 
     <link rel="stylesheet" href="assets/css/bootstrap.min.css">
@@ -231,7 +231,7 @@ if (empty($orderItems)) {
                                                         <td>
 
                                                             $<?= number_format(
-                                                                                                        $item['unit_price'],
+                                                                $item['unit_price'],
                                                                 2
                                                             ) ?>
 

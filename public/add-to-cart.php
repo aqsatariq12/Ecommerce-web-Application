@@ -44,8 +44,8 @@ try {
         $productId,
         $quantity
     );
-
-    header("Location: cart.php");
+    $redirect = $_POST['redirect'] ?? 'index.php';
+    header("Location: " . $redirect);
     exit;
 
 } catch (Exception $e) {

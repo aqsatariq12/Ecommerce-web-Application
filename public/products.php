@@ -42,12 +42,12 @@ $products = Product::getByCategory($categoryId);
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
     <title>
-        <?= htmlspecialchars($category['name']) ?> - ClothWear
+        <?= htmlspecialchars($category['name']) ?> - ElectroCart
     </title>
 
-    <meta name="description" content="Browse <?= htmlspecialchars($category['name']) ?> products at ClothWear.">
+    <meta name="description" content="Browse <?= htmlspecialchars($category['name']) ?> products at ElectroCart.">
 
-    <meta name="author" content="ClothWear">
+    <meta name="author" content="ElectroCart">
 
 
     <!-- Favicon -->
@@ -63,9 +63,9 @@ $products = Product::getByCategory($categoryId);
 
     <link rel="shortcut icon" href="assets/images/icons/favicon.ico">
 
-    <meta name="apple-mobile-web-app-title" content="ClothWear">
+    <meta name="apple-mobile-web-app-title" content="ElectroCart">
 
-    <meta name="application-name" content="ClothWear">
+    <meta name="application-name" content="ElectroCart">
 
     <meta name="msapplication-TileColor" content="#cc9966">
 
@@ -143,11 +143,11 @@ $products = Product::getByCategory($categoryId);
                     <!-- Category Heading -->
                     <!-- ============================= -->
 
-<h1 class="page-title text-center mb-3">
+                    <h1 class="page-title text-center mb-3">
 
-    <?= htmlspecialchars($category['name']) ?>
+                        <?= htmlspecialchars($category['name']) ?>
 
-</h1>
+                    </h1>
 
 
                     <p class="text-center mb-5">

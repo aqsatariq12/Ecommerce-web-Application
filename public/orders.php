@@ -64,12 +64,9 @@ $orders = Order::getByUserId($user['id']);
 <head>
 
     <meta charset="UTF-8">
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1, shrink-to-fit=no"
-    >
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-    <title>My Orders - ClothWear</title>
+    <title>My Orders - ElectroCart</title>
 
     <link rel="stylesheet" href="assets/css/bootstrap.min.css">
     <link rel="stylesheet" href="assets/css/style.css">
@@ -79,208 +76,248 @@ $orders = Order::getByUserId($user['id']);
 
 <body>
 
-<div class="page-wrapper">
+    <div class="page-wrapper">
 
-    <?php include '../includes/header.php'; ?>
+        <?php include '../includes/header.php'; ?>
 
-    <main class="main">
+        <main class="main">
 
-        <div
-            class="page-header text-center"
-            style="background-image: url('assets/images/page-header-bg.jpg')"
-        >
-            <div class="container">
+            <div class="page-header text-center" style="background-image: url('assets/images/page-header-bg.jpg')">
+                <div class="container">
 
-                <h1 class="page-title">
-                    My Orders
-                    <span>Shop</span>
-                </h1>
-
-            </div>
-        </div>
-
-        <nav aria-label="breadcrumb" class="breadcrumb-nav">
-
-            <div class="container">
-
-                <ol class="breadcrumb">
-
-                    <li class="breadcrumb-item">
-                        <a href="index.php">Home</a>
-                    </li>
-
-                    <li class="breadcrumb-item active">
+                    <h1 class="page-title">
                         My Orders
-                    </li>
+                        <span>Shop</span>
+                    </h1>
 
-                </ol>
-
+                </div>
             </div>
 
-        </nav>
+            <nav aria-label="breadcrumb" class="breadcrumb-nav">
 
-        <div class="page-content">
+                <div class="container">
 
-            <div class="container">
+                    <ol class="breadcrumb">
 
-                <div class="row">
+                        <li class="breadcrumb-item">
+                            <a href="index.php">Home</a>
+                        </li>
 
-                    <div class="col-lg-12">
-
-                        <h2 class="checkout-title">
+                        <li class="breadcrumb-item active">
                             My Orders
-                        </h2>
+                        </li>
 
-                        <?php if (empty($orders)): ?>
+                    </ol>
 
-                            <div class="text-center py-5">
+                </div>
 
-                                <h3>No Orders Yet</h3>
+            </nav>
 
-                                <p class="text-muted">
-                                    You have not placed any orders yet.
-                                </p>
+            <div class="page-content">
 
-                                <a
-                                    href="shop.php"
-                                    class="btn btn-outline-primary-2"
-                                >
-                                    START SHOPPING
-                                </a>
+                <div class="container">
 
-                            </div>
+                    <div class="row">
 
-                        <?php else: ?>
+                        <div class="col-lg-12">
 
-                            <div class="table-responsive">
+                            <h2 class="checkout-title">
+                                My Orders
+                            </h2>
 
-                                <table class="table">
+                            <?php if (empty($orders)): ?>
 
-                                    <thead>
+                                <div class="text-center py-5">
 
-                                        <tr>
+                                    <h3>No Orders Yet</h3>
 
-                                            <th>Order</th>
-                                            <th>Date</th>
-                                            <th>Total</th>
-                                            <th>Payment</th>
-                                            <th>Status</th>
-                                            <th>Action</th>
+                                    <p class="text-muted">
+                                        You have not placed any orders yet.
+                                    </p>
 
-                                        </tr>
+                                    <a href="shop.php" class="btn btn-outline-primary-2">
+                                        START SHOPPING
+                                    </a>
 
-                                    </thead>
+                                </div>
 
-                                    <tbody>
+                            <?php else: ?>
 
-                                        <?php foreach ($orders as $order): ?>
+                                <div class="table-responsive">
+
+                                    <table class="table">
+
+                                        <thead>
 
                                             <tr>
 
-                                                <td>
-                                                    <strong>
-                                                        #<?= htmlspecialchars(
+                                                <th>Order</th>
+                                                <th>Date</th>
+                                                <th>Total</th>
+                                                <th>Payment</th>
+                                                <th>Status</th>
+                                                <th>Action</th>
+
+                                            </tr>
+
+                                        </thead>
+
+                                        <tbody>
+
+                                            <?php foreach ($orders as $order): ?>
+
+                                                <tr>
+
+                                                    <td>
+                                                        <strong>
+                                                            #<?= htmlspecialchars(
+                                                                $order['order_number']
+                                                            ) ?>
+                                                        </strong>
+                                                    </td>
+
+                                                    <td>
+                                                        <?= date(
+                                                            'M d, Y',
+                                                            strtotime($order['created_at'])
+                                                        ) ?>
+                                                    </td>
+
+                                                    <td>
+                                                        $<?= number_format(
+                                                            $order['total_amount'],
+                                                            2
+                                                        ) ?>
+                                                    </td>
+
+                                                    <td>
+                                                        <?php if ($order['payment_method'] === 'cod'): ?>
+
+                                                            Cash on Delivery
+
+                                                        <?php elseif ($order['payment_method'] === 'paypal'): ?>
+
+                                                            PayPal
+
+                                                        <?php else: ?>
+
+                                                            <?= htmlspecialchars(
+                                                                $order['payment_method']
+                                                            ) ?>
+
+                                                        <?php endif; ?>
+                                                    </td>
+
+                                                    <td>
+
+                                                        <?php
+                                                        $status = $order['order_status'];
+                                                        ?>
+
+                                                        <span class="badge badge-secondary">
+                                                            <?= htmlspecialchars(
+                                                                ucfirst($status)
+                                                            ) ?>
+                                                        </span>
+
+                                                    </td>
+
+                                                    <td>
+
+                                                        <a href="order-detail.php?order=<?= urlencode(
                                                             $order['order_number']
-                                                        ) ?>
-                                                    </strong>
-                                                </td>
+                                                        ) ?>" class="btn btn-sm btn-outline-dark">
+                                                            View
+                                                        </a>
 
-                                                <td>
-                                                    <?= date(
-                                                        'M d, Y',
-                                                        strtotime($order['created_at'])
-                                                    ) ?>
-                                                </td>
+                                                        <?php if ($status === 'processing'): ?>
 
-                                                <td>
-                                                    $<?= number_format(
-                                                        $order['total_amount'],
-                                                        2
-                                                    ) ?>
-                                                </td>
-
-                                                <td>
-                                                    <?php if ($order['payment_method'] === 'cod'): ?>
-
-                                                        Cash on Delivery
-
-                                                    <?php elseif ($order['payment_method'] === 'paypal'): ?>
-
-                                                        PayPal
-
-                                                    <?php else: ?>
-
-                                                        <?= htmlspecialchars(
-                                                            $order['payment_method']
-                                                        ) ?>
-
-                                                    <?php endif; ?>
-                                                </td>
-
-                                                <td>
-
-                                                    <?php
-                                                    $status = $order['order_status'];
-                                                    ?>
-
-                                                    <span class="badge badge-secondary">
-                                                        <?= htmlspecialchars(
-                                                            ucfirst($status)
-                                                        ) ?>
-                                                    </span>
-
-                                                </td>
-
-                                                <td>
-
-<a
-    href="order-detail.php?order=<?= urlencode(
-        $order['order_number']
-    ) ?>"
-    class="btn btn-sm btn-outline-dark"
->
-    View
-</a>
-
-                                                    <?php if ($status === 'processing'): ?>
-
-                                                        <form
-                                                            action="orders.php"
-                                                            method="POST"
-                                                            style="display: inline-block;"
-                                                        >
-
-                                                            <input
-                                                                type="hidden"
-                                                                name="order_id"
-                                                                value="<?= (int) $order['id'] ?>"
-                                                            >
-
-                                                            <button
-                                                                type="submit"
-                                                                class="btn btn-sm btn-outline-danger"
-                                                                onclick="return confirm('Are you sure you want to cancel this order?');"
-                                                            >
+                                                            <button type="button" class="btn btn-sm btn-outline-danger"
+                                                                data-toggle="modal"
+                                                                data-target="#cancelOrderModal<?= (int) $order['id'] ?>">
                                                                 Cancel
+                                                            </button>
+
+                                                        <?php endif; ?>
+
+                                                    </td>
+
+                                                </tr>
+
+                                            <?php endforeach; ?>
+
+                                        </tbody>
+
+                                    </table>
+
+                                </div>
+                                <?php foreach ($orders as $order): ?>
+
+                                    <?php if ($order['order_status'] === 'processing'): ?>
+
+                                        <div class="modal fade" id="cancelOrderModal<?= (int) $order['id'] ?>" tabindex="-1"
+                                            role="dialog" aria-labelledby="cancelOrderModalLabel<?= (int) $order['id'] ?>"
+                                            aria-hidden="true">
+
+                                            <div class="modal-dialog modal-dialog-centered" role="document">
+
+                                                <div class="modal-content">
+
+                                                    <div class="modal-header">
+
+                                                        <h5 class="modal-title" id="cancelOrderModalLabel<?= (int) $order['id'] ?>">
+                                                            Cancel Order
+                                                        </h5>
+
+                                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                            <span aria-hidden="true">&times;</span>
+                                                        </button>
+
+                                                    </div>
+
+                                                    <div class="modal-body p-4">
+
+                                                        <p class="mb-0">
+                                                            Are you sure you want to cancel this order?
+                                                        </p>
+
+                                                        <small class="text-muted">
+                                                            Order #<?= htmlspecialchars($order['order_number']) ?>
+                                                        </small>
+
+                                                    </div>
+
+                                                    <div class="modal-footer">
+
+                                                        <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                                                            No
+                                                        </button>
+
+                                                        <form action="orders.php" method="POST" style="display: inline;">
+
+                                                            <input type="hidden" name="order_id" value="<?= (int) $order['id'] ?>">
+
+                                                            <button type="submit" class="btn btn-danger">
+                                                                Yes, Cancel Order
                                                             </button>
 
                                                         </form>
 
-                                                    <?php endif; ?>
+                                                    </div>
 
-                                                </td>
+                                                </div>
 
-                                            </tr>
+                                            </div>
 
-                                        <?php endforeach; ?>
+                                        </div>
 
-                                    </tbody>
+                                    <?php endif; ?>
 
-                                </table>
+                                <?php endforeach; ?>
 
-                            </div>
+                            <?php endif; ?>
 
-                        <?php endif; ?>
+                        </div>
 
                     </div>
 
@@ -288,28 +325,23 @@ $orders = Order::getByUserId($user['id']);
 
             </div>
 
-        </div>
+        </main>
 
-    </main>
+        <?php include '../includes/footer.php'; ?>
 
-    <?php include '../includes/footer.php'; ?>
+    </div>
 
-</div>
+    <button id="scroll-top" title="Back to Top">
+        <i class="icon-arrow-up"></i>
+    </button>
 
-<button
-    id="scroll-top"
-    title="Back to Top"
->
-    <i class="icon-arrow-up"></i>
-</button>
-
-<script src="assets/js/jquery.min.js"></script>
-<script src="assets/js/bootstrap.bundle.min.js"></script>
-<script src="assets/js/jquery.hoverIntent.min.js"></script>
-<script src="assets/js/jquery.waypoints.min.js"></script>
-<script src="assets/js/superfish.min.js"></script>
-<script src="assets/js/owl.carousel.min.js"></script>
-<script src="assets/js/main.js"></script>
+    <script src="assets/js/jquery.min.js"></script>
+    <script src="assets/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/js/jquery.hoverIntent.min.js"></script>
+    <script src="assets/js/jquery.waypoints.min.js"></script>
+    <script src="assets/js/superfish.min.js"></script>
+    <script src="assets/js/owl.carousel.min.js"></script>
+    <script src="assets/js/main.js"></script>
 
 </body>
 
