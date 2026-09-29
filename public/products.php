@@ -85,7 +85,12 @@ $products = Product::getByCategory($categoryId);
     <link rel="stylesheet" href="assets/css/style.css">
 
     <link rel="stylesheet" href="assets/css/plugins/nouislider/nouislider.css">
-
+    <style>
+        .btn-product.btn-cart,.btn-product{
+            border: 1px solid brown !important;
+            border-radius: 4px;
+        }
+    </style>
 </head>
 
 <body>
@@ -405,7 +410,7 @@ $products = Product::getByCategory($categoryId);
                     <!-- Products -->
                     <!-- ============================= -->
 
-                    <div class="products mb-3">
+                    <div class="products mb-3" id="productsCat">
 
                         <div class="row">
 
@@ -474,12 +479,38 @@ $products = Product::getByCategory($categoryId);
 
                                                 <div class="product-action">
 
-                                                    <a href="#" class="btn-product btn-cart">
+                                                    <?php if ($product['stock'] > 0): ?>
 
-                                                        <span>
-                                                            add to cart
-                                                        </span>
+                                                        <form action="add-to-cart.php" method="POST" class="product-cart-form">
 
+                                                            <input type="hidden" name="product_id"
+                                                                value="<?= (int) $product['id'] ?>">
+
+                                                            <input type="hidden" name="quantity" value="1">
+
+                                                            <input type="hidden" name="redirect"
+                                                                value="products.php?category=<?= (int) $product['category_id'] ?>#productsCat">
+
+                                                            <button type="submit" class="btn-product btn-cart" title="Add to cart">
+                                                                <span>Add to cart</span>
+                                                            </button>
+
+                                                        </form>
+
+                                                    <?php else: ?>
+
+                                                        <button type="button" class="btn-product btn-cart" title="Out of stock"
+                                                            disabled>
+                                                            <span>Out of stock</span>
+                                                        </button>
+
+                                                    <?php endif; ?>
+
+
+                                                    <a href="product-detail.php?id=<?= (int) $product['id'] ?>"
+                                                        class="btn-product" title="View Details">
+                                                        <i class="icon-eye"></i>
+                                                        <span>View Details</span>
                                                     </a>
 
                                                 </div>
