@@ -109,6 +109,51 @@ $deliveredOrders = (int) $stmt->fetch()['total'];
 
 /*
 |--------------------------------------------------------------------------
+| Weekly Sales Summary
+|--------------------------------------------------------------------------
+*/
+
+$sql = "SELECT
+            YEAR(created_at) AS sale_year,
+            WEEK(created_at, 1) AS sale_week,
+
+            DATE_SUB(
+                DATE(created_at),
+                INTERVAL WEEKDAY(created_at) DAY
+            ) AS week_start,
+
+            LEAST(
+                DATE_ADD(
+                    DATE(created_at),
+                    INTERVAL (6 - WEEKDAY(created_at)) DAY
+                ),
+                CURDATE()
+            ) AS week_end,
+
+            COUNT(*) AS total_orders,
+            COALESCE(SUM(total_amount), 0) AS total_sales
+
+        FROM orders
+
+        WHERE order_status != 'cancelled'
+        AND YEAR(created_at) = YEAR(CURDATE())
+
+        GROUP BY
+            YEAR(created_at),
+            WEEK(created_at, 1)
+
+        ORDER BY
+            sale_year DESC,
+            sale_week DESC";
+
+$stmt = $pdo->prepare($sql);
+$stmt->execute();
+
+$weeklySales = $stmt->fetchAll();
+
+
+/*
+|--------------------------------------------------------------------------
 | Monthly Sales Summary
 |--------------------------------------------------------------------------
 */
@@ -121,14 +166,14 @@ $sql = "SELECT
             COALESCE(SUM(total_amount), 0) AS total_sales
         FROM orders
         WHERE order_status != 'cancelled'
+        AND YEAR(created_at) = YEAR(CURDATE())
         GROUP BY
             YEAR(created_at),
             MONTH(created_at),
             DATE_FORMAT(created_at, '%M %Y')
         ORDER BY
             sale_year DESC,
-            sale_month DESC
-        LIMIT 12";
+            sale_month DESC";
 
 $stmt = $pdo->prepare($sql);
 $stmt->execute();
@@ -136,6 +181,25 @@ $stmt->execute();
 $monthlySales = $stmt->fetchAll();
 
 
+/*
+|--------------------------------------------------------------------------
+| Yearly Sales Summary
+|--------------------------------------------------------------------------
+*/
+
+$sql = "SELECT
+            YEAR(created_at) AS sale_year,
+            COUNT(*) AS total_orders,
+            COALESCE(SUM(total_amount), 0) AS total_sales
+        FROM orders
+        WHERE order_status != 'cancelled'
+        GROUP BY YEAR(created_at)
+        ORDER BY sale_year DESC";
+
+$stmt = $pdo->prepare($sql);
+$stmt->execute();
+
+$yearlySales = $stmt->fetchAll();
 /*
 |--------------------------------------------------------------------------
 | Top Selling Products
@@ -238,6 +302,36 @@ $orderStatuses = $stmt->fetchAll();
 
         .report-table th,
         .report-table td {
+            vertical-align: middle;
+        }
+
+        /* Sales Summary Tabs */
+
+        .sales-summary-tabs {
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .sales-summary-tabs .nav-link {
+            border: none;
+            color: #67748e;
+            font-weight: 600;
+            padding: 12px 20px;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .sales-summary-tabs .nav-link:hover {
+            color: #344767;
+            background-color: #f8f9fa;
+        }
+
+        .sales-summary-tabs .nav-link.active {
+            color: #344767;
+            background-color: #fff;
+            border-bottom: 3px solid #344767;
+        }
+
+        .sales-summary-table th,
+        .sales-summary-table td {
             vertical-align: middle;
         }
     </style>
@@ -570,7 +664,7 @@ $orderStatuses = $stmt->fetchAll();
 
 
             <!-- ====================================================== -->
-            <!-- MONTHLY SALES -->
+            <!-- SALES SUMMARY TABS -->
             <!-- ====================================================== -->
 
             <div class="row">
@@ -582,110 +676,391 @@ $orderStatuses = $stmt->fetchAll();
                         <div class="card-header pb-0">
 
                             <h6>
-                                Monthly Sales Summary
+                                Sales Summary
                             </h6>
 
-                            <p class="text-sm mb-0 text-secondary">
-                                Sales and orders from the last 12 active months
+                            <p class="text-sm mb-3 text-secondary">
+                                View your store sales by week, month, or year
                             </p>
+
+                            <!-- Tabs -->
+                            <ul class="nav sales-summary-tabs" id="salesSummaryTabs" role="tablist">
+
+                                <!-- Weekly -->
+                                <li class="nav-item" role="presentation">
+
+                                    <button class="nav-link active" id="weekly-tab" data-bs-toggle="tab"
+                                        data-bs-target="#weekly-sales" type="button" role="tab">
+
+                                        <i class="fa-solid fa-calendar-week me-2"></i>
+                                        Weekly
+
+                                    </button>
+
+                                </li>
+
+
+                                <!-- Monthly -->
+                                <li class="nav-item" role="presentation">
+
+                                    <button class="nav-link" id="monthly-tab" data-bs-toggle="tab"
+                                        data-bs-target="#monthly-sales" type="button" role="tab">
+
+                                        <i class="fa-solid fa-calendar-days me-2"></i>
+                                        Monthly
+
+                                    </button>
+
+                                </li>
+
+
+                                <!-- Yearly -->
+                                <li class="nav-item" role="presentation">
+
+                                    <button class="nav-link" id="yearly-tab" data-bs-toggle="tab"
+                                        data-bs-target="#yearly-sales" type="button" role="tab">
+
+                                        <i class="fa-solid fa-calendar me-2"></i>
+                                        Yearly
+
+                                    </button>
+
+                                </li>
+
+                            </ul>
 
                         </div>
 
 
                         <div class="card-body px-0 pt-0 pb-2">
 
-                            <div class="table-responsive p-0">
+                            <div class="tab-content">
+                                                                  <!-- ================================================== -->
+                                <!-- WEEKLY SALES -->
+                                <!-- ================================================== -->
 
-                                <table class="table align-items-center mb-0 report-table">
+                                <div class="tab-pane fade show active" id="weekly-sales" role="tabpanel"
+                                    aria-labelledby="weekly-tab">
 
-                                    <thead>
+                                    <div class="table-responsive p-0">
 
-                                        <tr>
+                                        <table class="table align-items-center mb-0 sales-summary-table">
 
-                                            <th
-                                                class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
-                                                Month
-                                            </th>
-
-                                            <th
-                                                class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
-                                                Orders
-                                            </th>
-
-                                            <th
-                                                class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
-                                                Sales
-                                            </th>
-
-                                        </tr>
-
-                                    </thead>
-
-
-                                    <tbody>
-
-                                        <?php if (empty($monthlySales)): ?>
-
-                                            <tr>
-
-                                                <td colspan="3" class="text-center py-4">
-
-                                                    <p class="text-sm text-secondary mb-0">
-                                                        No sales data available.
-                                                    </p>
-
-                                                </td>
-
-                                            </tr>
-
-                                        <?php else: ?>
-
-                                            <?php foreach ($monthlySales as $month): ?>
+                                            <thead>
 
                                                 <tr>
 
-                                                    <td>
+                                                    <th
+                                                        class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                                        Week
+                                                    </th>
 
-                                                        <div class="d-flex px-3 py-1">
+                                                    <th
+                                                        class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                                        Orders
+                                                    </th>
 
-                                                            <h6 class="mb-0 text-sm">
-                                                                <?= htmlspecialchars($month['month_name']) ?>
-                                                            </h6>
-
-                                                        </div>
-
-                                                    </td>
-
-
-                                                    <td>
-
-                                                        <span class="text-sm font-weight-bold">
-                                                            <?= number_format((int) $month['total_orders']) ?>
-                                                        </span>
-
-                                                    </td>
-
-
-                                                    <td>
-
-                                                        <span class="text-sm font-weight-bold">
-                                                            $ <?= number_format(
-                                                                (float) $month['total_sales'],
-                                                                2
-                                                            ) ?>
-                                                        </span>
-
-                                                    </td>
+                                                    <th
+                                                        class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                                        Sales
+                                                    </th>
 
                                                 </tr>
 
-                                            <?php endforeach; ?>
+                                            </thead>
 
-                                        <?php endif; ?>
 
-                                    </tbody>
+                                            <tbody>
 
-                                </table>
+                                                <?php if (empty($weeklySales)): ?>
+
+                                                    <tr>
+
+                                                        <td colspan="3" class="text-center py-4">
+
+                                                            <p class="text-sm text-secondary mb-0">
+                                                                No weekly sales data available.
+                                                            </p>
+
+                                                        </td>
+
+                                                    </tr>
+
+                                                <?php else: ?>
+
+                                                    <?php foreach ($weeklySales as $week): ?>
+
+                                                        <tr>
+
+                                                            <td>
+                                                                <div class="d-flex px-3 py-1">
+
+                                                                    <h6 class="mb-0 text-sm">
+
+                                                                        <?= date(
+                                                                            'M d, Y',
+                                                                            strtotime($week['week_start'])
+                                                                        ) ?>
+
+                                                                        -
+
+                                                                        <?= date(
+                                                                            'M d, Y',
+                                                                            strtotime($week['week_end'])
+                                                                        ) ?>
+
+                                                                    </h6>
+
+                                                                </div>
+                                                            </td>
+
+                                                            <td>
+                                                                <span class="text-sm font-weight-bold">
+                                                                    <?= number_format(
+                                                                        (int) $week['total_orders']
+                                                                    ) ?>
+                                                                </span>
+                                                            </td>
+
+                                                            <td>
+                                                                <span class="text-sm font-weight-bold">
+                                                                    $
+                                                                    <?= number_format(
+                                                                        (float) $week['total_sales'],
+                                                                        2
+                                                                    ) ?>
+                                                                </span>
+                                                            </td>
+
+                                                        </tr>
+
+                                                    <?php endforeach; ?>
+
+                                                <?php endif; ?>
+
+                                            </tbody>
+
+                                        </table>
+
+                                    </div>
+
+                                </div>
+
+                                <!-- ================================================== -->
+                                <!-- Monthly SALES -->
+                                <!-- ================================================== -->
+
+                                <div class="tab-pane fade" id="monthly-sales" role="tabpanel"
+                                    aria-labelledby="monthly-tab">
+
+                                    <div class="table-responsive p-0">
+
+                                        <table class="table align-items-center mb-0 sales-summary-table">
+
+                                            <thead>
+
+                                                <tr>
+
+                                                    <th
+                                                        class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                                        Month
+                                                    </th>
+
+                                                    <th
+                                                        class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                                        Orders
+                                                    </th>
+
+                                                    <th
+                                                        class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                                        Sales
+                                                    </th>
+
+                                                </tr>
+
+                                            </thead>
+
+
+                                            <tbody>
+
+                                                <?php if (empty($monthlySales)): ?>
+
+                                                    <tr>
+
+                                                        <td colspan="3" class="text-center py-4">
+
+                                                            <p class="text-sm text-secondary mb-0">
+                                                                No monthly sales data available.
+                                                            </p>
+
+                                                        </td>
+
+                                                    </tr>
+
+                                                <?php else: ?>
+
+                                                    <?php foreach ($monthlySales as $month): ?>
+
+                                                        <tr>
+
+                                                            <td>
+                                                                <div class="d-flex px-3 py-1">
+
+                                                                    <h6 class="mb-0 text-sm">
+                                                                        <?= htmlspecialchars($month['month_name']) ?>
+                                                                    </h6>
+
+                                                                </div>
+                                                            </td>
+
+                                                            <td>
+                                                                <span class="text-sm font-weight-bold">
+                                                                    <?= number_format(
+                                                                        (int) $month['total_orders']
+                                                                    ) ?>
+                                                                </span>
+                                                            </td>
+
+                                                            <td>
+                                                                <span class="text-sm font-weight-bold">
+                                                                    $
+                                                                    <?= number_format(
+                                                                        (float) $month['total_sales'],
+                                                                        2
+                                                                    ) ?>
+                                                                </span>
+                                                            </td>
+
+                                                        </tr>
+
+                                                    <?php endforeach; ?>
+
+                                                <?php endif; ?>
+
+                                            </tbody>
+
+                                        </table>
+
+                                    </div>
+
+                                </div>
+
+
+
+                                <!-- ================================================== -->
+                                <!-- YEARLY SALES -->
+                                <!-- ================================================== -->
+
+                                <div class="tab-pane fade" id="yearly-sales" role="tabpanel"
+                                    aria-labelledby="yearly-tab">
+
+                                    <div class="table-responsive p-0">
+
+                                        <table class="table align-items-center mb-0 sales-summary-table">
+
+                                            <thead>
+
+                                                <tr>
+
+                                                    <th
+                                                        class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                                        Year
+                                                    </th>
+
+                                                    <th
+                                                        class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                                        Orders
+                                                    </th>
+
+                                                    <th
+                                                        class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                                        Sales
+                                                    </th>
+
+                                                </tr>
+
+                                            </thead>
+
+
+                                            <tbody>
+
+                                                <?php if (empty($yearlySales)): ?>
+
+                                                    <tr>
+
+                                                        <td colspan="3" class="text-center py-4">
+
+                                                            <p class="text-sm text-secondary mb-0">
+                                                                No yearly sales data available.
+                                                            </p>
+
+                                                        </td>
+
+                                                    </tr>
+
+                                                <?php else: ?>
+
+                                                    <?php foreach ($yearlySales as $year): ?>
+
+                                                        <tr>
+
+                                                            <td>
+
+                                                                <div class="d-flex px-3 py-1">
+
+                                                                    <h6 class="mb-0 text-sm">
+
+                                                                        <?= htmlspecialchars(
+                                                                            $year['sale_year']
+                                                                        ) ?>
+
+                                                                    </h6>
+
+                                                                </div>
+
+                                                            </td>
+
+
+                                                            <td>
+
+                                                                <span class="text-sm font-weight-bold">
+
+                                                                    <?= number_format(
+                                                                        (int) $year['total_orders']
+                                                                    ) ?>
+
+                                                                </span>
+
+                                                            </td>
+
+
+                                                            <td>
+
+                                                                <span class="text-sm font-weight-bold">
+
+                                                                    $
+                                                                    <?= number_format(
+                                                                        (float) $year['total_sales'],
+                                                                        2
+                                                                    ) ?>
+
+                                                                </span>
+
+                                                            </td>
+
+                                                        </tr>
+
+                                                    <?php endforeach; ?>
+
+                                                <?php endif; ?>
+
+                                            </tbody>
+
+                                        </table>
+
+                                    </div>
+
+                                </div>
 
                             </div>
 
@@ -696,8 +1071,10 @@ $orderStatuses = $stmt->fetchAll();
                 </div>
 
 
+                <!-- ====================================================== -->
+                <!-- ORDER STATUS -->
+                <!-- ====================================================== -->
 
-                <!-- Order Status -->
                 <div class="col-lg-4 mb-4">
 
                     <div class="card">
@@ -734,13 +1111,17 @@ $orderStatuses = $stmt->fetchAll();
                                     <div class="d-flex justify-content-between align-items-center mb-3">
 
                                         <span class="text-sm">
+
                                             <?= htmlspecialchars($statusName) ?>
+
                                         </span>
 
                                         <span class="badge badge-sm bg-gradient-dark">
+
                                             <?= number_format(
                                                 (int) $status['total']
                                             ) ?>
+
                                         </span>
 
                                     </div>
@@ -756,6 +1137,8 @@ $orderStatuses = $stmt->fetchAll();
                 </div>
 
             </div>
+
+
 
 
 

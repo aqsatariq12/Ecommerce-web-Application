@@ -284,7 +284,7 @@ $total = $subtotal + $shippingCost;
 
 											<input type="text" name="full_name" class="form-control" value="<?= htmlspecialchars(
 												$address['full_name'] ?? $user['name']
-											) ?>" required>
+											) ?>" required readonly>
 
 										</div>
 
@@ -346,7 +346,7 @@ $total = $subtotal + $shippingCost;
 
 									<label>Email address *</label>
 									<input type="email" name="email" class="form-control"
-										value="<?= htmlspecialchars($user["email"]) ?>" required>
+										value="<?= htmlspecialchars($user["email"]) ?>" required readonly>
 
 
 

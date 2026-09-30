@@ -3,6 +3,7 @@
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/Deal.php';
 require_once __DIR__ . '/../config/stripe.php';
+require_once __DIR__ . '/Mail.php';
 
 class Order
 {
@@ -286,6 +287,37 @@ class Order
 
             $pdo->commit();
 
+            /*
+             * Get customer information
+             */
+
+            $userSql = "SELECT name, email
+            FROM users
+            WHERE id = :user_id
+            LIMIT 1";
+
+            $userStmt = $pdo->prepare($userSql);
+
+            $userStmt->execute([
+                'user_id' => $userId
+            ]);
+
+            $user = $userStmt->fetch();
+
+            /*
+             * Send order confirmation email
+             */
+
+            if ($user && !empty($user['email'])) {
+
+                Mail::sendOrderConfirmation(
+                    $user['email'],
+                    $user['name'],
+                    $orderNumber,
+                    $total
+                );
+            }
+
             return [
                 'id' => $orderId,
                 'order_number' => $orderNumber,
@@ -302,6 +334,26 @@ class Order
 
             throw $e;
         }
+    }
+
+    public static function getByIdAndUserId($orderId, $userId)
+    {
+        global $pdo;
+
+        $sql = "SELECT *
+            FROM orders
+            WHERE id = :order_id
+            AND user_id = :user_id
+            LIMIT 1";
+
+        $stmt = $pdo->prepare($sql);
+
+        $stmt->execute([
+            'order_id' => $orderId,
+            'user_id' => $userId
+        ]);
+
+        return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
     public static function getByOrderNumberAndUserId($orderNumber, $userId)

@@ -289,9 +289,9 @@ $orderItems = Order::getItems($order["id"]);
 
                                                         Cash on Delivery
 
-                                                    <?php elseif ($order['payment_method'] === 'paypal'): ?>
+                                                    <?php elseif ($order['payment_method'] === 'stripe'): ?>
 
-                                                        PayPal
+                                                        Stripe
 
                                                     <?php else: ?>
 
@@ -308,31 +308,15 @@ $orderItems = Order::getItems($order["id"]);
                                             </tr>
                                         </tbody>
                                     </table>
-                                     <?php if ($order['order_status'] === 'processing'): ?>
+                                    <?php if ($order['order_status'] === 'processing'): ?>
 
-    <form
-        action="orders.php"
-        method="POST"
-        class="mb-2"
-        onsubmit="return confirm('Are you sure you want to cancel this order?');"
-    >
+                                        <button type="button" class="btn btn-outline-danger btn-block mb-2"
+                                            data-toggle="modal" data-target="#cancelOrderModal">
+                                            CANCEL ORDER
+                                        </button>
 
-        <input
-            type="hidden"
-            name="order_id"
-            value="<?= (int) $order['id'] ?>"
-        >
+                                    <?php endif; ?>
 
-        <button
-            type="submit"
-            class="btn btn-outline-danger btn-block"
-        >
-            CANCEL ORDER
-        </button>
-
-    </form>
-
-<?php endif; ?>                   
                                     <a href="all_products.php" class="btn btn-outline-primary-2 btn-order btn-block">
                                         CONTINUE SHOPPING
                                     </a>
@@ -343,6 +327,66 @@ $orderItems = Order::getItems($order["id"]);
                                     <i class="icon-refresh"></i>
                                 </a>
                             </aside>
+                            
+                            <?php if ($order['order_status'] === 'processing'): ?>
+
+                                <div class="modal fade" id="cancelOrderModal" tabindex="-1" role="dialog"
+                                    aria-labelledby="cancelOrderModalLabel" aria-hidden="true">
+
+                                    <div class="modal-dialog modal-dialog-centered" role="document">
+
+                                        <div class="modal-content">
+
+                                            <div class="modal-header">
+
+                                                <h5 class="modal-title" id="cancelOrderModalLabel">
+                                                    Cancel Order
+                                                </h5>
+
+                                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                    <span aria-hidden="true">&times;</span>
+                                                </button>
+
+                                            </div>
+
+                                            <div class="modal-body p-4">
+
+                                                <p class="mb-0">
+                                                    Are you sure you want to cancel this order?
+                                                </p>
+
+                                                <small class="text-muted">
+                                                    Order #<?= htmlspecialchars($order['order_number']) ?>
+                                                </small>
+
+                                            </div>
+
+                                            <div class="modal-footer">
+
+                                                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                                                    No
+                                                </button>
+
+                                                <form action="orders.php" method="POST" style="display: inline;">
+
+                                                    <input type="hidden" name="order_id" value="<?= (int) $order['id'] ?>">
+
+                                                    <button type="submit" class="btn btn-danger">
+                                                        Yes, Cancel Order
+                                                    </button>
+
+                                                </form>
+
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                            <?php endif; ?>
+                            
 
                         </div>
                     </div>

@@ -27,6 +27,7 @@ if ($isLoggedIn && Auth::isCustomer()) {
 }
 
 ?>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
 
 <style>
     /* =========================================================
@@ -482,7 +483,58 @@ if ($isLoggedIn && Auth::isCustomer()) {
 
     }
 </style>
+<style>
+    /* =========================================================
+       TOASTR FIX
+       ========================================================= */
 
+    #toast-container>.toast {
+        color: #ffffff !important;
+        opacity: 1 !important;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15) !important;
+    }
+
+    #toast-container>.toast-success {
+        background-color: #28a745 !important;
+        color: #ffffff !important;
+    }
+
+    #toast-container>.toast-error {
+        background-color: #dc3545 !important;
+        color: #ffffff !important;
+    }
+
+    #toast-container>.toast-info {
+        background-color: #17a2b8 !important;
+        color: #ffffff !important;
+    }
+
+    #toast-container>.toast-warning {
+        background-color: #ffc107 !important;
+        color: #212529 !important;
+    }
+
+    #toast-container .toast-message {
+        color: #ffffff !important;
+        font-size: 14px !important;
+        font-weight: 500 !important;
+        line-height: 1.5 !important;
+    }
+
+    #toast-container .toast-title {
+        color: #ffffff !important;
+        font-weight: 600 !important;
+    }
+
+    #toast-container .toast-close-button {
+        color: #ffffff !important;
+        opacity: 1 !important;
+    }
+
+    #toast-container .toast-progress {
+        opacity: 0.7 !important;
+    }
+</style>
 
 <header class="header header-intro-clearance header-4">
 
@@ -1429,4 +1481,44 @@ if ($isLoggedIn && Auth::isCustomer()) {
         }
 
     });
+</script>
+<!-- Toastr JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+
+<script>
+    toastr.options = {
+        closeButton: true,
+        progressBar: true,
+        newestOnTop: true,
+        positionClass: "toast-top-right",
+        preventDuplicates: true,
+        timeOut: 3000,
+        extendedTimeOut: 1000
+    };
+
+
+    <?php
+    $successMessage = Session::getFlash('success');
+    $errorMessage = Session::getFlash('error');
+    ?>
+
+
+    <?php if ($successMessage): ?>
+
+        toastr.success(
+            <?= json_encode($successMessage) ?>
+        );
+
+    <?php endif; ?>
+
+
+    <?php if ($errorMessage): ?>
+
+        toastr.error(
+            <?= json_encode($errorMessage) ?>
+        );
+
+    <?php endif; ?>
 </script>

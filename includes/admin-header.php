@@ -194,7 +194,7 @@ $user = Auth::user();
 
                         <!-- Profile -->
                         <li>
-                            <a class="dropdown-item border-radius-md" href="profile.php">
+                            <a class="dropdown-item border-radius-md" href="/admin/profile.php">
 
                                 <i class="material-symbols-rounded me-2">
                                     person

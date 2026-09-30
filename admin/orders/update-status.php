@@ -4,6 +4,7 @@ require_once '../../core/Middleware.php';
 require_once '../../config/database.php';
 require_once '../../core/Session.php';
 require_once '../../config/stripe.php';
+require_once '../../core/Mail.php';
 
 Middleware::admin();
 Session::start();
@@ -123,14 +124,21 @@ try {
     // =================================================
 
     $sql = "SELECT
-            id,
-            order_status,
-            payment_method,
-            payment_status,
-            transaction_id
-        FROM orders
-        WHERE id = :id
-        LIMIT 1";
+        o.id,
+        o.user_id,
+        o.order_number,
+        o.order_status,
+        o.payment_method,
+        o.payment_status,
+        o.transaction_id,
+        o.total_amount,
+        u.name AS customer_name,
+        u.email AS customer_email
+    FROM orders o
+    INNER JOIN users u
+        ON o.user_id = u.id
+    WHERE o.id = :id
+    LIMIT 1";
 
     $stmt = $pdo->prepare($sql);
 
@@ -359,15 +367,61 @@ try {
 
 
     // =================================================
-    // COMMIT
-    // =================================================
+// COMMIT
+// =================================================
 
     $pdo->commit();
 
 
     // =================================================
-    // SUCCESS MESSAGE
+// SEND ORDER STATUS EMAIL
+// =================================================
+
+    if (
+        $currentOrderStatus !== $orderStatus &&
+        !empty($order['customer_email'])
+    ) {
+
+        $customerName = $order['customer_name'];
+        $customerEmail = $order['customer_email'];
+        $orderNumber = $order['order_number'];
+        $totalAmount = $order['total_amount'];
+
+        /*
+         * Cancellation email
+         */
+
+        if ($orderStatus === 'cancelled') {
+
+            Mail::sendCancellationEmail(
+                $customerEmail,
+                $customerName,
+                $orderNumber,
+                $totalAmount,
+                $order['payment_method'],
+                $paymentStatus
+            );
+
+        } else {
+
+            /*
+             * Normal status email
+             */
+
+            Mail::sendOrderStatusUpdate(
+                $customerEmail,
+                $customerName,
+                $orderNumber,
+                $totalAmount,
+                $orderStatus
+            );
+        }
+    }
+
+
     // =================================================
+// SUCCESS MESSAGE
+// =================================================
 
     Session::setFlash(
         'success',

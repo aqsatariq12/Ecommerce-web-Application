@@ -454,8 +454,7 @@ include '../includes/header.php';
 
                                                         <input type="hidden" name="quantity" value="1">
 
-                                                        <input type="hidden" name="redirect"     value="index.php#newArrival"
-">
+                                                        <input type="hidden" name="redirect" value="index.php#newArrival">
 
                                                         <button type="submit" class="btn-product btn-cart" title="Add to cart">
 

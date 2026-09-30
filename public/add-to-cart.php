@@ -5,6 +5,9 @@ Middleware::customer();
 
 require_once '../core/Auth.php';
 require_once '../core/Cart.php';
+require_once '../core/Session.php';
+
+Session::start();
 
 
 // Get product ID
@@ -17,6 +20,8 @@ $quantity = filter_input(INPUT_POST, 'quantity', FILTER_VALIDATE_INT);
 
 // Validate product ID
 if (!$productId) {
+
+    Session::setFlash('error', 'Invalid product.');
 
     header("Location: index.php");
     exit;
@@ -44,12 +49,35 @@ try {
         $productId,
         $quantity
     );
+
+
+    // Success message
+    Session::setFlash(
+        'success',
+        'Item added to cart successfully!'
+    );
+
+
+    // Redirect back to the page
     $redirect = $_POST['redirect'] ?? 'index.php';
+
     header("Location: " . $redirect);
     exit;
 
+
 } catch (Exception $e) {
 
-    die($e->getMessage());
+    // Error message
+    Session::setFlash(
+        'error',
+        $e->getMessage()
+    );
+
+
+    // Redirect back to the page
+    $redirect = $_POST['redirect'] ?? 'index.php';
+
+    header("Location: " . $redirect);
+    exit;
 
 }

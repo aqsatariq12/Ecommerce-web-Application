@@ -6,10 +6,15 @@ Middleware::customer();
 require_once '../core/Auth.php';
 require_once '../core/Order.php';
 require_once '../core/Session.php';
+require_once '../core/Mail.php';
 
 Session::start();
 
 $user = Auth::user();
+
+/*
+ * Cancel order
+ */
 
 /*
  * Cancel order
@@ -25,10 +30,86 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     try {
 
+        /*
+         * Get the customer's order first
+         *
+         * This also makes sure the order belongs
+         * to the currently logged-in customer.
+         */
+
+        $order = Order::getByIdAndUserId(
+            $orderId,
+            $user['id']
+        );
+
+        if (!$order) {
+            throw new Exception("Order not found.");
+        }
+
+
+        /*
+         * Store information that we need
+         * for the cancellation email.
+         */
+
+        $customerName = $user['name'];
+        $customerEmail = $user['email'];
+
+        $orderNumber = $order['order_number'];
+        $totalAmount = $order['total_amount'];
+
+        $paymentMethod = $order['payment_method'];
+
+
+        /*
+         * Cancel the order
+         *
+         * This handles:
+         *
+         * - status validation
+         * - stock restoration
+         * - Stripe refund
+         * - order status update
+         */
+
         Order::cancel(
             $orderId,
             $user['id']
         );
+
+
+        /*
+         * Get the order again after cancellation.
+         *
+         * This is important because a Stripe order may
+         * have changed:
+         *
+         * completed → refunded
+         */
+
+        $updatedOrder = Order::getByIdAndUserId(
+            $orderId,
+            $user['id']
+        );
+
+
+        /*
+         * Send professional cancellation email
+         */
+
+        Mail::sendCancellationEmail(
+            $customerEmail,
+            $customerName,
+            $orderNumber,
+            $totalAmount,
+            $paymentMethod,
+            $updatedOrder['payment_status']
+        );
+
+
+        /*
+         * Success message
+         */
 
         Session::set(
             'success',
@@ -37,6 +118,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         header("Location: orders.php");
         exit;
+
 
     } catch (Exception $e) {
 

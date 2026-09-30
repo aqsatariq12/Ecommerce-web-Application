@@ -144,6 +144,19 @@ $stmt->execute();
 $lowStockProducts = (int) $stmt->fetch()['total'];
 
 
+//Low stock product name
+
+$sql = "SELECT name, stock
+        FROM products
+        WHERE stock <= 5
+        AND status = 1";
+
+$stmt = $pdo->prepare($sql);
+$stmt->execute();
+
+$lowStockProductsName = $stmt->fetchAll();
+
+
 /*
 |--------------------------------------------------------------------------
 | SALES FOR LAST 7 DAYS
@@ -713,27 +726,65 @@ $topProducts = $stmt->fetchAll();
                 <!-- Low Stock -->
                 <div class="col-xl-3 col-sm-6 mb-4">
 
-                    <div class="card">
+                    <div class="card h-100">
 
                         <div class="card-body p-3">
 
+                            <!-- Header -->
                             <p class="text-sm mb-1 text-uppercase font-weight-bold">
                                 Low Stock
                             </p>
 
-                            <h5 class="font-weight-bolder mb-0">
+                            <!-- Count -->
+                            <div class="d-flex align-items-center mb-3">
 
-                                <?= number_format($lowStockProducts) ?>
+                                <h4 class="font-weight-bolder mb-0">
+                                    <?= number_format($lowStockProducts) ?>
+                                </h4>
 
-                                <?php if ($lowStockProducts > 0): ?>
+                                <span class="text-xs text-warning ms-2">
+                                    products need attention
+                                </span>
 
-                                    <span class="text-xs text-warning">
-                                        products
+                            </div>
+
+                            <?php if (!empty($lowStockProductsName)): ?>
+
+                                <!-- Product List -->
+                                <div class="low-stock-list">
+
+                                    <?php foreach ($lowStockProductsName as $product): ?>
+
+                                        <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+
+                                            <!-- Product Name -->
+                                            <span class="text-xs font-weight-bold text-dark text-truncate"
+                                                style="max-width: 75%;" title="<?= htmlspecialchars($product['name']) ?>">
+                                                <?= htmlspecialchars($product['name']) ?>
+                                            </span>
+
+                                            <!-- Stock -->
+                                            <span class="text-xs text-warning font-weight-bold">
+                                                <?= (int) $product['stock'] ?> left
+                                            </span>
+
+                                        </div>
+
+                                    <?php endforeach; ?>
+
+                                </div>
+
+                            <?php else: ?>
+
+                                <div class="text-center py-3">
+
+                                    <span class="text-xs text-success font-weight-bold">
+                                        All products have sufficient stock
                                     </span>
 
-                                <?php endif; ?>
+                                </div>
 
-                            </h5>
+                            <?php endif; ?>
 
                         </div>
 
