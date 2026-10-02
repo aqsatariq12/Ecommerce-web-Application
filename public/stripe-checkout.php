@@ -92,10 +92,10 @@ try {
         'customer_email' => $user['email'],
 
         'success_url' =>
-            'http://clothwear.local/public/stripe-success.php?session_id={CHECKOUT_SESSION_ID}',
+            'http://electro-cart.infinityfree.io/public/stripe-success.php?session_id={CHECKOUT_SESSION_ID}',
 
         'cancel_url' =>
-            'http://clothwear.local/public/checkout.php',
+            'http://electro-cart.infinityfree.io/public/checkout.php',
 
         'metadata' => [
             'user_id' => (string) $user['id'],

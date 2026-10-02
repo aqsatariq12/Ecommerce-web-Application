@@ -1,3 +1,4 @@
 /config/stripe.php
 .env
 /vendor/
+config/database.credentials.php

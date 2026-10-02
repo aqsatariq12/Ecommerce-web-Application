@@ -1,20 +1,30 @@
-<?php 
-$host = "localhost";
-$dbname = "ecommerce";
-$username = "root";
-$password = "";
+<?php
 
-//utf8mb4: support many characyers like emojis, english characters, character which has a cap on their head
-try{
-    $pdo = new PDO("mysql:host=$host; dbname=$dbname;charset=utf8mb4", $username, $password);
+require_once __DIR__ . '/database.credentials.php';
 
-    //PDO, if something goes wrong with the database give me an error/exception instead of silently failing
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+try {
 
-    //PDO, whenever I fetch database data, return each row as an associative array using the column names
-    $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
-}
-catch(PDOException $e){
+    $pdo = new PDO(
+        "mysql:host=$host;port=$port;dbname=$dbname;charset=utf8mb4",
+        $username,
+        $password
+    );
+
+    // Show database errors as exceptions
+    $pdo->setAttribute(
+        PDO::ATTR_ERRMODE,
+        PDO::ERRMODE_EXCEPTION
+    );
+
+    // Fetch rows as associative arrays
+    $pdo->setAttribute(
+        PDO::ATTR_DEFAULT_FETCH_MODE,
+        PDO::FETCH_ASSOC
+    );
+
+} catch (PDOException $e) {
+
     die("Database Connection Failed.");
+
 }
 ?>
