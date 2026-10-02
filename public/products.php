@@ -86,9 +86,64 @@ $products = Product::getByCategory($categoryId);
 
     <link rel="stylesheet" href="assets/css/plugins/nouislider/nouislider.css">
     <style>
-        .btn-product.btn-cart,.btn-product{
+        /* =========================================
+       PRODUCT IMAGE CONTAINER
+    ========================================= */
+
+        .product-media {
+            height: 280px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            background: #fff;
+        }
+
+        .product-media>a {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .product-media .product-image {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+        }
+
+
+        /* =========================================
+       PRODUCT ACTION BUTTONS
+    ========================================= */
+
+        .btn-product.btn-cart,
+        .btn-product {
             border: 1px solid brown !important;
             border-radius: 4px;
+        }
+
+
+        /* =========================================
+       RESPONSIVE IMAGE HEIGHT
+    ========================================= */
+
+        @media (max-width: 767px) {
+
+            .product-media {
+                height: 220px;
+            }
+
+        }
+
+        @media (max-width: 480px) {
+
+            .product-media {
+                height: 190px;
+            }
+
         }
     </style>
 </head>

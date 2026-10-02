@@ -19,7 +19,7 @@ $sql = "SELECT
             COALESCE(SUM(total_amount), 0) AS total
         FROM orders
         WHERE DATE(created_at) = CURDATE()
-        AND order_status != 'cancelled'";
+        AND order_status = 'delivered'";
 
 $stmt = $pdo->prepare($sql);
 $stmt->execute();
@@ -36,7 +36,7 @@ $todaySales = (float) $stmt->fetch()['total'];
 $sql = "SELECT
             COALESCE(SUM(total_amount), 0) AS total
         FROM orders
-        WHERE order_status != 'cancelled'";
+        WHERE order_status = 'delivered'";
 
 $stmt = $pdo->prepare($sql);
 $stmt->execute();
@@ -135,7 +135,7 @@ $sql = "SELECT
 
         FROM orders
 
-        WHERE order_status != 'cancelled'
+        WHERE order_status = 'delivered'
         AND YEAR(created_at) = YEAR(CURDATE())
 
         GROUP BY
@@ -165,7 +165,7 @@ $sql = "SELECT
             COUNT(*) AS total_orders,
             COALESCE(SUM(total_amount), 0) AS total_sales
         FROM orders
-        WHERE order_status != 'cancelled'
+        WHERE order_status = 'delivered'
         AND YEAR(created_at) = YEAR(CURDATE())
         GROUP BY
             YEAR(created_at),
@@ -192,7 +192,7 @@ $sql = "SELECT
             COUNT(*) AS total_orders,
             COALESCE(SUM(total_amount), 0) AS total_sales
         FROM orders
-        WHERE order_status != 'cancelled'
+        WHERE order_status = 'delivered'
         GROUP BY YEAR(created_at)
         ORDER BY sale_year DESC";
 
@@ -421,7 +421,7 @@ $orderStatuses = $stmt->fetchAll();
                                     <div
                                         class="icon icon-shape bg-gradient-dark shadow text-center border-radius-md report-icon">
 
-                                        <i class="ni ni-money-coins text-lg opacity-10"></i>
+                                        <i class="fa-solid fa-money-bill-wave text-lg opacity-10"></i>
 
                                     </div>
 
@@ -468,7 +468,7 @@ $orderStatuses = $stmt->fetchAll();
                                     <div
                                         class="icon icon-shape bg-gradient-success shadow text-center border-radius-md report-icon">
 
-                                        <i class="ni ni-chart-bar-32 text-lg opacity-10"></i>
+                                        <i class="fa-solid fa-chart-column text-lg opacity-10"></i>
 
                                     </div>
 
@@ -515,7 +515,7 @@ $orderStatuses = $stmt->fetchAll();
                                     <div
                                         class="icon icon-shape bg-gradient-info shadow text-center border-radius-md report-icon">
 
-                                        <i class="ni ni-cart text-lg opacity-10"></i>
+                                        <i class="fa-solid fa-cart-shopping text-lg opacity-10"></i>
 
                                     </div>
 
@@ -562,7 +562,7 @@ $orderStatuses = $stmt->fetchAll();
                                     <div
                                         class="icon icon-shape bg-gradient-warning shadow text-center border-radius-md report-icon">
 
-                                        <i class="ni ni-single-02 text-lg opacity-10"></i>
+                                        <i class="fa-solid fa-user text-lg opacity-10"></i>
 
                                     </div>
 
@@ -735,7 +735,7 @@ $orderStatuses = $stmt->fetchAll();
                         <div class="card-body px-0 pt-0 pb-2">
 
                             <div class="tab-content">
-                                                                  <!-- ================================================== -->
+                                <!-- ================================================== -->
                                 <!-- WEEKLY SALES -->
                                 <!-- ================================================== -->
 

@@ -1035,10 +1035,12 @@ $totalOrders = count($orders);
                                                 <?php
                                                 $paymentMethod = $order['payment_method'];
                                                 $paymentStatus = $order['payment_status'];
+                                                $orderStatus = $order['order_status'];
+
                                                 ?>
 
                                                 <select name="payment_status" class="form-select payment-status-select"
-                                                    form="order-form-<?= (int) $order['id'] ?>">
+                                                    form="order-form-<?= (int) $order['id'] ?>" <?= $orderStatus === 'cancelled' ? 'disabled' : '' ?>>
 
                                                     <?php if ($paymentMethod === 'cod'): ?>
 
@@ -1048,9 +1050,13 @@ $totalOrders = count($orders);
                                                                 Pending
                                                             </option>
 
-                                                            <option value="completed">
-                                                                Completed
-                                                            </option>
+                                                            <?php if ($orderStatus !== 'delivered'): ?>
+
+                                                                <option value="completed">
+                                                                    Completed
+                                                                </option>
+
+                                                            <?php endif; ?>
 
                                                         <?php elseif ($paymentStatus === 'completed'): ?>
 
@@ -1059,7 +1065,6 @@ $totalOrders = count($orders);
                                                             </option>
 
                                                         <?php endif; ?>
-
 
                                                     <?php elseif ($paymentMethod === 'stripe'): ?>
 
@@ -1127,9 +1132,7 @@ $totalOrders = count($orders);
 
                                             <td>
 
-                                                <?php
-                                                $orderStatus = $order['order_status'];
-                                                ?>
+
 
                                                 <select name="order_status" class="form-select order-status-select"
                                                     form="order-form-<?= (int) $order['id'] ?>">
@@ -1222,9 +1225,18 @@ $totalOrders = count($orders);
                                                         <button type="submit" class="btn bg-gradient-dark order-save-btn"
                                                             title="Save Status">
 
-                                                            <i class="fa-solid fa-check"></i>
+                                                            <span class="save-status-content">
 
-                                                            Save
+                                                                <i class="fa-solid fa-check"></i>
+
+                                                                Save
+
+                                                            </span>
+
+                                                            <span class="save-status-loader spinner-border spinner-border-sm"
+                                                                role="status" aria-hidden="true" style="display: none;">
+
+                                                            </span>
 
                                                         </button>
 
@@ -1292,6 +1304,32 @@ $totalOrders = count($orders);
 
     <script src="../assets/js/material-dashboard.min.js?v=3.2.0"></script>
 
+    <script>
+
+        document.querySelectorAll('.order-save-btn').forEach(function (button) {
+
+            button.closest('form').addEventListener('submit', function () {
+
+                const saveButton = button;
+
+                const saveContent = saveButton.querySelector('.save-status-content');
+
+                const loader = saveButton.querySelector('.save-status-loader');
+
+                // Prevent multiple submissions
+                saveButton.disabled = true;
+
+                // Hide Save content
+                saveContent.style.display = 'none';
+
+                // Show loader
+                loader.style.display = 'inline-block';
+
+            });
+
+        });
+
+    </script>
 </body>
 
 </html>

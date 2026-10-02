@@ -219,6 +219,38 @@ foreach ($products as $product) {
             }
 
         }
+
+        /* =========================================
+   ALL PRODUCTS IMAGE CONTAINER
+========================================= */
+
+        .product-category-section .product-media {
+            height: 280px;
+            width: 100%;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            background: #fff;
+
+            overflow: hidden;
+        }
+
+        /* =========================================
+   ALL PRODUCTS IMAGE
+========================================= */
+
+        .product-category-section .product-media .product-image {
+            width: 100%;
+            height: 100%;
+
+            object-fit: contain;
+
+            padding: 15px;
+
+            display: block;
+        }
     </style>
 
 </head>

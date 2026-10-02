@@ -5,25 +5,65 @@ Middleware::guest();
 Session::start();
 $error = '';
 
+$errors = [];
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
   $email = trim($_POST['email'] ?? '');
   $password = $_POST['password'] ?? '';
-  if ($email === '' | $password === '') {
-    $error = 'Email and Password are required';
-  } else {
+
+  /*
+   * Validate email
+   */
+
+  if ($email === '') {
+
+    $errors['email'] = 'Please enter your email address.';
+
+  } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+
+    $errors['email'] = 'Please enter a valid email address.';
+
+  }
+
+
+  /*
+   * Validate password
+   */
+
+  if ($password === '') {
+
+    $errors['password'] = 'Please enter your password.';
+
+  }
+
+
+  /*
+   * Login
+   */
+
+  if (empty($errors)) {
+
     $result = Auth::login($email, $password);
 
     if (!$result['success']) {
-      $error = $result['message'];
+
+      $errors['password'] = $result['message'];
+
     } else {
+
       if (Auth::isAdmin()) {
+
         header("Location: /admin/index.php");
         exit;
+
       }
 
       if (Auth::isCustomer()) {
+
         header("Location: /public/index.php");
         exit;
+
       }
 
     }
@@ -54,6 +94,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" />
   <!-- CSS Files -->
   <link id="pagestyle" href="assets/css/material-dashboard.css?v=3.2.0" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
 </head>
 
 <body class="bg-gray-200">
@@ -142,18 +183,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
               </div>
               <div class="card-body">
-                <?php if($error):?>
-                  <div class="alert alert-danger text-sm">
-                    <?= htmlspecialchars($error) ?>
-                  </div>
-                  <?php endif;?>
                 <form method="POST" action="" role="form" class="text-start">
                   <div class="input-group input-group-outline my-3">
-                    
-                    <input type="email" class="form-control" name="email" placeholder="Email" value="<?= htmlspecialchars($POST['email'] ?? '') ?>">
+
+                    <input type="text" class="form-control" name="email" placeholder="Email"
+                      value="<?= htmlspecialchars($_POST['email'] ?? '') ?>">
                   </div>
                   <div class="input-group input-group-outline mb-3">
-                    <input type="password" placeholder="Password" class="form-control" name="password" >
+                    <input type="password" placeholder="Password" class="form-control" name="password">
                   </div>
                   <div class="text-center">
                     <button type="submit" class="btn bg-gradient-dark w-100 my-4 mb-2">Sign in</button>
@@ -220,6 +257,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <script async defer src="https://buttons.github.io/buttons.js"></script>
   <!-- Control Center for Material Dashboard: parallax effects, scripts for the example pages etc -->
   <script src="assets/js/material-dashboard.min.js?v=3.2.0"></script>
-</body>
 
+  <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+
+  <script>
+
+    const validationErrors = <?= json_encode(array_values($errors)) ?>;
+
+    validationErrors.forEach(function (message) {
+
+      Toastify({
+        text: message,
+        duration: 4000,
+        gravity: "top",
+        position: "right",
+        close: true,
+        stopOnFocus: true
+      }).showToast();
+
+    });
+
+  </script>
+
+</body>
 </html>

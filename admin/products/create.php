@@ -34,8 +34,7 @@ if (
     $stock = (int) ($_POST['stock'] ?? 0);
     $status = $_POST['status'] ?? 'active';
     $description = trim($_POST['description'] ?? '');
-    $image = $_FILES['image'] ?? null;
-
+    $images = $_FILES['images'] ?? null;
 
     // =========================
     // VALIDATION
@@ -76,11 +75,15 @@ if (
             'Stock cannot be negative.'
         );
 
-    } elseif (!$image || $image['error'] !== UPLOAD_ERR_OK) {
+    } elseif (
+        !$images ||
+        !isset($images['name']) ||
+        empty($images['name'][0])
+    ) {
 
         Session::setFlash(
             'error',
-            'Please select a product image.'
+            'Please select at least one product image.'
         );
 
     } else {
@@ -168,150 +171,259 @@ if (
                 // IMAGE VALIDATION
                 // =========================
 
-                if ($image['size'] > 2 * 1024 * 1024) {
 
-                    Session::setFlash(
-                        'error',
-                        'Image size must be less than 2MB.'
+                $allowedTypes = [
+                    'image/jpeg',
+                    'image/png',
+                    'image/webp'
+                ];
+
+                $uploadedImages = [];
+                $imageUploadFailed = false;
+
+
+                // =========================
+                // VALIDATE ALL IMAGES
+                // =========================
+                $uploadedImages = [];
+
+                foreach ($images['name'] as $index => $originalName) {
+
+                    // Skip empty upload slots
+                    if (
+                        empty($originalName) &&
+                        $images['error'][$index] === UPLOAD_ERR_NO_FILE
+                    ) {
+                        continue;
+                    }
+
+
+                    // Check upload error
+
+                    if ($images['error'][$index] !== UPLOAD_ERR_OK) {
+
+                        Session::setFlash(
+                            'error',
+                            'One of the selected images could not be uploaded.'
+                        );
+
+                        $imageUploadFailed = true;
+
+                        break;
+                    }
+
+
+                    // Check file size
+
+                    if ($images['size'][$index] > 2 * 1024 * 1024) {
+
+                        Session::setFlash(
+                            'error',
+                            'Each image must be less than 2MB.'
+                        );
+
+                        $imageUploadFailed = true;
+
+                        break;
+                    }
+
+
+                    // Detect MIME type
+
+                    $imageType = mime_content_type(
+                        $images['tmp_name'][$index]
                     );
 
-                } else {
 
-                    $imageType =
-                        mime_content_type($image['tmp_name']);
+                    // Check allowed type
 
-                    $allowedTypes = [
-                        'image/jpeg',
-                        'image/png',
-                        'image/webp'
-                    ];
-
-
-                    if (
-                        !in_array(
-                            $imageType,
-                            $allowedTypes
-                        )
-                    ) {
+                    if (!in_array($imageType, $allowedTypes)) {
 
                         Session::setFlash(
                             'error',
                             'Only JPG, PNG, and WebP images are allowed.'
                         );
 
-                    } else {
+                        $imageUploadFailed = true;
 
-                        // =========================
-                        // IMAGE EXTENSION
-                        // =========================
-
-                        $extension = match ($imageType) {
-
-                            'image/jpeg' => 'jpg',
-
-                            'image/png' => 'png',
-
-                            'image/webp' => 'webp',
-
-                            default => null
-                        };
-
-
-                        // =========================
-                        // IMAGE NAME
-                        // =========================
-
-                        $imageName =
-                            uniqid(
-                                'product_',
-                                true
-                            ) . '.' . $extension;
-
-
-                        // =========================
-                        // UPLOAD PATH
-                        // =========================
-
-                        $uploadDirectory =
-                            '../../public/uploads/products/';
-
-                        $uploadPath =
-                            $uploadDirectory . $imageName;
-
-
-                        // =========================
-                        // MOVE IMAGE
-                        // =========================
-
-                        if (
-                            !move_uploaded_file(
-                                $image['tmp_name'],
-                                $uploadPath
-                            )
-                        ) {
-
-                            Session::setFlash(
-                                'error',
-                                'Failed to upload product image.'
-                            );
-
-                        } else {
-
-                            // =========================
-                            // INSERT PRODUCT
-                            // =========================
-
-                            $sql = "INSERT INTO products
-                                    (
-                                        category_id,
-                                        name,
-                                        slug,
-                                        description,
-                                        price,
-                                        stock,
-                                        image,
-                                        status
-                                    )
-                                    VALUES
-                                    (
-                                        :category_id,
-                                        :name,
-                                        :slug,
-                                        :description,
-                                        :price,
-                                        :stock,
-                                        :image,
-                                        :status
-                                    )";
-
-                            $stmt = $pdo->prepare($sql);
-
-                            $stmt->execute([
-                                ':category_id' => $categoryId,
-                                ':name' => $name,
-                                ':slug' => $slug,
-                                ':description' => $description,
-                                ':price' => $price,
-                                ':stock' => $stock,
-                                ':image' => $imageName,
-                                ':status' => $statusValue
-                            ]);
-
-
-                            // =========================
-                            // SUCCESS
-                            // =========================
-
-                            Session::setFlash(
-                                'success',
-                                'Product created successfully.'
-                            );
-
-                            header('Location: index.php');
-                            exit;
-                        }
+                        break;
                     }
+
+
+                    // Determine extension
+
+                    $extension = match ($imageType) {
+
+                        'image/jpeg' => 'jpg',
+
+                        'image/png' => 'png',
+
+                        'image/webp' => 'webp',
+
+                        default => null
+                    };
+
+
+                    if (!$extension) {
+
+                        Session::setFlash(
+                            'error',
+                            'Invalid image format.'
+                        );
+
+                        $imageUploadFailed = true;
+
+                        break;
+                    }
+
+
+                    // Generate unique filename
+
+                    $imageName =
+                        uniqid(
+                            'product_',
+                            true
+                        ) . '.' . $extension;
+
+
+                    // Upload path
+
+                    $uploadDirectory =
+                        '../../public/uploads/products/';
+
+                    $uploadPath =
+                        $uploadDirectory . $imageName;
+
+
+                    // Move image
+
+                    if (
+                        !move_uploaded_file(
+                            $images['tmp_name'][$index],
+                            $uploadPath
+                        )
+                    ) {
+
+                        Session::setFlash(
+                            'error',
+                            'Failed to upload one of the product images.'
+                        );
+
+                        $imageUploadFailed = true;
+
+                        break;
+                    }
+
+
+                    // Store uploaded image name
+
+                    $uploadedImages[] = $imageName;
                 }
+
+
+                // =========================
+// INSERT PRODUCT
+// =========================
+
+                if (!$imageUploadFailed && !empty($uploadedImages)) {
+
+                    /*
+                     * First uploaded image becomes
+                     * the main product image.
+                     */
+
+                    $mainImage = $uploadedImages[0];
+
+
+                    $sql = "INSERT INTO products
+            (
+                category_id,
+                name,
+                slug,
+                description,
+                price,
+                stock,
+                image,
+                status
+            )
+            VALUES
+            (
+                :category_id,
+                :name,
+                :slug,
+                :description,
+                :price,
+                :stock,
+                :image,
+                :status
+            )";
+
+                    $stmt = $pdo->prepare($sql);
+
+                    $stmt->execute([
+                        ':category_id' => $categoryId,
+                        ':name' => $name,
+                        ':slug' => $slug,
+                        ':description' => $description,
+                        ':price' => $price,
+                        ':stock' => $stock,
+                        ':image' => $mainImage,
+                        ':status' => $statusValue
+                    ]);
+
+
+                    // Get newly created product ID
+
+                    $productId = (int) $pdo->lastInsertId();
+
+
+                    // =========================
+                    // INSERT ALL PRODUCT IMAGES
+                    // =========================
+
+                    // =========================
+// INSERT ADDITIONAL PRODUCT IMAGES
+// =========================
+
+                    $sql = "INSERT INTO product_images
+(
+    product_id,
+    image
+)
+VALUES
+(
+    :product_id,
+    :image
+)";
+
+                    $stmt = $pdo->prepare($sql);
+
+
+                    // Start from index 1
+// because index 0 is the main product image
+                    foreach (array_slice($uploadedImages, 1) as $uploadedImage) {
+
+                        $stmt->execute([
+                            ':product_id' => $productId,
+                            ':image' => $uploadedImage
+                        ]);
+                    }
+
+                    // =========================
+                    // SUCCESS
+                    // =========================
+
+                    Session::setFlash(
+                        'success',
+                        'Product created successfully with '
+                        . count($uploadedImages)
+                        . ' image(s).'
+                    );
+
+                    header('Location: index.php');
+                    exit;
+                }
+
             }
         }
     }
@@ -939,17 +1051,20 @@ if (
 
                                         <i class="fa-solid fa-image"></i>
 
-                                        Product Image
+                                        Product Images
 
                                     </label>
 
 
-                                    <input type="file" id="image" name="image" class="product-input"
-                                        accept="image/jpeg,image/png,image/webp" required>
+                                    <input type="file" id="images" name="images[]" class="product-input"
+                                        accept="image/jpeg,image/png,image/webp" multiple required>
 
 
                                     <span class="field-help">
-                                        Upload JPG, PNG or WEBP image. Maximum size: 2MB.
+                                        Upload one or more JPG, PNG or WEBP images.
+                                        The first image will be saved as the main product image,
+                                        while the remaining images will be saved as additional images.
+                                        Maximum size: 2MB per image.
                                     </span>
 
                                 </div>

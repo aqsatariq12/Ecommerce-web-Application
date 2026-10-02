@@ -222,6 +222,199 @@ include '../includes/header.php';
             }
 
         }
+
+        /* =========================
+   PRODUCT IMAGE CONTAINER
+========================= */
+
+        .product-media {
+            height: 280px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #fff;
+            overflow: hidden;
+        }
+
+        /* =========================
+   PRODUCT IMAGE
+========================= */
+
+        .product-media .product-image {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            padding: 15px;
+            display: block;
+        }
+
+        /* =========================================
+   FEATURED DEAL CTA - MOBILE RESPONSIVE
+========================================= */
+
+        @media (max-width: 767px) {
+
+            .cta.cta-border {
+                position: relative;
+                min-height: auto;
+                padding: 30px 20px !important;
+
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+
+                text-align: center;
+                overflow: hidden;
+            }
+
+            /* Product image */
+
+            .cta.cta-border .cta-img {
+                position: relative !important;
+
+                display: block;
+
+                width: 100%;
+                max-width: 220px;
+                height: 180px;
+
+                object-fit: contain;
+
+                margin: 0 auto 20px auto;
+
+                transform: none !important;
+            }
+
+            /* Content */
+
+            .cta.cta-border .row,
+            .cta.cta-border .col-md-12 {
+                width: 100%;
+                margin: 0;
+                padding: 0;
+            }
+
+            .cta.cta-border .cta-content {
+                width: 100%;
+
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+
+                text-align: center;
+
+                padding: 0 !important;
+            }
+
+            /* Deal text */
+
+            .cta.cta-border .cta-text {
+                width: 100%;
+
+                text-align: center !important;
+
+                margin-bottom: 15px;
+            }
+
+            .cta.cta-border .cta-text p {
+                margin-bottom: 0;
+
+                font-size: 15px;
+                line-height: 1.5;
+            }
+
+            .cta.cta-border .cta-text strong {
+                font-size: 20px;
+            }
+
+            /* Button */
+
+            .cta.cta-border .btn {
+                margin: 0 auto;
+
+                white-space: normal;
+
+                font-size: 13px;
+                padding: 10px 18px;
+            }
+
+        }
+
+        @media (max-width: 480px) {
+
+            .cta.cta-border {
+                padding: 25px 15px !important;
+            }
+
+            .cta.cta-border .cta-img {
+                max-width: 180px;
+                height: 150px;
+                margin-bottom: 15px;
+            }
+
+            .cta.cta-border .cta-text p {
+                font-size: 14px;
+            }
+
+            .cta.cta-border .cta-text strong {
+                font-size: 18px;
+            }
+
+            .cta.cta-border .btn {
+                font-size: 12px;
+                padding: 9px 15px;
+            }
+
+        }
+
+        @media (max-width: 767px) {
+
+            /* Center the main deal container */
+            .container {
+                width: 100%;
+                max-width: 100%;
+                margin-left: auto !important;
+                margin-right: auto !important;
+                padding-left: 15px;
+                padding-right: 15px;
+            }
+
+            /* Center the deal box */
+            .container .cta.cta-border {
+                width: 100%;
+                margin-left: auto !important;
+                margin-right: auto !important;
+
+                display: flex;
+                align-items: center;
+                justify-content: center;
+
+                text-align: center;
+            }
+
+            /* Center image */
+            .container .cta.cta-border .cta-img {
+                margin-left: auto !important;
+                margin-right: auto !important;
+            }
+
+            /* Center content */
+            .container .cta.cta-border .cta-content {
+                width: 100%;
+                margin-left: auto !important;
+                margin-right: auto !important;
+
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+
+                text-align: center;
+            }
+
+        }
     </style>
 </head>
 
@@ -1058,9 +1251,10 @@ include '../includes/header.php';
                                                                     value="<?= (int) $product['id'] ?>">
 
                                                                 <input type="hidden" name="quantity" value="1">
-                                                                
 
-                                                                <input type="hidden" name="redirect"     value="index.php#trendingProducts">
+
+                                                                <input type="hidden" name="redirect"
+                                                                    value="index.php#trendingProducts">
 
                                                                 <button type="submit" class="btn-product btn-cart"
                                                                     title="Add to cart">

@@ -14,6 +14,7 @@ require_once '../config/stripe.php';
 Session::start();
 
 $user = Auth::user();
+$errors = [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
@@ -33,137 +34,160 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 	 */
 
 	if (!in_array($paymentMethod, ['cod', 'stripe'], true)) {
-		die("Invalid payment method.");
+		$errors['payment_method'] = 'Please select a valid payment method.';
 	}
 
 	/*
 	 * Validate billing details
 	 */
 
-	if (
-		$fullName === '' ||
-		$phone === '' ||
-		$country === '' ||
-		$addressLine1 === '' ||
-		$city === '' ||
-		$state === '' ||
-		$postcode === ''
-	) {
-		die("Please fill in all required billing fields.");
+	if ($fullName === '') {
+		$errors['full_name'] = 'Please enter your full name.';
 	}
 
-	/*
-	 * Save address
-	 */
+	if ($phone === '') {
+		$errors['phone'] = 'Please enter your phone number.';
+	}
 
-	$addressData = [
-		'full_name' => $fullName,
-		'phone' => $phone,
-		'country' => $country,
-		'address_line1' => $addressLine1,
-		'address_line2' => $addressLine2,
-		'city' => $city,
-		'state' => $state,
-		'postcode' => $postcode
-	];
+	if ($country === '') {
+		$errors['country'] = 'Please enter your country.';
+	}
 
-	$existingAddress = Address::getByUserId($user['id']);
+	if ($addressLine1 === '') {
+		$errors['address_line1'] = 'Please enter your street address.';
+	}
 
-	if ($existingAddress) {
+	if ($city === '') {
+		$errors['city'] = 'Please enter your city.';
+	}
 
-		Address::update(
-			$user['id'],
-			$addressData
-		);
+	if ($state === '') {
+		$errors['state'] = 'Please enter your state.';
+	}
 
+	if ($postcode === '') {
+		$errors['postcode'] = 'Please enter your postcode / ZIP code.';
+	}
+
+
+	if (!empty($errors)) {
+		// Stop processing the order.
+		// Errors will be displayed using Toastify.
 	} else {
 
-		Address::create(
-			$user['id'],
-			$addressData
-		);
-	}
-
-	/*
-	 * Get cart again from database
-	 */
-
-	$cartItems = Cart::getCartItems($user['id']);
-
-	if (empty($cartItems)) {
-		die("Your cart is empty.");
-	}
-
-	/*
-	 * Get selected shipping method
-	 */
-
-	$selectedShippingId = Session::get('shipping_id');
-
-	$shippingMethod = null;
-
-	if ($selectedShippingId) {
-		$shippingMethod = Shipping::getMethodById(
-			$selectedShippingId
-		);
-	}
-
-	if (!$shippingMethod) {
-		die("Invalid shipping method.");
-	}
-	/*
-	 * Stripe payment
-	 */
-
-	if ($paymentMethod === 'stripe') {
-
-		header("Location: stripe-checkout.php");
-
-		exit;
-	}
-	/*
-	 * Create COD order
-	 */
-
-	try {
-
-		$order = Order::create(
-			$user['id'],
-			$cartItems,
-			$addressData,
-			$shippingMethod,
-			$paymentMethod
-		);
-
 		/*
-		 * Remove purchased items from cart
+		 * Save address
 		 */
 
-		Cart::clearCart($user['id']);
+		$addressData = [
+			'full_name' => $fullName,
+			'phone' => $phone,
+			'country' => $country,
+			'address_line1' => $addressLine1,
+			'address_line2' => $addressLine2,
+			'city' => $city,
+			'state' => $state,
+			'postcode' => $postcode
+		];
+
+		$existingAddress = Address::getByUserId($user['id']);
+
+		if ($existingAddress) {
+
+			Address::update(
+				$user['id'],
+				$addressData
+			);
+
+		} else {
+
+			Address::create(
+				$user['id'],
+				$addressData
+			);
+		}
 
 		/*
-		 * Remove shipping selection from session
+		 * Get cart again from database
 		 */
 
-		Session::remove('shipping_id');
+		$cartItems = Cart::getCartItems($user['id']);
+
+		if (empty($cartItems)) {
+			die("Your cart is empty.");
+		}
 
 		/*
-		 * Redirect to order confirmation
+		 * Get selected shipping method
 		 */
 
-		header(
-			"Location: order-confirmation.php?order=" .
-			urlencode($order['order_number'])
-		);
+		$selectedShippingId = Session::get('shipping_id');
 
-		exit;
+		$shippingMethod = null;
 
-	} catch (Exception $e) {
+		if ($selectedShippingId) {
+			$shippingMethod = Shipping::getMethodById(
+				$selectedShippingId
+			);
+		}
 
-		die(
-			"Order could not be created: " .
-			$e->getMessage()
-		);
+		if (!$shippingMethod) {
+			die("Invalid shipping method.");
+		}
+		/*
+		 * Stripe payment
+		 */
+
+		if ($paymentMethod === 'stripe') {
+
+			header("Location: stripe-checkout.php");
+
+			exit;
+		}
+		/*
+		 * Create COD order
+		 */
+
+		try {
+
+			$order = Order::create(
+				$user['id'],
+				$cartItems,
+				$addressData,
+				$shippingMethod,
+				$paymentMethod
+			);
+
+			/*
+			 * Remove purchased items from cart
+			 */
+
+			Cart::clearCart($user['id']);
+
+			/*
+			 * Remove shipping selection from session
+			 */
+
+			Session::remove('shipping_id');
+
+			/*
+			 * Redirect to order confirmation
+			 */
+
+			header(
+				"Location: order-confirmation.php?order=" .
+				urlencode($order['order_number'])
+			);
+
+			exit;
+
+		} catch (Exception $e) {
+
+			die(
+				"Order could not be created: " .
+				$e->getMessage()
+			);
+		}
 	}
 }
 
@@ -248,6 +272,7 @@ $total = $subtotal + $shippingCost;
 	<link rel="stylesheet" href="assets/css/bootstrap.min.css">
 	<!-- Main CSS File -->
 	<link rel="stylesheet" href="assets/css/style.css">
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
 </head>
 
 <body>
@@ -272,7 +297,7 @@ $total = $subtotal + $shippingCost;
 			<div class="page-content">
 				<div class="checkout">
 					<div class="container">
-						<form action="checkout.php" method="POST">
+						<form action="checkout.php" method="POST" id="checkoutForm">
 							<div class="row">
 								<div class="col-lg-9">
 									<h2 class="checkout-title">Billing Details</h2><!-- End .checkout-title -->
@@ -284,7 +309,7 @@ $total = $subtotal + $shippingCost;
 
 											<input type="text" name="full_name" class="form-control" value="<?= htmlspecialchars(
 												$address['full_name'] ?? $user['name']
-											) ?>" required readonly>
+											) ?>" readonly>
 
 										</div>
 
@@ -292,13 +317,13 @@ $total = $subtotal + $shippingCost;
 
 									<label>Country *</label>
 									<input type="text" class="form-control" name="country"
-										value="<?= htmlspecialchars($address['country'] ?? '') ?>" required>
+										value="<?= htmlspecialchars($address['country'] ?? '') ?>">
 
 									<label>Street address *</label>
 
 									<input type="text" name="address_line1" class="form-control"
 										placeholder="House number and Street name"
-										value="<?= htmlspecialchars($address['address_line1'] ?? '') ?>" required>
+										value="<?= htmlspecialchars($address['address_line1'] ?? '') ?>">
 
 									<input type="text" name="address_line2" class="form-control"
 										placeholder="Apartment, suite, unit etc ..."
@@ -310,7 +335,7 @@ $total = $subtotal + $shippingCost;
 											<label>Town / City *</label>
 
 											<input type="text" name="city" class="form-control"
-												value="<?= htmlspecialchars($address['city'] ?? '') ?>" required>
+												value="<?= htmlspecialchars($address['city'] ?? '') ?>">
 
 										</div>
 
@@ -319,7 +344,7 @@ $total = $subtotal + $shippingCost;
 											<label>State *</label>
 
 											<input type="text" name="state" class="form-control"
-												value="<?= htmlspecialchars($address['state'] ?? '') ?>" required>
+												value="<?= htmlspecialchars($address['state'] ?? '') ?>">
 
 										</div>
 
@@ -330,7 +355,7 @@ $total = $subtotal + $shippingCost;
 											<label>Postcode / ZIP *</label>
 
 											<input type="text" name="postcode" class="form-control"
-												value="<?= htmlspecialchars($address['postcode'] ?? '') ?>" required>
+												value="<?= htmlspecialchars($address['postcode'] ?? '') ?>">
 
 										</div>
 
@@ -338,15 +363,15 @@ $total = $subtotal + $shippingCost;
 
 											<label>Phone *</label>
 
-											<input type="tel" name="phone" class="form-control"
-												value="<?= htmlspecialchars($address['phone'] ?? '') ?>" required>
+											<input type="text" name="phone" class="form-control"
+												value="<?= htmlspecialchars($address['phone'] ?? '') ?>">
 
 										</div>
 									</div>
 
 									<label>Email address *</label>
 									<input type="email" name="email" class="form-control"
-										value="<?= htmlspecialchars($user["email"]) ?>" required readonly>
+										value="<?= htmlspecialchars($user["email"]) ?>" readonly>
 
 
 
@@ -475,8 +500,17 @@ $total = $subtotal + $shippingCost;
 										</div>
 										<!-- End .accordion -->
 
-										<button type="submit" class="btn btn-outline-primary btn-order btn-block">
-											<span class="">Place Order</span>
+										<button type="submit" id="placeOrderBtn"
+											class="btn btn-outline-primary btn-order btn-block">
+
+											<span id="placeOrderText">
+												Place Order
+											</span>
+
+											<span id="placeOrderLoader" class="spinner-border spinner-border-sm ms-2"
+												role="status" aria-hidden="true" style="display: none;">
+											</span>
+
 										</button>
 									</div><!-- End .summary -->
 								</aside><!-- End .col-lg-3 -->
@@ -501,6 +535,47 @@ $total = $subtotal + $shippingCost;
 	<script src="assets/js/owl.carousel.min.js"></script>
 	<!-- Main JS File -->
 	<script src="assets/js/main.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+	<script>
+
+		document.getElementById('checkoutForm').addEventListener('submit', function () {
+
+			const button = document.getElementById('placeOrderBtn');
+			const buttonText = document.getElementById('placeOrderText');
+			const loader = document.getElementById('placeOrderLoader');
+
+			// Disable button to prevent double submission
+			button.disabled = true;
+
+			// Change button text
+			buttonText.textContent = 'Processing Order...';
+
+			// Show loader
+			loader.style.display = 'inline-block';
+
+		});
+
+
+		/*
+		 * Toastify validation messages
+		 */
+
+		const validationErrors = <?= json_encode(array_values($errors)) ?>;
+
+		validationErrors.forEach(function (message) {
+
+			Toastify({
+				text: message,
+				duration: 4000,
+				gravity: "top",
+				position: "right",
+				close: true,
+				stopOnFocus: true
+			}).showToast();
+
+		});
+
+	</script>
 </body>
 
 

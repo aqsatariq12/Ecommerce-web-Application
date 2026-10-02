@@ -327,7 +327,7 @@ $orderItems = Order::getItems($order["id"]);
                                     <i class="icon-refresh"></i>
                                 </a>
                             </aside>
-                            
+
                             <?php if ($order['order_status'] === 'processing'): ?>
 
                                 <div class="modal fade" id="cancelOrderModal" tabindex="-1" role="dialog"
@@ -363,16 +363,30 @@ $orderItems = Order::getItems($order["id"]);
 
                                             <div class="modal-footer">
 
-                                                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                                                <button type="button" class="btn btn-secondary" id="cancelOrderNoBtn"
+                                                    data-dismiss="modal">
+
                                                     No
+
+                                                </button>
                                                 </button>
 
-                                                <form action="orders.php" method="POST" style="display: inline;">
+                                                <form action="orders.php" method="POST" style="display: inline;"
+                                                    id="cancelOrderForm">
 
                                                     <input type="hidden" name="order_id" value="<?= (int) $order['id'] ?>">
 
-                                                    <button type="submit" class="btn btn-danger">
-                                                        Yes, Cancel Order
+                                                    <button type="submit" class="btn btn-danger" id="cancelOrderBtn">
+
+                                                        <span id="cancelOrderText">
+                                                            Yes, Cancel Order
+                                                        </span>
+
+                                                        <span id="cancelOrderLoader"
+                                                            class="spinner-border spinner-border-sm ms-2" role="status"
+                                                            aria-hidden="true" style="display: none;">
+                                                        </span>
+
                                                     </button>
 
                                                 </form>
@@ -386,7 +400,7 @@ $orderItems = Order::getItems($order["id"]);
                                 </div>
 
                             <?php endif; ?>
-                            
+
 
                         </div>
                     </div>
@@ -411,6 +425,33 @@ $orderItems = Order::getItems($order["id"]);
     <script src="assets/js/superfish.min.js"></script>
     <script src="assets/js/owl.carousel.min.js"></script>
     <script src="assets/js/main.js"></script>
+
+    <script>
+
+        document.getElementById('cancelOrderForm').addEventListener('submit', function () {
+
+            const button = document.getElementById('cancelOrderBtn');
+            const buttonText = document.getElementById('cancelOrderText');
+            const loader = document.getElementById('cancelOrderLoader');
+            const noButton = document.getElementById('cancelOrderNoBtn');
+
+            // Prevent multiple submissions
+            button.disabled = true;
+
+            // Disable "No" while cancellation is processing
+            noButton.disabled = true;
+
+            // Change button text
+            buttonText.textContent = 'Cancelling Order...';
+
+            // Show loader
+            loader.style.display = 'inline-block';
+
+        });
+
+    </script>
+
+</body>
 
 </body>
 

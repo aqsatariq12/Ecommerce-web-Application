@@ -5,54 +5,112 @@ Middleware::guest();
 
 require_once '../core/Auth.php';
 Session::start();
-$error = '';
+$errors = [];
 $success = '';
+$activeTab = 'login';
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 	$action = $_POST['action'] ?? '';
 	//Login
 	if ($action === 'login') {
+		$activeTab = 'login';
 
 		$email = trim($_POST['email'] ?? '');
 		$password = $_POST['password'] ?? '';
 
-		if ($email === "" || $password === "") {
-			$error = "Please enter your email and password";
-		} else {
-			$result = AUTH::login($email, $password);
+		if ($email === '') {
+
+			$errors['email'] = 'Please enter your email address.';
+
+		} elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+
+			$errors['email'] = 'Please enter a valid email address.';
+
+		}
+
+		if ($password === '') {
+
+			$errors['password'] = 'Please enter your password.';
+
+		}
+
+		if (empty($errors)) {
+
+			$result = Auth::login($email, $password);
+
 			if ($result['success']) {
 
 				if ($result['user']['role'] === "admin") {
+
 					header('Location: ../admin/index.php');
 					exit;
+
 				} else {
-					header("Location: index.php");
+
+					header('Location: index.php');
 					exit;
 				}
 
 			} else {
-				$error = $result["message"];
+
+				/*
+				 * Login credentials are incorrect.
+				 * Show the error under the password field.
+				 */
+				$errors['password'] = $result['message'];
 			}
 		}
 	}
 	// REGISTER
 	elseif ($action === "register") {
-
+		$activeTab = 'register';
 		$name = trim($_POST["name"] ?? "");
 		$email = trim($_POST["email"] ?? "");
-		$password = trim($_POST["password"] ?? "");
-		if ($name === '' || $email === '' || $password === '') {
-			$error = 'Please fil in all required fields';
+		$password = $_POST["password"] ?? "";
+		$policy = isset($_POST['policy']);
+
+		if ($name === '') {
+
+			$errors['name'] = 'Please enter your name.';
+
+		}
+
+		if ($email === '') {
+
+			$errors['register_email'] = 'Please enter your email address.';
+
 		} elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-			$error = 'Please enter a valid email address';
+
+			$errors['register_email'] = 'Please enter a valid email address.';
+
+		}
+
+		if ($password === '') {
+
+			$errors['register_password'] = 'Please enter your password.';
+
 		} elseif (strlen($password) < 6) {
-			$error = 'Password must be atleast 6 characters long';
-		} else {
-			$result = AUTH::register($name, $email, $password);
+
+			$errors['register_password'] = 'Password must be at least 6 characters long.';
+
+		}
+		if (!$policy) {
+
+			$errors['policy'] = 'Please agree to the privacy policy.';
+
+		}
+
+		if (empty($errors)) {
+
+			$result = Auth::register($name, $email, $password);
+
 			if ($result['success']) {
+
 				$success = $result['message'];
+
 			} else {
-				$error = $result['message'];
+
+				$errors['register_email'] = $result['message'];
 			}
 		}
 	}
@@ -88,6 +146,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 	<link rel="stylesheet" href="assets/css/bootstrap.min.css">
 	<!-- Main CSS File -->
 	<link rel="stylesheet" href="assets/css/style.css">
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
 	<style>
 		.login-page {
 			position: relative;
@@ -142,31 +201,27 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 							<div class="tab-content">
 								<div class="tab-pane fade show active" id="signin-2" role="tabpanel"
 									aria-labelledby="signin-tab-2">
-									<?php if ($error): ?>
-										<div class="alert alert-danger">
-											<?= htmlspecialchars($error) ?>
-										</div>
-									<?php endif; ?>
-									<?php if ($success): ?>
-										<div class="alert alert-success">
-
-											<?= htmlspecialchars($success) ?>
-										</div>
-									<?php endif; ?>
 									<form method="POST" action="">
 										<input type="hidden" name="action" value="login">
 
 										<div class="form-group">
-											<label for="singin-email-2"> Email address *</label>
-											<input type="email" class="form-control" id="singin-email" name="email"
-												required>
-										</div><!-- End .form-group -->
 
+											<label for="singin-email">Email address *</label>
+
+											<input type="text" class="form-control" id="singin-email" name="email"
+												value="<?= htmlspecialchars($_POST['email'] ?? '') ?>">
+
+										</div>
 										<div class="form-group">
+
 											<label for="singin-password">Password *</label>
+
 											<input type="password" class="form-control" id="singin-password"
-												name="password" required>
-										</div><!-- End .form-group -->
+												name="password">
+
+
+
+										</div>
 
 										<div class="form-footer">
 											<button type="submit" class="btn btn-outline-primary-2">
@@ -190,20 +245,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 											<label for="register-name-2">Your name *</label>
 
 											<input type="text" class="form-control" id="register-name-2" name="name"
-												required>
+												value="<?= htmlspecialchars($_POST['name'] ?? '') ?>">
 										</div>
 
 										<div class="form-group">
 											<label for="register-email-2">Your email address *</label>
 
-											<input type="email" class="form-control" id="register-email-2" name="email"
-												required>
+											<input type="text" class="form-control" id="register-email-2" name="email"
+												value="<?= htmlspecialchars($_POST['email'] ?? '') ?>">
 										</div>
 
 										<div class="form-group">
 											<label for="register-password-2">Password *</label>
 											<input type="password" class="form-control" id="register-password-2"
-												name="password" required>
+												name="password">
 										</div><!-- End .form-group -->
 
 										<div class="form-footer">
@@ -214,7 +269,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 											<div class="custom-control custom-checkbox">
 												<input type="checkbox" class="custom-control-input"
-													id="register-policy-2" required>
+													id="register-policy-2" name="policy">
 												<label class="custom-control-label" for="register-policy-2">I agree to
 													the <a href="#">privacy policy</a> *</label>
 											</div><!-- End .custom-checkbox -->
@@ -244,6 +299,44 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 	<script src="assets/js/owl.carousel.min.js"></script>
 	<!-- Main JS File -->
 	<script src="assets/js/main.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+	<script>
+		const validationErrors = <?= json_encode(array_values($errors)) ?>;
+		const successMessage = <?= json_encode($success) ?>;
+
+		validationErrors.forEach(function (message) {
+
+			Toastify({
+				text: message,
+				duration: 4000,
+				gravity: "top",
+				position: "right",
+				close: true,
+				stopOnFocus: true
+			}).showToast();
+
+		});
+
+		if (successMessage) {
+
+			Toastify({
+				text: successMessage,
+				duration: 4000,
+				gravity: "top",
+				position: "right",
+				close: true,
+				stopOnFocus: true
+			}).showToast();
+
+		}
+		const activeTab = <?= json_encode($activeTab) ?>;
+
+		if (activeTab === 'register') {
+
+			$('#register-tab-2').tab('show');
+
+		}
+	</script>
 </body>
 
 

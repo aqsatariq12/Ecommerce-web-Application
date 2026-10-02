@@ -67,6 +67,41 @@ if (!$product) {
 
 
 // Delete product from database
+// =========================
+// FETCH ADDITIONAL IMAGES
+// =========================
+
+$sql = "SELECT image
+        FROM product_images
+        WHERE product_id = :product_id";
+
+$stmt = $pdo->prepare($sql);
+
+$stmt->execute([
+    ':product_id' => $productId
+]);
+
+$additionalImages = $stmt->fetchAll();
+
+
+// =========================
+// DELETE ADDITIONAL IMAGES FROM DATABASE
+// =========================
+
+$sql = "DELETE FROM product_images
+        WHERE product_id = :product_id";
+
+$stmt = $pdo->prepare($sql);
+
+$stmt->execute([
+    ':product_id' => $productId
+]);
+
+
+// =========================
+// DELETE PRODUCT FROM DATABASE
+// =========================
+
 $sql = "DELETE FROM products
         WHERE id = :id";
 
@@ -78,6 +113,10 @@ $stmt->execute([
 
 
 // Delete product image
+// =========================
+// DELETE PRIMARY IMAGE FILE
+// =========================
+
 if (!empty($product['image'])) {
 
     $imagePath =
@@ -86,6 +125,25 @@ if (!empty($product['image'])) {
 
     if (file_exists($imagePath)) {
         unlink($imagePath);
+    }
+}
+
+
+// =========================
+// DELETE ADDITIONAL IMAGE FILES
+// =========================
+
+foreach ($additionalImages as $additionalImage) {
+
+    if (!empty($additionalImage['image'])) {
+
+        $imagePath =
+            '../../public/uploads/products/'
+            . $additionalImage['image'];
+
+        if (file_exists($imagePath)) {
+            unlink($imagePath);
+        }
     }
 }
 

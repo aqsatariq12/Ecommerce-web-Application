@@ -20,7 +20,7 @@ $sql = "SELECT
             COALESCE(SUM(total_amount), 0) AS total
         FROM orders
         WHERE DATE(created_at) = CURDATE()
-        AND order_status != 'cancelled'";
+        AND order_status = 'delivered'";
 
 $stmt = $pdo->prepare($sql);
 $stmt->execute();
@@ -84,7 +84,7 @@ $totalProducts = (int) $stmt->fetch()['total'];
 $sql = "SELECT
             COALESCE(SUM(total_amount), 0) AS total
         FROM orders
-        WHERE order_status != 'cancelled'";
+        WHERE order_status = 'delivered'";
 
 $stmt = $pdo->prepare($sql);
 $stmt->execute();
@@ -373,6 +373,21 @@ $topProducts = $stmt->fetchAll();
             max-height: 400px;
             overflow-y: auto;
             overflow-x: hidden;
+        }
+
+
+        /* Top Selling Product Images */
+        .product-dashboard-image {
+            width: 55px;
+            height: 55px;
+
+            object-fit: contain;
+
+            flex-shrink: 0;
+
+            display: block;
+
+            background: #fff;
         }
     </style>
 </head>

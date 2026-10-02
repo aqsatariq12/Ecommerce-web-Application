@@ -371,16 +371,29 @@ $orders = Order::getByUserId($user['id']);
 
                                                     <div class="modal-footer">
 
-                                                        <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                                                        <button type="button" class="btn btn-secondary cancel-order-no-btn"
+                                                            data-dismiss="modal">
+
                                                             No
+
                                                         </button>
 
-                                                        <form action="orders.php" method="POST" style="display: inline;">
+                                                        <form action="orders.php" method="POST" style="display: inline;"
+                                                            class="cancel-order-form">
 
                                                             <input type="hidden" name="order_id" value="<?= (int) $order['id'] ?>">
 
-                                                            <button type="submit" class="btn btn-danger">
-                                                                Yes, Cancel Order
+                                                            <button type="submit" class="btn btn-danger cancel-order-btn">
+
+                                                                <span class="cancel-order-text">
+                                                                    Yes, Cancel Order
+                                                                </span>
+
+                                                                <span
+                                                                    class="cancel-order-loader spinner-border spinner-border-sm ms-2"
+                                                                    role="status" aria-hidden="true" style="display: none;">
+                                                                </span>
+
                                                             </button>
 
                                                         </form>
@@ -424,6 +437,38 @@ $orders = Order::getByUserId($user['id']);
     <script src="assets/js/superfish.min.js"></script>
     <script src="assets/js/owl.carousel.min.js"></script>
     <script src="assets/js/main.js"></script>
+
+    <script>
+
+        document.querySelectorAll('.cancel-order-form').forEach(function (form) {
+
+            form.addEventListener('submit', function () {
+
+                const button = form.querySelector('.cancel-order-btn');
+                const buttonText = form.querySelector('.cancel-order-text');
+                const loader = form.querySelector('.cancel-order-loader');
+
+                const modal = form.closest('.modal');
+                const noButton = modal.querySelector('.cancel-order-no-btn');
+
+                // Prevent multiple submissions
+                button.disabled = true;
+
+                // Disable "No" button
+                noButton.disabled = true;
+
+                // Change button text
+                buttonText.textContent = 'Cancelling Order...';
+
+                // Show loader
+                loader.style.display = 'inline-block';
+
+            });
+
+        });
+
+    </script>
+
 
 </body>
 

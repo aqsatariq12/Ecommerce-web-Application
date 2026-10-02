@@ -96,6 +96,27 @@ class Product
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
+    public static function getAdditionalImages($productId)
+    {
+        global $pdo;
+
+        $sql = "SELECT
+                id,
+                product_id,
+                image
+            FROM product_images
+            WHERE product_id = :product_id
+            ORDER BY id ASC";
+
+        $stmt = $pdo->prepare($sql);
+
+        $stmt->execute([
+            ':product_id' => $productId
+        ]);
+
+        return $stmt->fetchAll();
+    }
+
     public static function getBestSelling()
     {
         global $pdo;

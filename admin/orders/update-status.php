@@ -252,6 +252,65 @@ try {
         );
     }
 
+    // =====================================================
+// COD PAYMENT / ORDER STATUS RULES
+// =====================================================
+
+    if ($paymentMethod === 'cod') {
+
+        /*
+         * =========================================
+         * COD ORDER CANNOT BE DELIVERED IF CANCELLED
+         * =========================================
+         */
+
+        if (
+            $orderStatus === 'cancelled' &&
+            $paymentStatus === 'completed'
+        ) {
+
+            throw new Exception(
+                'A cancelled COD order cannot have completed payment.'
+            );
+        }
+
+
+        /*
+         * =========================================
+         * COD PAYMENT COMPLETED
+         *
+         * Completing COD payment means the order
+         * has been delivered.
+         * =========================================
+         */
+
+        if ($paymentStatus === 'completed') {
+
+            if (
+                $currentOrderStatus === 'processing' ||
+                $currentOrderStatus === 'shipped'
+            ) {
+
+                $orderStatus = 'delivered';
+            }
+        }
+
+
+        /*
+         * =========================================
+         * COD ORDER DELIVERED
+         *
+         * Delivering a COD order means payment
+         * has been collected.
+         * =========================================
+         */
+
+        if ($orderStatus === 'delivered') {
+
+            $paymentStatus = 'completed';
+        }
+    }
+
     // =================================================
 // COD CANNOT BE REFUNDED
 // =================================================

@@ -61,6 +61,22 @@ if (!$product) {
     exit;
 }
 
+// =========================
+// FETCH PRODUCT IMAGES
+// =========================
+$sql = "SELECT id, image
+        FROM product_images
+        WHERE product_id = :product_id
+        ORDER BY id ASC";
+
+$stmt = $pdo->prepare($sql);
+
+$stmt->execute([
+    ':product_id' => $productId
+]);
+
+$productImages = $stmt->fetchAll();
+
 
 // =========================
 // FETCH ACTIVE CATEGORIES
@@ -76,10 +92,175 @@ $stmt->execute();
 
 $categories = $stmt->fetchAll();
 
+// =========================
+// DELETE PRIMARY IMAGE
+// =========================
+
+if (
+    $_SERVER['REQUEST_METHOD'] === 'POST'
+    && isset($_POST['delete_primary_image'])
+) {
+
+    // Check if a primary image exists
+    if (empty($product['image'])) {
+
+        Session::setFlash(
+            'error',
+            'No primary image exists.'
+        );
+
+        header("Location: edit.php?id={$productId}");
+        exit;
+    }
+
+
+    // Save current primary image filename
+    $primaryImageToDelete = $product['image'];
+
+
+    // =========================
+    // REMOVE PRIMARY IMAGE FROM PRODUCTS
+    // =========================
+
+    $sql = "UPDATE products
+            SET image = NULL
+            WHERE id = :id";
+
+    $stmt = $pdo->prepare($sql);
+
+    $stmt->execute([
+        ':id' => $productId
+    ]);
+
+    // =========================
+// REMOVE PRIMARY IMAGE FROM PRODUCT_IMAGES
+// =========================
+
+    $sql = "DELETE FROM product_images
+        WHERE product_id = :product_id
+        AND image = :image";
+
+    $stmt = $pdo->prepare($sql);
+
+    $stmt->execute([
+        ':product_id' => $productId,
+        ':image' => $primaryImageToDelete
+    ]);
+
+    // =========================
+    // DELETE PHYSICAL FILE
+    // =========================
+
+    $imagePath =
+        '../../public/uploads/products/'
+        . $primaryImageToDelete;
+
+    if (file_exists($imagePath)) {
+        unlink($imagePath);
+    }
+
+
+    Session::setFlash(
+        'success',
+        'Primary image deleted successfully.'
+    );
+
+    header("Location: edit.php?id={$productId}");
+    exit;
+}
 
 // =========================
-// UPDATE PRODUCT
+// DELETE PRODUCT IMAGE
 // =========================
+
+if (
+    $_SERVER['REQUEST_METHOD'] === 'POST'
+    && isset($_POST['delete_image'])
+) {
+
+    $imageId = (int) ($_POST['image_id'] ?? 0);
+
+    if ($imageId <= 0) {
+
+        Session::setFlash(
+            'error',
+            'Invalid image.'
+        );
+
+        header("Location: edit.php?id={$productId}");
+        exit;
+    }
+
+
+    // =========================
+    // GET IMAGE TO DELETE
+    // =========================
+
+    $sql = "SELECT id, image
+            FROM product_images
+            WHERE id = :id
+            AND product_id = :product_id
+            LIMIT 1";
+
+    $stmt = $pdo->prepare($sql);
+
+    $stmt->execute([
+        ':id' => $imageId,
+        ':product_id' => $productId
+    ]);
+
+    $imageToDelete = $stmt->fetch();
+
+
+    if (!$imageToDelete) {
+
+        Session::setFlash(
+            'error',
+            'Image not found.'
+        );
+
+        header("Location: edit.php?id={$productId}");
+        exit;
+    }
+
+
+    // =========================
+    // DELETE DATABASE RECORD
+    // =========================
+
+    $sql = "DELETE FROM product_images
+            WHERE id = :id
+            AND product_id = :product_id";
+
+    $stmt = $pdo->prepare($sql);
+
+    $stmt->execute([
+        ':id' => $imageId,
+        ':product_id' => $productId
+    ]);
+
+
+    // =========================
+    // DELETE PHYSICAL FILE
+    // =========================
+
+    $imagePath =
+        '../../public/uploads/products/'
+        . $imageToDelete['image'];
+
+    if (file_exists($imagePath)) {
+        unlink($imagePath);
+    }
+
+
+    Session::setFlash(
+        'success',
+        'Product image deleted successfully.'
+    );
+
+    header("Location: edit.php?id={$productId}");
+    exit;
+}
 
 if (
     $_SERVER['REQUEST_METHOD'] === 'POST'
@@ -110,9 +291,9 @@ if (
 
     $status = $_POST['status'] ?? 'active';
 
-    $image = $_FILES['image'] ?? null;
+    $primaryImage = $_FILES['primary_image'] ?? null;
 
-
+    $images = $_FILES['images'] ?? null;
     // =========================
     // VALIDATION
     // =========================
@@ -263,28 +444,53 @@ if (
 
 
     // =========================
-    // CURRENT IMAGE
+    // UPDATE DATABASE
     // =========================
 
-    $imageName = $product['image'];
+    $sql = "UPDATE products
+            SET
+                category_id = :category_id,
+                name = :name,
+                slug = :slug,
+                description = :description,
+                price = :price,
+                stock = :stock,
+                status = :status
+            WHERE id = :id";
 
-    $newImageUploaded = false;
+    $stmt = $pdo->prepare($sql);
+
+    $stmt->execute([
+        ':category_id' => $categoryId,
+        ':name' => $name,
+        ':slug' => $slug,
+        ':description' => $description,
+        ':price' => $price,
+        ':stock' => $stock,
+        ':status' => $statusValue,
+        ':id' => $productId
+    ]);
 
 
     // =========================
-    // NEW IMAGE UPLOAD
-    // =========================
+// UPDATE PRIMARY IMAGE
+// =========================
 
     if (
-        $image
-        && $image['error'] !== UPLOAD_ERR_NO_FILE
+        $primaryImage
+        && isset($primaryImage['name'])
+        && $primaryImage['error'] !== UPLOAD_ERR_NO_FILE
     ) {
 
-        if ($image['error'] !== UPLOAD_ERR_OK) {
+        // =========================
+        // CHECK UPLOAD ERROR
+        // =========================
+
+        if ($primaryImage['error'] !== UPLOAD_ERR_OK) {
 
             Session::setFlash(
                 'error',
-                'There was a problem uploading the image.'
+                'There was a problem uploading the primary image.'
             );
 
             header("Location: edit.php?id={$productId}");
@@ -292,13 +498,15 @@ if (
         }
 
 
-        // MAX 2MB
+        // =========================
+        // CHECK SIZE
+        // =========================
 
-        if ($image['size'] > 2 * 1024 * 1024) {
+        if ($primaryImage['size'] > 2 * 1024 * 1024) {
 
             Session::setFlash(
                 'error',
-                'Image size must be less than 2MB.'
+                'Primary image must be less than 2MB.'
             );
 
             header("Location: edit.php?id={$productId}");
@@ -306,12 +514,18 @@ if (
         }
 
 
-        // CHECK MIME TYPE
+        // =========================
+        // TEMPORARY FILE
+        // =========================
 
-        $imageType =
-            mime_content_type(
-                $image['tmp_name']
-            );
+        $tmpName = $primaryImage['tmp_name'];
+
+
+        // =========================
+        // MIME TYPE
+        // =========================
+
+        $imageType = mime_content_type($tmpName);
 
 
         $allowedTypes = [
@@ -321,16 +535,15 @@ if (
         ];
 
 
-        if (
-            !in_array(
-                $imageType,
-                $allowedTypes
-            )
-        ) {
+        // =========================
+        // VALIDATE TYPE
+        // =========================
+
+        if (!in_array($imageType, $allowedTypes)) {
 
             Session::setFlash(
                 'error',
-                'Only JPG, PNG, and WebP images are allowed.'
+                'Only JPG, PNG, and WebP images are allowed for the primary image.'
             );
 
             header("Location: edit.php?id={$productId}");
@@ -358,11 +571,10 @@ if (
         // NEW IMAGE NAME
         // =========================
 
-        $newImageName =
-            uniqid(
-                'product_',
-                true
-            ) . '.' . $extension;
+        $newPrimaryImage =
+            uniqid('product_', true)
+            . '.'
+            . $extension;
 
 
         // =========================
@@ -372,8 +584,9 @@ if (
         $uploadDirectory =
             '../../public/uploads/products/';
 
+
         $uploadPath =
-            $uploadDirectory . $newImageName;
+            $uploadDirectory . $newPrimaryImage;
 
 
         // =========================
@@ -382,14 +595,14 @@ if (
 
         if (
             !move_uploaded_file(
-                $image['tmp_name'],
+                $tmpName,
                 $uploadPath
             )
         ) {
 
             Session::setFlash(
                 'error',
-                'Failed to upload the new image.'
+                'Failed to upload the primary image.'
             );
 
             header("Location: edit.php?id={$productId}");
@@ -397,62 +610,229 @@ if (
         }
 
 
-        $imageName = $newImageName;
+        // =========================
+        // SAVE OLD PRIMARY IMAGE
+        // =========================
 
-        $newImageUploaded = true;
-    }
+        $oldPrimaryImage = $product['image'];
 
 
-    // =========================
-    // UPDATE DATABASE
-    // =========================
+        // =========================
+        // UPDATE PRODUCTS TABLE
+        // =========================
 
-    $sql = "UPDATE products
-            SET
-                category_id = :category_id,
-                name = :name,
-                slug = :slug,
-                description = :description,
-                price = :price,
-                stock = :stock,
-                image = :image,
-                status = :status
+        $sql = "UPDATE products
+            SET image = :image
             WHERE id = :id";
 
-    $stmt = $pdo->prepare($sql);
+        $stmt = $pdo->prepare($sql);
 
-    $stmt->execute([
-        ':category_id' => $categoryId,
-        ':name' => $name,
-        ':slug' => $slug,
-        ':description' => $description,
-        ':price' => $price,
-        ':stock' => $stock,
-        ':image' => $imageName,
-        ':status' => $statusValue,
-        ':id' => $productId
-    ]);
+        $stmt->execute([
+            ':image' => $newPrimaryImage,
+            ':id' => $productId
+        ]);
 
+        // =========================
+// REMOVE NEW PRIMARY FROM PRODUCT_IMAGES
+// =========================
 
-    // =========================
-    // DELETE OLD IMAGE
-    // =========================
+        $sql = "DELETE FROM product_images
+        WHERE product_id = :product_id
+        AND image = :image";
 
-    if (
-        $newImageUploaded
-        && !empty($product['image'])
-    ) {
+        $stmt = $pdo->prepare($sql);
 
-        $oldImagePath =
-            '../../public/uploads/products/'
-            . $product['image'];
+        $stmt->execute([
+            ':product_id' => $productId,
+            ':image' => $newPrimaryImage
+        ]);
 
+        // =========================
+        // DELETE OLD PRIMARY FILE
+        // =========================
 
-        if (file_exists($oldImagePath)) {
+        if (!empty($oldPrimaryImage)) {
 
-            unlink($oldImagePath);
+            $oldImagePath =
+                $uploadDirectory . $oldPrimaryImage;
+
+            if (
+                file_exists($oldImagePath)
+                && $oldPrimaryImage !== $newPrimaryImage
+            ) {
+                unlink($oldImagePath);
+            }
         }
     }
+
+    // =========================
+// UPLOAD NEW PRODUCT IMAGES
+// =========================
+
+    if (
+        $images
+        && isset($images['name'])
+        && is_array($images['name'])
+    ) {
+
+        $uploadDirectory =
+            '../../public/uploads/products/';
+
+        $allowedTypes = [
+            'image/jpeg',
+            'image/png',
+            'image/webp'
+        ];
+
+        foreach ($images['name'] as $key => $originalName) {
+
+            // Skip empty file inputs
+            if (
+                empty($originalName)
+                || $images['error'][$key] === UPLOAD_ERR_NO_FILE
+            ) {
+                continue;
+            }
+
+
+            // Check upload error
+            if (
+                $images['error'][$key] !== UPLOAD_ERR_OK
+            ) {
+
+                Session::setFlash(
+                    'error',
+                    'There was a problem uploading one of the images.'
+                );
+
+                header("Location: edit.php?id={$productId}");
+                exit;
+            }
+
+
+            // Check size
+            if (
+                $images['size'][$key] > 2 * 1024 * 1024
+            ) {
+
+                Session::setFlash(
+                    'error',
+                    'Each image must be less than 2MB.'
+                );
+
+                header("Location: edit.php?id={$productId}");
+                exit;
+            }
+
+
+            // Temporary file
+            $tmpName = $images['tmp_name'][$key];
+
+
+            // MIME type
+            $imageType = mime_content_type($tmpName);
+
+
+            // Validate type
+            if (
+                !in_array(
+                    $imageType,
+                    $allowedTypes
+                )
+            ) {
+
+                Session::setFlash(
+                    'error',
+                    'Only JPG, PNG, and WebP images are allowed.'
+                );
+
+                header("Location: edit.php?id={$productId}");
+                exit;
+            }
+
+
+            // =========================
+            // IMAGE EXTENSION
+            // =========================
+
+            $extension = match ($imageType) {
+
+                'image/jpeg' => 'jpg',
+
+                'image/png' => 'png',
+
+                'image/webp' => 'webp',
+
+                default => null
+            };
+
+
+            // =========================
+            // IMAGE NAME
+            // =========================
+
+            $imageName =
+                uniqid(
+                    'product_',
+                    true
+                ) . '.' . $extension;
+
+
+            // =========================
+            // UPLOAD PATH
+            // =========================
+
+            $uploadPath =
+                $uploadDirectory . $imageName;
+
+
+            // =========================
+            // MOVE IMAGE
+            // =========================
+
+            if (
+                !move_uploaded_file(
+                    $tmpName,
+                    $uploadPath
+                )
+            ) {
+
+                Session::setFlash(
+                    'error',
+                    'Failed to upload one of the images.'
+                );
+
+                header("Location: edit.php?id={$productId}");
+                exit;
+            }
+
+
+            // =========================
+            // INSERT IMAGE
+            // =========================
+
+            $sql = "INSERT INTO product_images
+                (
+                    product_id,
+                    image
+                )
+                VALUES
+                (
+                    :product_id,
+                    :image
+                )";
+
+            $stmt = $pdo->prepare($sql);
+
+            $stmt->execute([
+                ':product_id' => $productId,
+                ':image' => $imageName
+            ]);
+        }
+    }
+
+
+
 
 
     // =========================
@@ -760,6 +1140,235 @@ if (
         }
 
 
+
+        /* =========================
+   CURRENT PRODUCT IMAGES
+========================== */
+
+        .current-images-grid {
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(auto-fill, minmax(150px, 1fr));
+
+            gap: 18px;
+
+            margin-bottom: 20px;
+        }
+
+
+        /* =========================
+   IMAGE CARD
+========================== */
+
+        .current-image-card {
+
+            padding: 10px;
+
+            border: 1px solid #e9ecef;
+
+            border-radius: 12px;
+
+            background: #ffffff;
+
+            box-shadow:
+                0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+
+
+        /* =========================
+   IMAGE
+========================== */
+
+        .current-image-card img {
+
+            width: 100%;
+            height: 150px;
+
+            object-fit: contain;
+
+            background: #f8f9fa;
+
+            border-radius: 8px;
+
+            display: block;
+
+            margin-bottom: 10px;
+        }
+
+
+        /* =========================
+   IMAGE ACTIONS
+========================== */
+
+        .current-image-actions {
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: space-between;
+
+            gap: 8px;
+        }
+
+
+        /* =========================
+   IMAGE LABEL
+========================== */
+
+        .image-label {
+
+            font-size: 11px;
+
+            font-weight: 600;
+
+            color: #8392ab;
+        }
+
+        /* =========================
+   PRIMARY IMAGE CARD
+========================== */
+
+        .primary-image-card {
+            border: 1px solid #e9ecef;
+            border-radius: 14px;
+            background: #ffffff;
+            padding: 16px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+        }
+
+
+        /* =========================
+   PRIMARY IMAGE PREVIEW
+========================== */
+
+        .primary-image-preview {
+            width: 100%;
+            min-height: 320px;
+            max-height: 420px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            background: #f8f9fa;
+
+            border: 1px solid #e9ecef;
+            border-radius: 12px;
+
+            padding: 20px;
+
+            overflow: hidden;
+        }
+
+
+        /* =========================
+   PRIMARY IMAGE
+========================== */
+
+        .primary-image-preview img {
+            width: 100%;
+            height: 100%;
+
+            max-width: 100%;
+            max-height: 380px;
+
+            object-fit: contain;
+
+            border-radius: 8px;
+
+            display: block;
+        }
+
+
+        /* =========================
+   PRIMARY IMAGE INFO
+========================== */
+
+        .primary-image-info {
+            display: flex;
+
+            align-items: center;
+            justify-content: space-between;
+
+            gap: 15px;
+
+            padding-top: 15px;
+        }
+
+
+        /* =========================
+   PRIMARY BADGE
+========================== */
+
+        .primary-badge {
+            display: inline-flex;
+
+            align-items: center;
+
+            gap: 6px;
+
+            padding: 6px 10px;
+
+            border-radius: 6px;
+
+            background: #fff8e1;
+
+            color: #b78103;
+
+            font-size: 12px;
+
+            font-weight: 700;
+        }
+
+
+        /* =========================
+   PRIMARY IMAGE NAME
+========================== */
+
+        .primary-image-name {
+            margin: 8px 0 0;
+
+            font-size: 12px;
+
+            color: #8392ab;
+
+            word-break: break-all;
+        }
+
+
+        /* =========================
+   PRIMARY IMAGE MOBILE
+========================== */
+
+        @media (max-width: 576px) {
+
+            .primary-image-preview {
+                min-height: 240px;
+                max-height: 300px;
+
+                padding: 15px;
+            }
+
+            .primary-image-preview img {
+                max-height: 270px;
+            }
+
+            .primary-image-info {
+                flex-direction: column;
+
+                align-items: stretch;
+            }
+
+            .primary-image-info .btn {
+                width: 100%;
+            }
+
+        }
+
         /* =========================
        MOBILE
     ========================== */
@@ -892,16 +1501,16 @@ if (
 
 
                         <!-- =========================
-                         FORM BODY
-                    ========================== -->
+                              FORM BODY
+                         ========================== -->
 
                         <div class="product-form-body">
 
                             <form action="" method="POST" enctype="multipart/form-data">
 
                                 <!-- =========================
-             PRODUCT NAME
-        ========================== -->
+                                PRODUCT NAME
+                                ========================== -->
 
                                 <div class="product-field">
 
@@ -927,8 +1536,8 @@ if (
 
 
                                 <!-- =========================
-             PRODUCT SLUG
-        ========================== -->
+                                    PRODUCT SLUG
+                                ========================== -->
 
                                 <div class="product-field">
 
@@ -1040,8 +1649,8 @@ if (
 
 
                                 <!-- =========================
-             STOCK + STATUS
-        ========================== -->
+                                    STOCK + STATUS
+                                ========================== -->
 
                                 <div class="row">
 
@@ -1120,8 +1729,8 @@ if (
 
 
                                 <!-- =========================
-             DESCRIPTION
-        ========================== -->
+                                    DESCRIPTION
+                                ========================== -->
 
                                 <div class="product-field">
 
@@ -1145,56 +1754,176 @@ if (
                                 </div>
 
 
+
                                 <!-- =========================
-             PRODUCT IMAGE
-        ========================== -->
+                                    PRIMARY IMAGE
+                                ========================== -->
 
                                 <div class="product-field">
 
-                                    <label for="image">
+                                    <label>
 
-                                        <i class="fa-solid fa-image"></i>
+                                        <i class="fa-solid fa-star"></i>
 
-                                        Product Image
+                                        Primary Image
 
                                     </label>
 
 
-                                    <!-- CURRENT IMAGE -->
+                                    <!-- CURRENT PRIMARY IMAGE -->
 
                                     <?php if (!empty($product['image'])): ?>
 
-                                        <div class="mb-3">
+                                        <div class="primary-image-card">
 
-                                            <img src="../../public/uploads/products/<?= htmlspecialchars($product['image']) ?>"
-                                                alt="<?= htmlspecialchars($product['name']) ?>" width="120" height="120"
-                                                style="
-                            object-fit: cover;
-                            border-radius: 10px;
-                        ">
+                                            <div class="primary-image-preview">
+
+                                                <img src="../../public/uploads/products/<?= htmlspecialchars($product['image']) ?>"
+                                                    alt="<?= htmlspecialchars($product['name']) ?>">
+
+                                            </div>
+
+                                            <div class="primary-image-info">
+
+                                                <div>
+
+                                                    <span class="primary-badge">
+                                                        <i class="fa-solid fa-star"></i>
+                                                        Primary Image
+                                                    </span>
+
+                                                    <p class="primary-image-name">
+                                                        <?= htmlspecialchars($product['image']) ?>
+                                                    </p>
+
+                                                </div>
+
+                                                <button type="button" class="btn btn-sm btn-outline-danger"
+                                                    data-bs-toggle="modal" data-bs-target="#deletePrimaryImageModal">
+
+                                                    <i class="fa-solid fa-trash me-1"></i>
+                                                    Delete Primary Image
+
+                                                </button>
+
+                                            </div>
+
+                                        </div>
+
+                                    <?php else: ?>
+
+                                        <div class="alert alert-light border text-sm mb-3">
+
+                                            <i class="fa-solid fa-image me-1"></i>
+
+                                            No primary image has been set.
 
                                         </div>
 
                                     <?php endif; ?>
 
 
-                                    <!-- NEW IMAGE -->
+                                    <!-- NEW PRIMARY IMAGE -->
 
-                                    <input type="file" id="image" name="image" class="product-input"
+                                    <input type="file" id="primary_image" name="primary_image" class="product-input"
                                         accept="image/jpeg,image/png,image/webp">
 
-
                                     <span class="field-help">
-                                        Leave empty to keep the current image.
-                                        Upload JPG, PNG or WEBP. Maximum size: 2MB.
+
+                                        Upload a new image to replace the current primary image.
+                                        JPG, PNG or WEBP only. Maximum size: 2MB.
+
                                     </span>
 
                                 </div>
 
 
                                 <!-- =========================
-             BUTTONS
-        ========================== -->
+                                        OTHER PRODUCT IMAGES
+                                ========================== -->
+
+                                <div class="product-field">
+
+                                    <label>
+
+                                        <i class="fa-solid fa-images"></i>
+
+                                        Other Product Images
+
+                                    </label>
+
+
+                                    <!-- CURRENT OTHER IMAGES -->
+
+                                    <?php if (!empty($productImages)): ?>
+
+                                        <div class="current-images-grid">
+
+                                            <?php foreach ($productImages as $productImage): ?>
+
+                                                <div class="current-image-card">
+
+                                                    <img src="../../public/uploads/products/<?= htmlspecialchars($productImage['image']) ?>"
+                                                        alt="<?= htmlspecialchars($product['name']) ?>">
+
+
+                                                    <div class="current-image-actions">
+
+                                                        <span class="image-label">
+
+                                                            <i class="fa-solid fa-image me-1"></i>
+
+                                                            Additional Image
+
+                                                        </span>
+
+
+                                                        <button type="button" class="btn btn-sm btn-outline-danger"
+                                                            onclick="openDeleteProductImageModal(<?= (int) $productImage['id'] ?>);">
+
+                                                            <i class="fa-solid fa-trash"></i>
+                                                            Delete
+
+                                                        </button>
+
+                                                    </div>
+
+                                                </div>
+
+                                            <?php endforeach; ?>
+
+                                        </div>
+
+                                    <?php else: ?>
+
+                                        <div class="alert alert-light border text-sm">
+
+                                            No additional product images found.
+
+                                        </div>
+
+                                    <?php endif; ?>
+
+
+                                    <!-- ADD OTHER IMAGES -->
+
+                                    <input type="file" id="images" name="images[]" class="product-input"
+                                        accept="image/jpeg,image/png,image/webp" multiple>
+
+                                    <span class="field-help">
+
+                                        Add one or multiple additional product images.
+                                        These images are separate from the primary image.
+                                        JPG, PNG or WEBP only. Maximum size: 2MB per image.
+
+                                    </span>
+
+                                </div>
+
+
+                                <!-- =========================
+                                    BUTTONS
+                                ========================== -->
 
                                 <div class="product-form-actions">
 
@@ -1257,6 +1986,193 @@ if (
 
     <!-- Material Dashboard -->
     <script src="../assets/js/material-dashboard.min.js?v=3.2.0"></script>
+    <script>
+
+    function openDeleteProductImageModal(imageId) {
+
+        document.getElementById('deleteProductImageId').value = imageId;
+
+        const modalElement = document.getElementById('deleteProductImageModal');
+
+        const modal = new bootstrap.Modal(modalElement);
+
+        modal.show();
+    }
+
+</script>
+    <!-- Delete Primary Image Modal -->
+    <div class="modal fade" id="deletePrimaryImageModal" tabindex="-1" aria-labelledby="deletePrimaryImageModalLabel"
+        aria-hidden="true">
+
+        <div class="modal-dialog modal-dialog-centered">
+
+            <div class="modal-content">
+
+                <div class="modal-header">
+
+                    <h5 class="modal-title" id="deletePrimaryImageModalLabel">
+                        <i class="fa-solid fa-triangle-exclamation text-danger me-2"></i>
+                        Delete Primary Image
+                    </h5>
+
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                    </button>
+
+                </div>
+
+
+                <div class="modal-body">
+
+                    <div class="text-center py-2">
+
+                        <div class="mb-3">
+                            <i class="fa-solid fa-image-slash text-danger" style="font-size: 45px;">
+                            </i>
+                        </div>
+
+                        <h6 class="mb-2">
+                            Are you sure?
+                        </h6>
+
+                        <p class="text-sm text-secondary mb-0">
+                            This will permanently delete the primary image
+                            from this product.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="modal-footer">
+
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">
+
+                        Cancel
+
+                    </button>
+
+
+                    <form action="edit.php?id=<?= $productId ?>" method="POST">
+
+                        <input type="hidden" name="delete_primary_image" value="1">
+
+                        <button type="submit" class="btn btn-danger">
+
+                            <i class="fa-solid fa-trash me-1"></i>
+
+                            Yes, Delete Image
+
+                        </button>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+    <!-- Delete Other Product Image Modal -->
+<div class="modal fade"
+    id="deleteProductImageModal"
+    tabindex="-1"
+    aria-labelledby="deleteProductImageModalLabel"
+    aria-hidden="true">
+
+    <div class="modal-dialog modal-dialog-centered">
+
+        <div class="modal-content">
+
+            <div class="modal-header">
+
+                <h5 class="modal-title" id="deleteProductImageModalLabel">
+
+                    <i class="fa-solid fa-triangle-exclamation text-danger me-2"></i>
+
+                    Delete Product Image
+
+                </h5>
+
+                <button type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal"
+                    aria-label="Close">
+                </button>
+
+            </div>
+
+
+            <div class="modal-body">
+
+                <div class="text-center py-2">
+
+                    <div class="mb-3">
+
+                        <i class="fa-solid fa-image-slash text-danger"
+                            style="font-size: 45px;">
+                        </i>
+
+                    </div>
+
+                    <h6 class="mb-2">
+                        Are you sure?
+                    </h6>
+
+                    <p class="text-sm text-secondary mb-0">
+
+                        This will permanently delete this additional
+                        product image.
+
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="modal-footer">
+
+                <button type="button"
+                    class="btn btn-light"
+                    data-bs-dismiss="modal">
+
+                    Cancel
+
+                </button>
+
+
+                <form action="edit.php?id=<?= $productId ?>" method="POST">
+
+                    <input type="hidden"
+                        name="delete_image"
+                        value="1">
+
+                    <input type="hidden"
+                        name="image_id"
+                        id="deleteProductImageId"
+                        value="">
+
+                    <button type="submit"
+                        class="btn btn-danger">
+
+                        <i class="fa-solid fa-trash me-1"></i>
+
+                        Yes, Delete Image
+
+                    </button>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+    <script src="assets/js/core/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>

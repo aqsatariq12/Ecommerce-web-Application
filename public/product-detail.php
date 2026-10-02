@@ -12,10 +12,14 @@ if (!$productId) {
 }
 
 $product = Product::getById($productId);
+
 if (!$product) {
     header("Location: index.php");
     exit;
 }
+
+$additionalImages = Product::getAdditionalImages($productId);
+
 $activeDeal = Deal::getActiveDealByProductId($productId);
 $youMayAlsoLike = Product::getOneProductPerCategory($productId);
 
@@ -57,6 +61,160 @@ include '../includes/header.php';
     <!-- Main CSS File -->
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="stylesheet" href="assets/css/plugins/nouislider/nouislider.css">
+    <style>
+        /* =========================================
+       PRODUCT IMAGE GALLERY
+    ========================================= */
+
+        .product-gallery {
+            width: 100%;
+            max-width: 560px;
+            margin: 0 auto;
+        }
+
+
+        /* =========================================
+       MAIN IMAGE
+    ========================================= */
+
+        .product-gallery-main {
+            width: 100%;
+            height: 430px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            background: #ffffff;
+
+            border: 1px solid #eeeeee;
+            border-radius: 14px;
+
+            padding: 25px;
+
+            overflow: hidden;
+        }
+
+
+        .main-product-image {
+            width: 100%;
+            height: 100%;
+
+            object-fit: contain;
+
+            transition: opacity 0.2s ease,
+                transform 0.25s ease;
+        }
+
+
+        .product-gallery-main:hover .main-product-image {
+            transform: scale(1.02);
+        }
+
+
+        /* =========================================
+       THUMBNAILS
+    ========================================= */
+
+        .product-gallery-thumbnails {
+            display: flex;
+
+            gap: 12px;
+
+            margin-top: 15px;
+
+            overflow-x: auto;
+
+            padding: 4px 2px 8px;
+
+            scrollbar-width: thin;
+        }
+
+
+        .product-thumbnail {
+            flex: 0 0 82px;
+
+            width: 82px;
+            height: 82px;
+
+            padding: 5px;
+
+            background: #ffffff;
+
+            border: 1px solid #e5e5e5;
+
+            border-radius: 10px;
+
+            cursor: pointer;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            transition: all 0.2s ease;
+        }
+
+
+        .product-thumbnail img {
+            width: 100%;
+            height: 100%;
+
+            object-fit: contain;
+
+            border-radius: 6px;
+        }
+
+
+        .product-thumbnail:hover {
+            border-color: #c96;
+
+            transform: translateY(-2px);
+        }
+
+
+        .product-thumbnail.active {
+            border: 2px solid #c96;
+
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+        }
+
+
+        /* =========================================
+       MOBILE
+    ========================================= */
+
+        @media (max-width: 767px) {
+
+            .product-gallery {
+                max-width: 100%;
+            }
+
+
+            .product-gallery-main {
+                height: 340px;
+
+                padding: 20px;
+            }
+
+
+            .product-thumbnail {
+                flex-basis: 70px;
+
+                width: 70px;
+                height: 70px;
+            }
+
+        }
+
+
+        @media (max-width: 480px) {
+
+            .product-gallery-main {
+                height: 290px;
+            }
+
+        }
+    </style>
 </head>
 
 <body>
@@ -89,11 +247,54 @@ include '../includes/header.php';
 
                                 <div class="col-lg-6 mb-4 mb-lg-0">
 
-                                    <div class="text-center">
+                                    <div class="product-gallery">
 
-                                        <img src="uploads/products/<?= htmlspecialchars($product['image']) ?>"
-                                            alt="<?= htmlspecialchars($product['name']) ?>" class="img-fluid"
-                                            style="max-height: 400px; width: 100%; object-fit: contain;">
+                                        <!-- =========================
+             MAIN IMAGE
+        ========================== -->
+
+                                        <div class="product-gallery-main">
+
+                                            <img id="mainProductImage"
+                                                src="uploads/products/<?= htmlspecialchars($product['image']) ?>"
+                                                alt="<?= htmlspecialchars($product['name']) ?>"
+                                                class="main-product-image">
+
+                                        </div>
+
+
+                                        <!-- =========================
+             IMAGE THUMBNAILS
+        ========================== -->
+
+                                        <div class="product-gallery-thumbnails">
+
+                                            <!-- PRIMARY IMAGE -->
+
+                                            <button type="button" class="product-thumbnail active"
+                                                data-image="uploads/products/<?= htmlspecialchars($product['image']) ?>">
+
+                                                <img src="uploads/products/<?= htmlspecialchars($product['image']) ?>"
+                                                    alt="Primary image">
+
+                                            </button>
+
+
+                                            <!-- ADDITIONAL IMAGES -->
+
+                                            <?php foreach ($additionalImages as $additionalImage): ?>
+
+                                                <button type="button" class="product-thumbnail"
+                                                    data-image="uploads/products/<?= htmlspecialchars($additionalImage['image']) ?>">
+
+                                                    <img src="uploads/products/<?= htmlspecialchars($additionalImage['image']) ?>"
+                                                        alt="<?= htmlspecialchars($product['name']) ?>">
+
+                                                </button>
+
+                                            <?php endforeach; ?>
+
+                                        </div>
 
                                     </div>
 
@@ -283,7 +484,8 @@ include '../includes/header.php';
 
                                                 <?php if ($product['stock'] > 0): ?>
 
-                                                    <input type="hidden" name="redirect" value="product-detail.php?id=<?= (int) $product['id'] ?>#productDetail">
+                                                    <input type="hidden" name="redirect"
+                                                        value="product-detail.php?id=<?= (int) $product['id'] ?>#productDetail">
 
                                                     <button type="submit" class="btn-product btn-cart">
                                                         <span>add to cart</span>
@@ -663,6 +865,50 @@ include '../includes/header.php';
     <script src="assets/js/jquery.magnific-popup.min.js"></script>
     <!-- Main JS File -->
     <script src="assets/js/main.js"></script>
+    <script>
+
+        document.querySelectorAll('.product-thumbnail').forEach(function (thumbnail) {
+
+            thumbnail.addEventListener('click', function () {
+
+                const image = this.getAttribute('data-image');
+
+                const mainImage = document.getElementById('mainProductImage');
+
+                if (!mainImage || !image) {
+                    return;
+                }
+
+
+                // Change main image
+                mainImage.style.opacity = '0';
+
+                setTimeout(function () {
+
+                    mainImage.src = image;
+
+                    mainImage.style.opacity = '1';
+
+                }, 100);
+
+
+                // Remove active state
+                document.querySelectorAll('.product-thumbnail')
+                    .forEach(function (item) {
+
+                        item.classList.remove('active');
+
+                    });
+
+
+                // Activate clicked thumbnail
+                this.classList.add('active');
+
+            });
+
+        });
+
+    </script>
 </body>
 
 
